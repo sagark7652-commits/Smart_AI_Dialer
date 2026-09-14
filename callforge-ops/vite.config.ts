@@ -79,21 +79,31 @@ function vitePluginManusDebugCollector(): Plugin {
     name: "manus-debug-collector",
 
     transformIndexHtml(html) {
-      if (process.env.NODE_ENV === "production") {
-        return html;
+      const tags: any[] = [];
+      if (process.env.NODE_ENV !== "production") {
+        tags.push({
+          tag: "script",
+          attrs: {
+            src: "/__manus__/debug-collector.js",
+            defer: true,
+          },
+          injectTo: "head",
+        });
+      }
+      if (process.env.VITE_ANALYTICS_ENDPOINT && process.env.VITE_ANALYTICS_WEBSITE_ID) {
+        tags.push({
+          tag: "script",
+          attrs: {
+            src: `${process.env.VITE_ANALYTICS_ENDPOINT}/umami`,
+            "data-website-id": process.env.VITE_ANALYTICS_WEBSITE_ID,
+            defer: true,
+          },
+          injectTo: "body",
+        });
       }
       return {
         html,
-        tags: [
-          {
-            tag: "script",
-            attrs: {
-              src: "/__manus__/debug-collector.js",
-              defer: true,
-            },
-            injectTo: "head",
-          },
-        ],
+        tags,
       };
     },
 
