@@ -12,6 +12,8 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { callingRouter } from "../calling/routes";
+import { dialerWorker } from "../calling/queue";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -40,6 +42,8 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  // High-throughput calling and dialer API
+  app.use("/api/calling", callingRouter);
   // tRPC API
   app.use(
     "/api/trpc",
@@ -64,6 +68,7 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    dialerWorker.start();
   });
 }
 
