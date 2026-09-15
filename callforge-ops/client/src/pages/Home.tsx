@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Activity,
@@ -38,6 +38,7 @@ import {
   CreditCard,
   PhoneCall,
   Shield,
+  X,
 } from "lucide-react";
 
 // Calling Component Imports (All 8 Categories)
@@ -48,18 +49,27 @@ import { WebRTCSoftphone } from "../components/calling/agent/WebRTCSoftphone";
 import { AgentStatusDropdown } from "../components/calling/agent/AgentStatusDropdown";
 import { LiveWallboardGrid } from "../components/calling/supervisor/LiveWallboardGrid";
 import { CDRDataTable, CDRRecord } from "../components/calling/supervisor/CDRDataTable";
-import { QAScorecardModal } from "../components/calling/supervisor/QAScorecardModal";
 import { AudioPlayerDrawer } from "../components/calling/global/AudioPlayerDrawer";
-import { VisualIVRBuilder } from "../components/calling/global/VisualIVRBuilder";
-import { DisabledStateGuard } from "../components/calling/global/DisabledStateGuard";
-import { LiveSpendCounter } from "../components/calling/billing/LiveSpendCounter";
-import { AutoRechargeConfig } from "../components/calling/billing/AutoRechargeConfig";
+import { QAScorecardModal } from "../components/calling/supervisor/QAScorecardModal";
 import { VoiceSelectionPicker } from "../components/calling/ai/VoiceSelectionPicker";
 import { ABTestingSplitUI } from "../components/calling/ai/ABTestingSplitUI";
+import { VisualIVRBuilder } from "../components/calling/global/VisualIVRBuilder";
+import { DisabledStateGuard } from "../components/calling/global/DisabledStateGuard";
+import { AutoRechargeConfig } from "../components/calling/billing/AutoRechargeConfig";
+import { LiveSpendCounter } from "../components/calling/billing/LiveSpendCounter";
 import { ClickToCallButton } from "../components/calling/crm/ClickToCallButton";
 import { ConsentAuditLedger } from "../components/calling/crm/ConsentAuditLedger";
 import { RoleManagementUI } from "../components/calling/admin/RoleManagementUI";
 import { SystemStatusPage } from "../components/calling/admin/SystemStatusPage";
+
+// New Rich Functional Components
+import { CommandPaletteModal } from "../components/calling/global/CommandPaletteModal";
+import { NotificationCenter } from "../components/calling/global/NotificationCenter";
+import { LeadDetailsDrawer, LeadRecord } from "../components/calling/crm/LeadDetailsDrawer";
+import { AddLeadModal } from "../components/calling/crm/AddLeadModal";
+import { ProUpgradeModal } from "../components/calling/global/ProUpgradeModal";
+import { HelpCenterModal } from "../components/calling/global/HelpCenterModal";
+import { UserProfileModal } from "../components/calling/global/UserProfileModal";
 
 const navigation = [
   { label: "Overview", icon: LayoutDashboard },
@@ -80,7 +90,7 @@ const campaigns = [
   { name: "Inbound demo callbacks", mode: "Preview", status: "Paused", leads: "320", connected: "127", progress: 26, color: "amber" },
 ];
 
-const leads = [
+const INITIAL_LEADS: LeadRecord[] = [
   { name: "Aarav Mehta", company: "Northstar Foods", phone: "+91 99887 11002", source: "Website", stage: "Interested", score: 88, last: "2 min ago" },
   { name: "Neha Iyer", company: "Bloom Retail", phone: "+91 97654 30781", source: "Meta Ads", stage: "Callback", score: 74, last: "8 min ago" },
   { name: "Kabir Singh", company: "Suncore Energy", phone: "+91 98990 48210", source: "Referral", stage: "New", score: 66, last: "16 min ago" },
@@ -117,7 +127,15 @@ function StatusPill({ children, tone = "green" }: { children: React.ReactNode; t
 }
 
 // 1. Overview Screen
-function Overview({ onNavigate, onNewCampaign }: { onNavigate: (label: string) => void; onNewCampaign: () => void }) {
+function Overview({
+  onNavigate,
+  onNewCampaign,
+  onExportReport,
+}: {
+  onNavigate: (label: string) => void;
+  onNewCampaign: () => void;
+  onExportReport: () => void;
+}) {
   const [timeframe, setTimeframe] = useState("Today");
   return (
     <div className="page-enter space-y-4">
@@ -130,7 +148,7 @@ function Overview({ onNavigate, onNewCampaign }: { onNavigate: (label: string) =
           <p className="page-subtitle">Here’s how your AI calling floor & carrier trunks are performing today.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="soft-button" onClick={() => toast.success("Daily report CSV queued for export")}>
+          <button className="soft-button hover:bg-zinc-800 transition" onClick={onExportReport} title="Download Executive CSV Report">
             <FileText size={15} /> Export report
           </button>
           <button className="primary-button" onClick={onNewCampaign}>
@@ -158,63 +176,56 @@ function Overview({ onNavigate, onNewCampaign }: { onNavigate: (label: string) =
         <section className="panel chart-panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">ACTIVITY PULSE</p>
-              <h2 className="section-title">Calls over time</h2>
+              <p className="eyebrow">DIALER THROUGHPUT</p>
+              <h3 className="panel-title">Calls placed vs. answered</h3>
             </div>
-            <div className="segmented">
-              {["Today", "7 days", "30 days"].map((item) => (
-                <button key={item} className={timeframe === item ? "active" : ""} onClick={() => setTimeframe(item)}>
-                  {item}
+            <div className="pill-group">
+              {["Today", "7D", "30D", "All"].map((t) => (
+                <button key={t} className={`pill ${timeframe === t ? "active" : ""}`} onClick={() => setTimeframe(t)}>
+                  {t}
                 </button>
               ))}
             </div>
           </div>
-          <div className="chart-meta">
-            <span className="chart-total">12,842 <small>total calls</small></span>
-            <span className="legend"><i className="legend-line" /> Connected <i className="legend-line faint" /> Dialed</span>
-          </div>
-          <div className="bar-chart" aria-label="Calls over time chart">
-            {bars.map((height, i) => (
-              <div key={i} className={`bar ${i % 5 === 0 ? "highlight" : ""}`} style={{ height: `${height}%` }} />
-            ))}
-          </div>
-          <div className="chart-axis">
-            <span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span>
+          <div className="bar-chart-wrap">
+            <div className="bar-chart">
+              {bars.map((height, i) => (
+                <div key={i} className="bar-col">
+                  <div style={{ height: `${height}%` }} className={`bar ${i === bars.length - 1 ? "latest" : ""}`} />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className="panel live-panel">
+        <section className="panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">RIGHT NOW</p>
-              <h2 className="section-title">Live floor overview</h2>
+              <p className="eyebrow">CARRIER TRUNKS</p>
+              <h3 className="panel-title">Trunk health & latency</h3>
             </div>
-            <button className="icon-button" onClick={() => onNavigate("Live Floor")}>
-              <MoreHorizontal size={18} />
+            <button className="soft-button" onClick={() => onNavigate("Admin & Billing")}>
+              Diagnostics
             </button>
           </div>
-          <div className="floor-number">
-            <strong>24</strong><span>active calls</span>
-            <span className="floor-badge"><span className="status-dot" /> 9 AI agents</span>
+          <div className="space-y-3">
+            {[
+              { name: "Airtel PRI-01", latency: "22ms", quality: "Optimal", channels: "48/60 active" },
+              { name: "Tata SIP-02", latency: "28ms", quality: "Optimal", channels: "32/60 active" },
+              { name: "Jio Cloud Trunk", latency: "45ms", quality: "Good", channels: "18/30 active" },
+            ].map((trunk) => (
+              <div key={trunk.name} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/40 border border-zinc-800/80">
+                <div>
+                  <div className="text-xs font-semibold text-zinc-200">{trunk.name}</div>
+                  <div className="text-[11px] text-zinc-400 mt-0.5">{trunk.channels}</div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-mono text-emerald-400">{trunk.latency}</span>
+                  <div className="text-[10px] text-zinc-500 uppercase">{trunk.quality}</div>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="mini-metrics">
-            <div><span>Agents online</span><strong>18 / 24</strong></div>
-            <div><span>Queue waiting</span><strong>07</strong></div>
-            <div><span>Service level</span><strong className="cyan-text">94.2%</strong></div>
-          </div>
-          <div className="agent-stack">
-            <div className="avatar-stack">
-              <span className="avatar avatar-violet">AS</span>
-              <span className="avatar avatar-cyan">RK</span>
-              <span className="avatar avatar-amber">PM</span>
-              <span className="avatar avatar-rose">VN</span>
-              <span className="avatar avatar-more">+14</span>
-            </div>
-            <span className="muted text-xs">3 supervisors monitoring</span>
-          </div>
-          <button className="full-width-button" onClick={() => onNavigate("Live Floor")}>
-            <Radio size={14} /> Open Supervisor Wallboard
-          </button>
         </section>
       </div>
     </div>
@@ -223,18 +234,17 @@ function Overview({ onNavigate, onNewCampaign }: { onNavigate: (label: string) =
 
 // 2. Campaigns Screen
 function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; onTestCall: () => void }) {
-  const [status, setStatus] = useState("All campaigns");
   return (
     <div className="page-enter space-y-4">
       <div className="hero-row">
         <div>
-          <p className="eyebrow violet-text">OUTBOUND ENGINE</p>
-          <h1 className="page-title">Campaigns</h1>
-          <p className="page-subtitle">Orchestrate every list, retry rule, caller ID, and AI assistant from one place.</p>
+          <p className="eyebrow violet-text">DIALER CADENCE & ORCHESTRATION</p>
+          <h1 className="page-title">Active Campaigns</h1>
+          <p className="page-subtitle">Configure outbound pacing, Claude AI script variables, and audio retry schedules.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="soft-button" onClick={onTestCall}>
-            <PhoneCall size={15} /> Sandbox test dial
+            <PhoneCall size={15} /> Sandbox test call
           </button>
           <button className="primary-button" onClick={onNewCampaign}>
             <Plus size={16} /> New campaign
@@ -242,55 +252,35 @@ function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; o
         </div>
       </div>
 
-      <CampaignControls />
-
-      <div className="filter-row">
-        <div className="search-box">
-          <Search size={15} />
-          <input placeholder="Search campaigns" />
-        </div>
-        <div className="filter-select">
-          <Filter size={14} />
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option>All campaigns</option>
-            <option>Running</option>
-            <option>Paused</option>
-            <option>Draft</option>
-          </select>
-          <ChevronDown size={14} />
-        </div>
-        <span className="muted text-xs ml-auto">3 campaigns · refreshed just now</span>
-      </div>
-
-      <div className="campaign-cards">
+      <div className="grid gap-3">
         {campaigns.map((c) => (
-          <div className="campaign-card" key={c.name}>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <span className={`campaign-mark large ${c.color}`} />
-                <div>
-                  <h3>{c.name}</h3>
-                  <p className="muted">{c.mode} · India / IST (09:00–21:00)</p>
+          <div key={c.name} className="p-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className={`p-2.5 rounded-lg bg-${c.color}-500/20 text-${c.color}-400 border border-${c.color}-500/30`}>
+                <Megaphone size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-100">{c.name}</h3>
+                <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
+                  <span className="font-mono text-zinc-300">Pacing: {c.mode}</span>
+                  <span>•</span>
+                  <span>{c.connected} / {c.leads} contacts dialed</span>
                 </div>
               </div>
-              <StatusPill tone={c.status === "Running" ? "green" : "yellow"}>{c.status}</StatusPill>
             </div>
-            <div className="campaign-card-metrics">
-              <div><span>Leads dialled</span><strong>{c.leads}</strong></div>
-              <div><span>Connected</span><strong>{c.connected}</strong></div>
-              <div><span>Avg. talk time</span><strong>03:42</strong></div>
-            </div>
-            <div className="progress-wrap full">
-              <div className="progress-track">
-                <div className={`progress-fill ${c.color}`} style={{ width: `${c.progress}%` }} />
+            <div className="flex items-center gap-6">
+              <div className="w-32 hidden sm:block">
+                <div className="flex justify-between text-[11px] text-zinc-400 mb-1">
+                  <span>Progress</span>
+                  <span className="font-mono">{c.progress}%</span>
+                </div>
+                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div style={{ width: `${c.progress}%` }} className="h-full bg-violet-500 rounded-full" />
+                </div>
               </div>
-              <span>{c.progress}% complete</span>
-            </div>
-            <div className="campaign-card-footer">
-              <span className="muted"><Phone size={13} /> Caller ID · +91 140 22 8041</span>
-              <button className="text-button" onClick={onTestCall}>
-                Test call <ArrowUpRight size={14} />
-              </button>
+              <StatusPill tone={c.status === "Running" ? "green" : "yellow"}>
+                {c.status}
+              </StatusPill>
             </div>
           </div>
         ))}
@@ -305,44 +295,52 @@ function AgentWorkspace() {
     <div className="page-enter space-y-4">
       <div className="hero-row">
         <div>
-          <p className="eyebrow violet-text">OPERATOR COCKPIT</p>
+          <p className="eyebrow cyan-text">TELEPHONY DESK & SOFTPHONE</p>
           <h1 className="page-title">Agent Workspace</h1>
-          <p className="page-subtitle">Your active WebRTC telephony terminal with automatic CTI screen-pop & wrap-up tagging.</p>
+          <p className="page-subtitle">Full WebRTC audio bridge, active caller telemetry, live CRM screen-pop & wrap-up.</p>
         </div>
-        <AgentStatusDropdown />
+        <div className="flex items-center gap-3">
+          <AgentStatusDropdown />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950/70 md:col-span-2 space-y-3">
-          <h3 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">Browser WebRTC Terminal Ready</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            Your browser audio stream is bound to the high-concurrency SIP/WebRTC gateway. When incoming calls arrive or progressive outbound dialing matches, a CTI screen-pop panel will automatically slide in with caller context.
-          </p>
-          <div className="p-3 rounded-lg bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
-            <span className="text-zinc-300">Microphone & Opus Audio:</span>
-            <span className="text-emerald-400 font-mono font-semibold">Active (48kHz)</span>
-          </div>
+      <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/20 flex items-center justify-between">
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold text-zinc-200">WebRTC Client Active</h3>
+          <p className="text-xs text-zinc-400">Opus 48kHz Codec • Round-trip latency: 24ms • SRTP encrypted</p>
         </div>
-
-        <div className="p-5 rounded-xl border border-violet-800/40 bg-violet-950/20 space-y-2">
-          <span className="text-[10px] uppercase font-bold text-violet-300 block">Softphone Available</span>
-          <h4 className="text-xs font-bold text-zinc-100">Floating Softphone Dock</h4>
-          <p className="text-[11px] text-zinc-400 leading-relaxed">
-            Click the WebRTC widget in the bottom-right corner anytime to dial numbers, toggle mute/hold, or simulate incoming rings.
-          </p>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-mono text-emerald-400">Registered to Asterisk SBC</span>
         </div>
       </div>
     </div>
   );
 }
 
-// 4. Leads & CRM Screen
-function LeadsScreen() {
+// 4. Leads & CRM Screen with Real Filter Bar & Drawer Actions
+function LeadsScreen({
+  leads,
+  onAddLeadClick,
+  onSelectLead,
+}: {
+  leads: LeadRecord[];
+  onAddLeadClick: () => void;
+  onSelectLead: (lead: LeadRecord) => void;
+}) {
   const [query, setQuery] = useState("");
-  const filtered = useMemo(
-    () => leads.filter((l) => `${l.name} ${l.company} ${l.phone}`.toLowerCase().includes(query.toLowerCase())),
-    [query]
-  );
+  const [stageFilter, setStageFilter] = useState("All");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const stages = ["All", "New", "Interested", "Callback", "Converted", "Not interested", "DNC"];
+
+  const filtered = useMemo(() => {
+    return leads.filter((l) => {
+      const matchesQuery = `${l.name} ${l.company} ${l.phone}`.toLowerCase().includes(query.toLowerCase());
+      const matchesStage = stageFilter === "All" || l.stage.toLowerCase() === stageFilter.toLowerCase();
+      return matchesQuery && matchesStage;
+    });
+  }, [leads, query, stageFilter]);
 
   return (
     <div className="page-enter space-y-4">
@@ -352,20 +350,57 @@ function LeadsScreen() {
           <h1 className="page-title">Leads & Contacts</h1>
           <p className="page-subtitle">One live record for every contact, outcome, callback, and click-to-call action.</p>
         </div>
-        <button className="primary-button" onClick={() => toast.success("New lead form opened")}>
+        <button className="primary-button" onClick={onAddLeadClick}>
           <Plus size={16} /> Add lead
         </button>
       </div>
 
-      <div className="filter-row">
-        <div className="search-box wide">
-          <Search size={15} />
-          <input placeholder="Search name, company, or phone" value={query} onChange={(e) => setQuery(e.target.value)} />
+      <div className="space-y-2">
+        <div className="filter-row">
+          <div className="search-box wide">
+            <Search size={15} />
+            <input
+              placeholder="Search name, company, or phone..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <button
+            className={`soft-button transition ${showFilters ? "bg-violet-600/20 text-violet-300 border-violet-500/40" : ""}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <ListFilter size={14} /> Filters {stageFilter !== "All" ? `(${stageFilter})` : ""}
+          </button>
+          <span className="muted text-xs ml-auto font-mono">{filtered.length} of {leads.length} contacts</span>
         </div>
-        <button className="soft-button">
-          <ListFilter size={14} /> Filters
-        </button>
-        <span className="muted text-xs ml-auto">{filtered.length} of 18,420 contacts</span>
+
+        {/* Expandable Filter Chips */}
+        {showFilters && (
+          <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 animate-in fade-in duration-100 text-xs">
+            <span className="text-zinc-500 text-[11px] mr-1 uppercase font-semibold">Stage:</span>
+            {stages.map((st) => (
+              <button
+                key={st}
+                onClick={() => setStageFilter(st)}
+                className={`px-2.5 py-1 rounded-md text-xs transition ${
+                  stageFilter === st
+                    ? "bg-violet-600 text-white font-medium shadow-xs"
+                    : "bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+                }`}
+              >
+                {st}
+              </button>
+            ))}
+            {stageFilter !== "All" && (
+              <button
+                onClick={() => setStageFilter("All")}
+                className="text-zinc-400 hover:text-rose-400 text-[11px] ml-2 flex items-center gap-1"
+              >
+                <X size={12} /> Reset
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <section className="panel">
@@ -383,45 +418,57 @@ function LeadsScreen() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((l) => (
-                <tr key={l.phone}>
-                  <td>
-                    <div className="lead-cell">
-                      <span className="avatar avatar-violet">
-                        {l.name.split(" ").map((x) => x[0]).join("")}
-                      </span>
-                      <div>
-                        <strong>{l.name}</strong>
-                        <span className="muted">{l.company}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <span className="mono-cell">{l.phone}</span>
-                      <ClickToCallButton phoneNumber={l.phone} leadName={l.name} />
-                    </div>
-                  </td>
-                  <td><span className="source-label">{l.source}</span></td>
-                  <td><span className={`stage ${l.stage.toLowerCase().replace(" ", "-")}`}>{l.stage}</span></td>
-                  <td>
-                    <div className="score">
-                      <span className={l.score > 80 ? "score-high" : l.score > 60 ? "score-mid" : "score-low"}>
-                        {l.score}
-                      </span>
-                      <div className="score-track">
-                        <div style={{ width: `${l.score}%` }} className={l.score > 80 ? "score-high-bg" : l.score > 60 ? "score-mid-bg" : "score-low-bg"} />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="muted">{l.last}</td>
-                  <td>
-                    <button className="icon-button" onClick={() => toast.info(`Opening ${l.name}'s lead record`)}>
-                      <MoreHorizontal size={17} />
-                    </button>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-8 text-sm text-zinc-500">
+                    No contacts found matching filter criteria.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filtered.map((l) => (
+                  <tr key={l.phone}>
+                    <td>
+                      <div className="lead-cell cursor-pointer" onClick={() => onSelectLead(l)}>
+                        <span className="avatar avatar-violet">
+                          {l.name.split(" ").map((x) => x[0]).join("")}
+                        </span>
+                        <div>
+                          <strong className="hover:text-violet-400 transition">{l.name}</strong>
+                          <span className="muted">{l.company}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <span className="mono-cell">{l.phone}</span>
+                        <ClickToCallButton phoneNumber={l.phone} leadName={l.name} />
+                      </div>
+                    </td>
+                    <td><span className="source-label">{l.source}</span></td>
+                    <td><span className={`stage ${l.stage.toLowerCase().replace(" ", "-")}`}>{l.stage}</span></td>
+                    <td>
+                      <div className="score">
+                        <span className={l.score > 80 ? "score-high" : l.score > 60 ? "score-mid" : "score-low"}>
+                          {l.score}
+                        </span>
+                        <div className="score-track">
+                          <div style={{ width: `${l.score}%` }} className={l.score > 80 ? "score-high-bg" : l.score > 60 ? "score-mid-bg" : "score-low-bg"} />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="muted">{l.last}</td>
+                    <td>
+                      <button
+                        className="icon-button hover:text-zinc-200 transition"
+                        onClick={() => onSelectLead(l)}
+                        title="Open Lead Profile & Activity Drawer"
+                      >
+                        <MoreHorizontal size={17} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -437,27 +484,104 @@ function LeadsScreen() {
 export default function Home() {
   const [active, setActive] = useState("Overview");
 
+  // Dynamic Live Leads State
+  const [leadsList, setLeadsList] = useState<LeadRecord[]>(INITIAL_LEADS);
+
   // Modals state
   const [showCampaignBuilder, setShowCampaignBuilder] = useState(false);
   const [showSandboxTest, setShowSandboxTest] = useState(false);
   const [selectedAudioRecord, setSelectedAudioRecord] = useState<CDRRecord | null>(null);
   const [selectedQARecord, setSelectedQARecord] = useState<CDRRecord | null>(null);
 
+  // New Rich Functional Modals & Drawers
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showProUpgrade, setShowProUpgrade] = useState(false);
+  const [showHelpCenter, setShowHelpCenter] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showAddLead, setShowAddLead] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<LeadRecord | null>(null);
+
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+      } else if (e.altKey && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        setShowCampaignBuilder(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Real Executive CSV Report Generator
+  const handleDownloadExecutiveReport = () => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const rows = [
+      ["Metric", "Value", "Delta", "Benchmark", "Category"],
+      ["Calls Placed", "3,682", "+18.4%", "Daily Traffic", "Operations"],
+      ["Connect Rate", "42.8%", "+6.2%", "Target > 40%", "Efficiency"],
+      ["Qualified Leads", "286", "+12.6%", "High Intent", "Sales"],
+      ["Avg. Talk Time", "03:48", "-0.8%", "3 to 5 mins", "Quality"],
+      ["Total Telephony Spend (INR)", "₹18,400.00", "--", "Prepaid Trunks", "Finance"],
+      ["Active Trunks", "Airtel PRI 01, Tata SIP 02", "Optimal (22ms)", "100 Channels", "Telephony"],
+      ["TRAI Compliance Rate", "100%", "Zero Violations", "09:00 - 21:00 Window", "Regulatory"],
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map((e) => e.map((val) => `"${val}"`).join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `CallForge_Executive_Daily_Report_${todayStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Executive Daily Report (.csv) downloaded successfully!`);
+  };
+
+  const handleAddNewLead = (newLead: LeadRecord) => {
+    setLeadsList((prev) => [newLead, ...prev]);
+  };
+
+  const handleUpdateLead = (updated: LeadRecord) => {
+    setLeadsList((prev) => prev.map((l) => (l.phone === updated.phone ? updated : l)));
+    setSelectedLead(updated);
+  };
+
   const activeIndex = navigation.findIndex((item) => item.label === active);
 
   let content: React.ReactNode = null;
   switch (active) {
     case "Overview":
-      content = <Overview onNavigate={setActive} onNewCampaign={() => setShowCampaignBuilder(true)} />;
+      content = (
+        <Overview
+          onNavigate={setActive}
+          onNewCampaign={() => setShowCampaignBuilder(true)}
+          onExportReport={handleDownloadExecutiveReport}
+        />
+      );
       break;
     case "Campaigns":
-      content = <Campaigns onNewCampaign={() => setShowCampaignBuilder(true)} onTestCall={() => setShowSandboxTest(true)} />;
+      content = (
+        <Campaigns
+          onNewCampaign={() => setShowCampaignBuilder(true)}
+          onTestCall={() => setShowSandboxTest(true)}
+        />
+      );
       break;
     case "Agent Workspace":
       content = <AgentWorkspace />;
       break;
     case "Leads & CRM":
-      content = <LeadsScreen />;
+      content = (
+        <LeadsScreen
+          leads={leadsList}
+          onAddLeadClick={() => setShowAddLead(true)}
+          onSelectLead={(ld) => setSelectedLead(ld)}
+        />
+      );
       break;
     case "AI Voice Studio":
       content = (
@@ -549,7 +673,13 @@ export default function Home() {
       );
       break;
     default:
-      content = <Overview onNavigate={setActive} onNewCampaign={() => setShowCampaignBuilder(true)} />;
+      content = (
+        <Overview
+          onNavigate={setActive}
+          onNewCampaign={() => setShowCampaignBuilder(true)}
+          onExportReport={handleDownloadExecutiveReport}
+        />
+      );
   }
 
   return (
@@ -566,7 +696,11 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="workspace-switcher">
+        <div
+          className="workspace-switcher cursor-pointer hover:bg-zinc-900/60 p-2 rounded-lg transition"
+          onClick={() => setShowUserProfile(true)}
+          title="Open Workspace & Profile Settings"
+        >
           <span className="workspace-avatar">A</span>
           <div>
             <strong>Arjun’s workspace</strong>
@@ -602,7 +736,7 @@ export default function Home() {
             </div>
             <strong>Unlock AI insights</strong>
             <p>Get deeper coaching signals on every call.</p>
-            <button onClick={() => toast.info("Your plan is already enabled for the demo")}>
+            <button onClick={() => setShowProUpgrade(true)}>
               Explore Pro <ArrowUpRight size={13} />
             </button>
           </div>
@@ -611,12 +745,16 @@ export default function Home() {
             <Settings2 size={17} />
             <span>Settings</span>
           </button>
-          <button className="nav-item" onClick={() => toast.info("Help center opened")}>
+          <button className="nav-item" onClick={() => setShowHelpCenter(true)}>
             <CircleHelp size={17} />
             <span>Help center</span>
           </button>
 
-          <div className="user-row">
+          <div
+            className="user-row cursor-pointer hover:bg-zinc-900/60 p-2 rounded-lg transition"
+            onClick={() => setShowUserProfile(true)}
+            title="Open Admin Profile"
+          >
             <span className="workspace-avatar user">AM</span>
             <div>
               <strong>Arjun Mehta</strong>
@@ -642,13 +780,27 @@ export default function Home() {
               <span className="status-dot" />
               Trunks Operational
             </div>
-            <button className="icon-button" onClick={() => toast.info("No new notifications")}>
-              <AlertTriangle size={17} />
-            </button>
-            <button className="icon-button" onClick={() => toast.info("Command search coming soon")}>
+
+            {/* Interactive Notification Center Tray */}
+            <NotificationCenter onNavigate={setActive} />
+
+            {/* Quick Command Omnibar Search (Ctrl+K) */}
+            <button
+              className="icon-button hover:text-zinc-100 transition"
+              onClick={() => setShowCommandPalette(true)}
+              title="Command search (Ctrl + K)"
+            >
               <Search size={17} />
             </button>
-            <div className="top-avatar">AM</div>
+
+            {/* User Profile Avatar */}
+            <div
+              className="top-avatar cursor-pointer hover:ring-2 hover:ring-violet-500 transition"
+              onClick={() => setShowUserProfile(true)}
+              title="Arjun Mehta (Admin Profile)"
+            >
+              AM
+            </div>
           </div>
         </header>
 
@@ -657,6 +809,20 @@ export default function Home() {
 
       {/* Persistent Dockable WebRTC Softphone */}
       <WebRTCSoftphone />
+
+      {/* Omnibar Command Palette */}
+      <CommandPaletteModal
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onNavigate={setActive}
+        onNewCampaign={() => setShowCampaignBuilder(true)}
+        onNewLead={() => setShowAddLead(true)}
+        onExportReport={handleDownloadExecutiveReport}
+        onOpenSoftphone={() => {
+          toast.info("WebRTC Softphone open in bottom-right corner");
+        }}
+        onShowHelp={() => setShowHelpCenter(true)}
+      />
 
       {/* Modals & Slide-out Drawers */}
       <CampaignBuilderModal
@@ -667,6 +833,34 @@ export default function Home() {
       <SandboxTestModal
         isOpen={showSandboxTest}
         onClose={() => setShowSandboxTest(false)}
+      />
+
+      <AddLeadModal
+        isOpen={showAddLead}
+        onClose={() => setShowAddLead(false)}
+        onAddLead={handleAddNewLead}
+      />
+
+      <LeadDetailsDrawer
+        isOpen={!!selectedLead}
+        onClose={() => setSelectedLead(null)}
+        lead={selectedLead}
+        onUpdateLead={handleUpdateLead}
+      />
+
+      <ProUpgradeModal
+        isOpen={showProUpgrade}
+        onClose={() => setShowProUpgrade(false)}
+      />
+
+      <HelpCenterModal
+        isOpen={showHelpCenter}
+        onClose={() => setShowHelpCenter(false)}
+      />
+
+      <UserProfileModal
+        isOpen={showUserProfile}
+        onClose={() => setShowUserProfile(false)}
       />
 
       <AudioPlayerDrawer
