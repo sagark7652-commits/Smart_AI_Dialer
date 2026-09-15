@@ -70,6 +70,7 @@ import { AddLeadModal } from "../components/calling/crm/AddLeadModal";
 import { ProUpgradeModal } from "../components/calling/global/ProUpgradeModal";
 import { HelpCenterModal } from "../components/calling/global/HelpCenterModal";
 import { UserProfileModal } from "../components/calling/global/UserProfileModal";
+import { ClaudeScriptEditor } from "../components/calling/campaigns/ClaudeScriptEditor";
 
 const navigation = [
   { label: "Overview", icon: LayoutDashboard },
@@ -234,13 +235,21 @@ function Overview({
 
 // 2. Campaigns Screen
 function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; onTestCall: () => void }) {
+  const [subView, setSubView] = useState<"runs" | "editor">("runs");
+  const [scriptValue, setScriptValue] = useState(
+    "Hamare paas 40 concurrent AI agent lines par festive season me 20% discount offer chal raha hai with direct TRAI DLT registration support."
+  );
+  const [objective, setObjective] = useState(
+    "Qualify interest in CallForge AI calling suite and book a 15-minute product demonstration."
+  );
+
   return (
     <div className="page-enter space-y-4">
       <div className="hero-row">
         <div>
           <p className="eyebrow violet-text">DIALER CADENCE & ORCHESTRATION</p>
-          <h1 className="page-title">Active Campaigns</h1>
-          <p className="page-subtitle">Configure outbound pacing, Claude AI script variables, and audio retry schedules.</p>
+          <h1 className="page-title">Active Campaigns & AI Scripting</h1>
+          <p className="page-subtitle">Configure outbound pacing, Notion-style Claude AI script variables, and audio retry schedules.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="soft-button" onClick={onTestCall}>
@@ -252,39 +261,75 @@ function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; o
         </div>
       </div>
 
-      <div className="grid gap-3">
-        {campaigns.map((c) => (
-          <div key={c.name} className="p-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`p-2.5 rounded-lg bg-${c.color}-500/20 text-${c.color}-400 border border-${c.color}-500/30`}>
-                <Megaphone size={18} />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-100">{c.name}</h3>
-                <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
-                  <span className="font-mono text-zinc-300">Pacing: {c.mode}</span>
-                  <span>•</span>
-                  <span>{c.connected} / {c.leads} contacts dialed</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="w-32 hidden sm:block">
-                <div className="flex justify-between text-[11px] text-zinc-400 mb-1">
-                  <span>Progress</span>
-                  <span className="font-mono">{c.progress}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div style={{ width: `${c.progress}%` }} className="h-full bg-violet-500 rounded-full" />
-                </div>
-              </div>
-              <StatusPill tone={c.status === "Running" ? "green" : "yellow"}>
-                {c.status}
-              </StatusPill>
-            </div>
-          </div>
-        ))}
+      {/* Sub-view toggle */}
+      <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+        <button
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            subView === "runs"
+              ? "bg-violet-600/20 text-violet-300 border border-violet-500/40 shadow-xs"
+              : "text-zinc-400 hover:text-zinc-200"
+          }`}
+          onClick={() => setSubView("runs")}
+        >
+          Active Dialing Runs ({campaigns.length})
+        </button>
+        <button
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+            subView === "editor"
+              ? "bg-violet-600/20 text-violet-300 border border-violet-500/40 shadow-xs"
+              : "text-zinc-400 hover:text-zinc-200"
+          }`}
+          onClick={() => setSubView("editor")}
+        >
+          <Sparkles size={13} className="text-violet-400" />
+          Notion-Style AI Script Studio
+        </button>
       </div>
+
+      {subView === "runs" ? (
+        <div className="grid gap-3">
+          {campaigns.map((c) => (
+            <div key={c.name} className="p-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`p-2.5 rounded-lg bg-${c.color}-500/20 text-${c.color}-400 border border-${c.color}-500/30`}>
+                  <Megaphone size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-100">{c.name}</h3>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
+                    <span className="font-mono text-zinc-300">Pacing: {c.mode}</span>
+                    <span>•</span>
+                    <span>{c.connected} / {c.leads} contacts dialed</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="w-32 hidden sm:block">
+                  <div className="flex justify-between text-[11px] text-zinc-400 mb-1">
+                    <span>Progress</span>
+                    <span className="font-mono">{c.progress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                    <div style={{ width: `${c.progress}%` }} className="h-full bg-violet-500 rounded-full" />
+                  </div>
+                </div>
+                <StatusPill tone={c.status === "Running" ? "green" : "yellow"}>
+                  {c.status}
+                </StatusPill>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950">
+          <ClaudeScriptEditor
+            value={scriptValue}
+            onChange={setScriptValue}
+            objective={objective}
+            onObjectiveChange={setObjective}
+          />
+        </div>
+      )}
     </div>
   );
 }

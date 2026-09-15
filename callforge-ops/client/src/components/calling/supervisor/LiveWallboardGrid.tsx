@@ -257,26 +257,34 @@ export const LiveWallboardGrid: React.FC = () => {
 
                 {/* Status Pill */}
                 <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 font-mono ${
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1.5 font-mono ${
                     agent.status === "on_call"
-                      ? "bg-violet-500/20 text-violet-300 border border-violet-500/40"
+                      ? "bg-emerald-950/40 text-emerald-300 border border-emerald-500/40"
                       : agent.status === "ready"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                      ? "bg-amber-950/30 text-amber-300 border border-amber-500/40"
                       : agent.status === "wrap_up"
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                      : "bg-zinc-800 text-zinc-400"
+                      ? "bg-violet-950/30 text-violet-300 border border-violet-500/40"
+                      : "bg-rose-950/30 text-rose-400 border border-rose-800/40"
                   }`}
                 >
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${
+                    className={`w-2 h-2 rounded-full ${
                       agent.status === "on_call"
-                        ? "bg-violet-400 animate-pulse"
+                        ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse"
                         : agent.status === "ready"
-                        ? "bg-emerald-400"
-                        : "bg-amber-400"
+                        ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)] animate-pulse"
+                        : agent.status === "wrap_up"
+                        ? "bg-violet-400 shadow-[0_0_8px_rgba(168,85,247,0.7)]"
+                        : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
                     }`}
                   />
-                  {agent.status.replace("_", " ").toUpperCase()}
+                  {agent.status === "on_call"
+                    ? "ACTIVE CALL"
+                    : agent.status === "ready"
+                    ? "RINGING / READY"
+                    : agent.status === "wrap_up"
+                    ? "WRAP-UP"
+                    : "BREAK"}
                 </span>
               </div>
 
