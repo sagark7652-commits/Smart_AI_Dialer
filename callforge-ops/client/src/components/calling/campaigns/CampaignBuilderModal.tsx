@@ -33,6 +33,8 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
   onClose,
   onCampaignCreated,
 }) => {
+  if (!isOpen) return null;
+
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form State
