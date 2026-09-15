@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm --prefix callforge-ops install && npm --prefix callforge-ops run build",
+  "outputDirectory": "callforge-ops/dist/public",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
