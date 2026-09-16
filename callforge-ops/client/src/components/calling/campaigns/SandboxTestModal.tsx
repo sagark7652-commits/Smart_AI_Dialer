@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Phone, PhoneOff, Bot, User, Mic, ShieldCheck, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { MANDATORY_COMPLIANCE_PREAMBLE } from "./ClaudeScriptEditor";
+import { audioEngine } from "../../../lib/calling/audioEngine";
 
 interface SandboxTestModalProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
   scriptText = "Offer festive season 20% discount on annual cloud calling packs.",
   agentName = "Asha (Hindi/English)",
 }) => {
-  const [phoneNumber, setPhoneNumber] = useState("+91 98765 43210");
+  const [phoneNumber, setPhoneNumber] = useState("+91 98201 55432");
   const [leadName, setLeadName] = useState("Rajesh Varma");
   const [callState, setCallState] = useState<"idle" | "ringing" | "connected" | "ended">("idle");
   const [timer, setTimer] = useState(0);
@@ -49,9 +50,12 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
     setCallState("ringing");
     setMessages([]);
     toast.info(`Dialing ${phoneNumber}...`);
+    audioEngine.startRingback();
 
-    // Simulated connection after 2 seconds
+    // Simulated connection after 2.2 seconds
     setTimeout(() => {
+      audioEngine.stopRingback();
+      audioEngine.playConnectChime();
       setCallState("connected");
       toast.success("Call connected to Voice Sandbox");
 
@@ -65,6 +69,7 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
             time: "00:02",
           },
         ]);
+        audioEngine.speakAgentMessage(MANDATORY_COMPLIANCE_PREAMBLE);
 
         // Simulated user response
         setTimeout(() => {
@@ -79,21 +84,26 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
 
           // Agent pitch
           setTimeout(() => {
+            const pitch = `Dhanyawad ${leadName} ji. Hamare paas aapke retail outlets ke liye CallForge AI Calling agent pack par exclusive 20% festive discount uplabdh hai. Kya aap kal subah 11 baje ek live demo dekhna chahenge?`;
             setMessages((m) => [
               ...m,
               {
                 speaker: "agent",
-                text: `Dhanyawad ${leadName} ji. Hamare paas aapke retail outlets ke liye CallForge AI Calling agent pack par exclusive 20% festive discount uplabdh hai. Kya aap kal subah 11 baje ek live demo dekhna chahenge?`,
+                text: pitch,
                 time: "00:15",
               },
             ]);
+            audioEngine.speakAgentMessage(pitch);
           }, 2000);
-        }, 2500);
-      }, 1000);
-    }, 2000);
+        }, 3000);
+      }, 800);
+    }, 2200);
   };
 
   const handleHangup = () => {
+    audioEngine.stopRingback();
+    audioEngine.playDisconnectTone();
+    audioEngine.stopSpeaking();
     setCallState("ended");
     toast.info("Sandbox test call ended");
     setTimeout(() => setCallState("idle"), 1500);

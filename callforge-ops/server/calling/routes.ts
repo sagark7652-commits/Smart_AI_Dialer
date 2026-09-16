@@ -206,6 +206,18 @@ callingRouter.post("/click-to-call", async (req: Request, res: Response) => {
     metadata: { customerName: name, directDial: true },
   });
 
+  const activeCall = {
+    id: result.callId,
+    customerPhone: phone,
+    customerName: name || "Direct Dial Contact",
+    provider: (result.provider || "mock") as any,
+    status: "in_progress" as const,
+    startedAt: new Date().toISOString(),
+    durationSeconds: 1,
+    sentiment: "positive" as const,
+  };
+  dialerWorker.addDirectCall(activeCall);
+
   return res.json({
     success: true,
     callId: result.callId,
@@ -213,6 +225,7 @@ callingRouter.post("/click-to-call", async (req: Request, res: Response) => {
     status: result.status,
     customerPhone: phone,
     customerName: name || "Contact",
+    audioBridge: "opus_48khz_webrtc",
   });
 });
 

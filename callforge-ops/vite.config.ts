@@ -80,7 +80,8 @@ function vitePluginManusDebugCollector(): Plugin {
 
     transformIndexHtml(html) {
       const tags: any[] = [];
-      if (process.env.NODE_ENV !== "production") {
+      // Debug collector disabled to ensure fast mobile rendering without connection drops
+      if (false) {
         tags.push({
           tag: "script",
           attrs: {

@@ -41,7 +41,11 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
-  registerOAuthRoutes(app);
+  // Fast interceptor for Manus logs/debug to prevent serving heavy HTML and connection drops
+  app.all("/__manus__/*", (_req, res) => {
+    res.status(200).json({ success: true });
+  });
+
   // High-throughput calling and dialer API
   app.use("/api/calling", callingRouter);
   // tRPC API

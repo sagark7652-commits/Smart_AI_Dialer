@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Phone, PhoneCall } from "lucide-react";
-import { toast } from "sonner";
+import { callingBus } from "../../../lib/calling/callingBus";
 
 interface ClickToCallButtonProps {
   phoneNumber: string;
@@ -20,14 +20,20 @@ export const ClickToCallButton: React.FC<ClickToCallButtonProps> = ({
   const handleClickToCall = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsCalling(true);
-    toast.info(`Bridging Call to ${leadName}`, {
-      description: `Ringing your agent WebRTC softphone first, then bridging to ${phoneNumber}.`,
+
+    callingBus.triggerCall({
+      phone: phoneNumber,
+      name: leadName,
+      source: "CRM Lead List",
+    });
+
+    toast.info(`Dialing ${leadName} (${phoneNumber})...`, {
+      description: "Opening WebRTC Softphone audio bridge.",
     });
 
     setTimeout(() => {
       setIsCalling(false);
-      toast.success(`Call Connected: ${phoneNumber}`);
-    }, 2500);
+    }, 1500);
   };
 
   return (

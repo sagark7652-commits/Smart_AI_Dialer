@@ -29,11 +29,7 @@ export interface CreateCampaignOptions {
 
 export class PersistentDialerWorker {
   private campaigns: Map<string, CampaignJob> = new Map();
-  private dncNumbers: Set<string> = new Set([
-    "+919876543210",
-    "9876543210",
-    "+919820098200",
-  ]);
+  private dncNumbers: Set<string> = new Set<string>();
   private isRunning = false;
   private workerInterval: NodeJS.Timeout | null = null;
   private activeCalls: Map<string, ActiveCall> = new Map();
@@ -75,18 +71,16 @@ export class PersistentDialerWorker {
   }
 
   addDNCNumber(phone: string) {
-    this.dncNumbers.add(phone.trim());
+    const normalized = phone.replace(/\D/g, "").slice(-10);
+    if (normalized.length === 10) {
+      this.dncNumbers.add(normalized);
+    }
   }
 
   isDNC(phone: string): boolean {
-    const clean = phone.replace(/[\s-+]/g, "");
-    for (const dnc of Array.from(this.dncNumbers)) {
-      const cleanDnc = dnc.replace(/[\s-+]/g, "");
-      if (clean.endsWith(cleanDnc) || cleanDnc.endsWith(clean)) {
-        return true;
-      }
-    }
-    return false;
+    const normalized = phone.replace(/\D/g, "").slice(-10);
+    if (normalized.length < 10) return false;
+    return this.dncNumbers.has(normalized);
   }
 
   isWithinCallingWindow(window: { startHour: number; endHour: number; timezone: string }): boolean {
@@ -320,6 +314,11 @@ export class PersistentDialerWorker {
         },
       });
     }
+  }
+
+  addDirectCall(call: ActiveCall) {
+    this.activeCalls.set(call.id, call);
+    eventBroker.broadcastCallUpdate(call);
   }
 }
 
