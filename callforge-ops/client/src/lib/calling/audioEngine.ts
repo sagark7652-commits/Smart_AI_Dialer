@@ -197,7 +197,7 @@ class CallAudioEngine {
     }
   }
 
-  // 5. Speak with AI Voice via Web Speech API (Hindi / Hinglish / English)
+  // 5. Speak with AI Voice via Web Speech API (Smooth, non-choppy, Indian natural voice)
   speakAgentMessage(text: string, onEnd?: () => void) {
     if (!("speechSynthesis" in window)) {
       if (onEnd) onEnd();
@@ -205,22 +205,32 @@ class CallAudioEngine {
     }
 
     try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.05;
+      // Humanize text for clear pronunciation without phoneme clipping
+      const cleanText = text
+        .replace(/CallForge/gi, "Call Forge")
+        .replace(/AI/g, "A.I.")
+        .replace(/₹/g, "Rupaye ")
+        .replace(/(\d+)%/g, "$1 percent ")
+        .trim();
 
-      // Select natural voice (prefer Indian English or Hindi if available)
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      // Pacing 0.90 ensures words don't trip over each other or stutter on mobile
+      utterance.rate = 0.90;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      // Select best natural Indian voice
       const voices = window.speechSynthesis.getVoices();
-      const indianVoice = voices.find(
-        (v) =>
-          v.lang.includes("hi") ||
-          v.lang.includes("en-IN") ||
-          v.name.toLowerCase().includes("india") ||
-          v.name.toLowerCase().includes("hindi")
-      );
-      if (indianVoice) {
-        utterance.voice = indianVoice;
+      const bestVoice =
+        voices.find((v) => v.lang === "hi-IN" || v.lang === "hi_IN") ||
+        voices.find((v) => v.lang === "en-IN" || v.lang === "en_IN") ||
+        voices.find((v) => v.name.toLowerCase().includes("india") || v.name.toLowerCase().includes("hindi")) ||
+        voices.find((v) => v.name.includes("Google") && (v.lang.startsWith("hi") || v.lang.startsWith("en"))) ||
+        voices.find((v) => v.lang.startsWith("en"));
+
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+        utterance.lang = bestVoice.lang;
       }
 
       utterance.onend = () => {
@@ -229,6 +239,10 @@ class CallAudioEngine {
       utterance.onerror = () => {
         if (onEnd) onEnd();
       };
+
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
 
       window.speechSynthesis.speak(utterance);
     } catch (e) {

@@ -161,8 +161,7 @@ export const WebRTCSoftphone: React.FC = () => {
         description: "Opus 48kHz HD Audio stream live. AI Voice Agent speaking.",
       });
 
-      // 4. Start Microphone & AI Agent Voice Greeting
-      audioEngine.startMicrophone().catch(() => {});
+      // 4. AI Agent Voice Greeting (HD Audio output without microphone echo cancellation cut)
       setAgentSpeaking(true);
       const greeting =
         customScript ||
@@ -398,11 +397,25 @@ export const WebRTCSoftphone: React.FC = () => {
               )}
 
               {/* Informative Carrier / GSM Notice */}
-              <div className="p-2.5 rounded-xl bg-zinc-900/40 border border-zinc-800 text-left text-[11px] text-zinc-400 flex items-start gap-2">
-                <Info size={14} className="text-violet-400 shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  <span className="font-semibold text-zinc-300">Voice Sandbox Mode:</span> Hearing two-way voice via your device speaker. To make physical cellular calls to target SIM cards, enter your Twilio or Exotel key in Settings.
+              <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-left text-xs space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-emerald-400 flex items-center gap-1.5 text-[11px]">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    WebRTC Voice Bridge (Live Speaker Audio)
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono font-semibold">
+                    ACTIVE
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-300 leading-relaxed">
+                  Aapka call CallForge AI Engine se live connected hai aur phone ke speaker par do-tarfa audio chal raha hai.
                 </p>
+                <div className="pt-1.5 border-t border-zinc-800/80 text-[11px] text-zinc-400">
+                  <p className="text-zinc-300 font-medium">📞 Asli Mobile SIM Par Call Kaise Jayegi?</p>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
+                    Kisi ke physical mobile par asli phone call bajwane ke liye telecom gateway (Twilio / Exotel) account zaroori hota hai. Settings &gt; Telephony me jakar apni Twilio API Key add karein.
+                  </p>
+                </div>
               </div>
 
               {/* Call Controls Toolbar */}
