@@ -47,7 +47,7 @@ import { CampaignControls } from "../components/calling/campaigns/CampaignContro
 import { SandboxTestModal } from "../components/calling/campaigns/SandboxTestModal";
 import { WebRTCSoftphone } from "../components/calling/agent/WebRTCSoftphone";
 import { AgentStatusDropdown } from "../components/calling/agent/AgentStatusDropdown";
-import { LiveWallboardGrid } from "../components/calling/supervisor/LiveWallboardGrid";
+import { LiveWallboardGrid, INITIAL_AGENTS } from "../components/calling/supervisor/LiveWallboardGrid";
 import { CDRDataTable, CDRRecord } from "../components/calling/supervisor/CDRDataTable";
 import { AudioPlayerDrawer } from "../components/calling/global/AudioPlayerDrawer";
 import { QAScorecardModal } from "../components/calling/supervisor/QAScorecardModal";
@@ -547,6 +547,7 @@ export default function Home() {
   const [showAddLead, setShowAddLead] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadRecord | null>(null);
+  const liveCallsCount = INITIAL_AGENTS.filter((a) => a.status === "on_call").length;
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -769,7 +770,12 @@ export default function Home() {
               >
                 <Icon size={17} />
                 <span>{item.label}</span>
-                {item.label === "Live Floor" && <span className="nav-count">24</span>}
+                {item.label === "Live Floor" && (
+                  <span className="nav-count flex items-center gap-1.5 bg-emerald-950/50 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full text-[10px] font-mono ml-auto">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    {liveCallsCount} Live
+                  </span>
+                )}
                 {isSelected && <span className="active-rail" />}
               </button>
             );

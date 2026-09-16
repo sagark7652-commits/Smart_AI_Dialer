@@ -30,7 +30,7 @@ export interface WallboardAgent {
   };
 }
 
-const INITIAL_AGENTS: WallboardAgent[] = [
+export const INITIAL_AGENTS: WallboardAgent[] = [
   {
     id: "ag-1",
     name: "Asha (AI Voice Agent)",
