@@ -71,6 +71,7 @@ import { ProUpgradeModal } from "../components/calling/global/ProUpgradeModal";
 import { HelpCenterModal } from "../components/calling/global/HelpCenterModal";
 import { UserProfileModal } from "../components/calling/global/UserProfileModal";
 import { ClaudeScriptEditor } from "../components/calling/campaigns/ClaudeScriptEditor";
+import { SettingsModal } from "../components/calling/global/SettingsModal";
 
 const navigation = [
   { label: "Overview", icon: LayoutDashboard },
@@ -544,6 +545,7 @@ export default function Home() {
   const [showHelpCenter, setShowHelpCenter] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showAddLead, setShowAddLead] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadRecord | null>(null);
 
   // Global Keyboard Shortcuts
@@ -786,7 +788,7 @@ export default function Home() {
             </button>
           </div>
 
-          <button className="nav-item" onClick={() => setActive("Admin & Billing")}>
+          <button className="nav-item" onClick={() => setShowSettings(true)} title="Open System & Telephony Settings">
             <Settings2 size={17} />
             <span>Settings</span>
           </button>
@@ -867,9 +869,15 @@ export default function Home() {
           toast.info("WebRTC Softphone open in bottom-right corner");
         }}
         onShowHelp={() => setShowHelpCenter(true)}
+        onShowSettings={() => setShowSettings(true)}
       />
 
       {/* Modals & Slide-out Drawers */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
+
       <CampaignBuilderModal
         isOpen={showCampaignBuilder}
         onClose={() => setShowCampaignBuilder(false)}

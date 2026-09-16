@@ -27,6 +27,7 @@ interface CommandPaletteProps {
   onExportReport: () => void;
   onOpenSoftphone: () => void;
   onShowHelp: () => void;
+  onShowSettings?: () => void;
 }
 
 interface ActionItem {
@@ -47,6 +48,7 @@ export function CommandPaletteModal({
   onExportReport,
   onOpenSoftphone,
   onShowHelp,
+  onShowSettings,
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -228,6 +230,17 @@ export function CommandPaletteModal({
           onShowHelp();
         },
       },
+      {
+        id: "act-settings",
+        category: "Actions",
+        title: "Open Workspace & Telephony Settings",
+        subtitle: "Carrier trunks, audio codecs, TRAI rules & API keys",
+        icon: Settings,
+        action: () => {
+          onClose();
+          onShowSettings?.();
+        },
+      },
 
       // Telephony
       {
@@ -249,6 +262,7 @@ export function CommandPaletteModal({
       onExportReport,
       onOpenSoftphone,
       onShowHelp,
+      onShowSettings,
       onClose,
     ]
   );
