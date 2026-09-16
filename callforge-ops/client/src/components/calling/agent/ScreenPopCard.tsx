@@ -55,7 +55,7 @@ export const ScreenPopCard: React.FC<ScreenPopCardProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-20 right-5 z-40 w-96 bg-zinc-950 border border-violet-500/60 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-right-8 duration-200">
+    <div className="fixed top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 z-50 bg-zinc-950 border border-violet-500/60 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-right-8 duration-200">
       {/* Header with Ringing Badge */}
       <div className="p-4 bg-gradient-to-r from-violet-950/70 via-zinc-900/90 to-zinc-900 border-b border-zinc-800 flex items-start justify-between">
         <div className="flex items-center gap-2.5">

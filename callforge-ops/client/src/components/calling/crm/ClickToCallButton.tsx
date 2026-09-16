@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Phone, PhoneCall } from "lucide-react";
 import { callingBus } from "../../../lib/calling/callingBus";
+import { audioEngine } from "../../../lib/calling/audioEngine";
 
 interface ClickToCallButtonProps {
   phoneNumber: string;
@@ -20,6 +21,9 @@ export const ClickToCallButton: React.FC<ClickToCallButtonProps> = ({
   const handleClickToCall = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsCalling(true);
+
+    // Synchronously prime Web Audio & Speech on mobile touch gesture
+    audioEngine.unlockAudio();
 
     callingBus.triggerCall({
       phone: phoneNumber,

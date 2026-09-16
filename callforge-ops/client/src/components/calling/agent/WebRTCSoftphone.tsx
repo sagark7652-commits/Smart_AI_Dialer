@@ -9,32 +9,29 @@ import {
   Play,
   Volume2,
   ChevronDown,
-  ChevronUp,
   Delete,
-  Radio,
-  Sparkles,
-  ShieldCheck,
   User,
-  MessageSquare,
-  Activity,
   Bot,
+  Sparkles,
+  Info,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenPopCard, ScreenPopLead } from "./ScreenPopCard";
-import { DispositionPanel, DispositionData } from "./DispositionPanel";
+import { DispositionPanel } from "./DispositionPanel";
 import { callingBus, CallRequest } from "../../../lib/calling/callingBus";
 import { audioEngine } from "../../../lib/calling/audioEngine";
 
 const CALLER_IDS = [
-  { id: "cid-1", number: "+91 140 22 8041", label: "DLT 140 Commercial Series" },
-  { id: "cid-2", number: "+91 22 6902 4410", label: "Mumbai Enterprise Trunk" },
-  { id: "cid-3", number: "+91 80 4721 9900", label: "Bengaluru Priority Desk" },
+  { id: "cid-1", number: "+91 140 22 8041", label: "DLT 140 Commercial Trunk" },
+  { id: "cid-2", number: "+91 22 6902 4410", label: "Mumbai Enterprise PRI" },
+  { id: "cid-3", number: "+91 80 4721 9900", label: "Bengaluru Priority SIP" },
 ];
 
 const AI_QUICK_RESPONSES = [
   {
     label: "👋 Namaste / Intro",
-    text: "Namaste! CallForge AI Calling Platform mein aapka swagat hai. Main aapki kya sahayata kar sakti hoon?",
+    text: "Namaste! CallForge AI Calling Assistant mein aapka swagat hai. Main aapki kya sahayata kar sakti hoon?",
   },
   {
     label: "💰 Plan & Pricing",
@@ -42,16 +39,16 @@ const AI_QUICK_RESPONSES = [
   },
   {
     label: "📅 Book Live Demo",
-    text: "Bahut badhiya! Aapka live agent demo kal dopahar 2 baje ke liye schedule kar diya gaya hai. Hamare senior consultant aapse connect karenge.",
+    text: "Bahut badhiya! Aapka live agent demo kal dopahar 2 baje ke liye schedule kar diya gaya hai. Hamari team aapse connect karegi.",
   },
   {
     label: "⏱️ Call Back Later",
-    text: "Theek hai ji, main aapko shaam ko 5 baje punah call karungi. Aapka din shubh rahe!",
+    text: "Theek hai ji, main aapko shaam ko 5 baje punah call karungi. Dhanyawad aur aapka din shubh rahe!",
   },
 ];
 
 export const WebRTCSoftphone: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isDialpadOpen, setIsDialpadOpen] = useState(false);
   const [dialInput, setDialInput] = useState("");
   const [selectedCallerId, setSelectedCallerId] = useState(CALLER_IDS[0].number);
 
@@ -63,15 +60,15 @@ export const WebRTCSoftphone: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
   const [activeLead, setActiveLead] = useState<ScreenPopLead>({
-    name: "Anjali Sharma",
-    phone: "+91 98765 14482",
-    company: "Sharma Retail Mart Pvt Ltd",
+    name: "Aarav Mehta",
+    phone: "+91 99887 11002",
+    company: "Northstar Foods",
     city: "Mumbai, Maharashtra",
-    intentScore: 92,
-    intentSummary: "Requested annual pricing for 12 storefronts during Meta Ads lead campaign.",
-    source: "Inbound Callback Queue",
-    lastCall: "Yesterday, 16:30",
-    lastOutcome: "Call back today at 11am",
+    intentScore: 88,
+    intentSummary: "Interested in automating customer lead follow-ups with Indian AI voice agent.",
+    source: "Direct Dial",
+    lastCall: "Just now",
+    lastOutcome: "Call in progress",
     assignedCampaign: "Festive season follow-up",
     dncStatus: "Verified Clean",
   });
@@ -83,6 +80,7 @@ export const WebRTCSoftphone: React.FC = () => {
   // Subscribe to global calling bus
   useEffect(() => {
     return callingBus.subscribe((req: CallRequest) => {
+      audioEngine.unlockAudio();
       setDialInput(req.phone);
       setActiveLead((prev) => ({
         ...prev,
@@ -90,7 +88,6 @@ export const WebRTCSoftphone: React.FC = () => {
         name: req.name || "Customer Lead",
         company: req.company || "Enterprise Lead",
       }));
-      setIsExpanded(true);
       executeDial(req.phone, req.name, req.script);
     });
   }, []);
@@ -113,6 +110,7 @@ export const WebRTCSoftphone: React.FC = () => {
   };
 
   const handleDialDigit = (digit: string) => {
+    audioEngine.unlockAudio();
     audioEngine.playDTMF(digit);
     setDialInput((prev) => prev + digit);
   };
@@ -122,8 +120,9 @@ export const WebRTCSoftphone: React.FC = () => {
   };
 
   const executeDial = async (targetPhone: string, customerName?: string, customScript?: string) => {
+    audioEngine.unlockAudio();
     setCallState("dialing");
-    setIsExpanded(true);
+    setIsDialpadOpen(false);
     toast.info(`Dialing ${targetPhone}...`, {
       description: "Audio bridge connecting (Ringback tone live).",
     });
@@ -142,7 +141,7 @@ export const WebRTCSoftphone: React.FC = () => {
           callerId: selectedCallerId,
           script: customScript,
         }),
-      }).catch((e) => console.warn("[Softphone] API call notice", e));
+      }).catch((e) => console.warn("[Softphone] API notice", e));
     } catch {
       // Non-blocking
     }
@@ -157,7 +156,6 @@ export const WebRTCSoftphone: React.FC = () => {
         phone: targetPhone,
         name: customerName || prev.name,
       }));
-      setShowScreenPop(true);
 
       toast.success(`Call Connected: ${targetPhone}`, {
         description: "Opus 48kHz HD Audio stream live. AI Voice Agent speaking.",
@@ -172,18 +170,19 @@ export const WebRTCSoftphone: React.FC = () => {
       audioEngine.speakAgentMessage(greeting, () => {
         setAgentSpeaking(false);
       });
-    }, 2400);
+    }, 2200);
   };
 
   const handleOutboundCall = () => {
-    const target = dialInput.trim() || "+91 98765 14482";
+    audioEngine.unlockAudio();
+    const target = dialInput.trim() || "+91 99887 11002";
     executeDial(target, activeLead.name);
   };
 
   const handleSimulateIncoming = () => {
+    audioEngine.unlockAudio();
     setCallState("ringing_in");
-    setIsExpanded(true);
-    setShowScreenPop(true);
+    setIsDialpadOpen(false);
     audioEngine.startRingback();
     toast("Incoming Call Ring", {
       description: "Inbound call from Anjali Sharma (+91 98765 14482)",
@@ -192,6 +191,7 @@ export const WebRTCSoftphone: React.FC = () => {
   };
 
   const handleAnswer = () => {
+    audioEngine.unlockAudio();
     audioEngine.stopRingback();
     audioEngine.playConnectChime();
     setCallState("connected");
@@ -234,6 +234,7 @@ export const WebRTCSoftphone: React.FC = () => {
   };
 
   const handleTriggerAIResponse = (text: string) => {
+    audioEngine.unlockAudio();
     setAgentSpeaking(true);
     audioEngine.speakAgentMessage(text, () => {
       setAgentSpeaking(false);
@@ -242,199 +243,121 @@ export const WebRTCSoftphone: React.FC = () => {
 
   return (
     <>
-      {/* Docked Softphone Bar / Container */}
-      <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 max-w-[calc(100vw-24px)]">
-        {!isExpanded ? (
-          /* Minimized Pill Widget */
-          <div className="flex items-center gap-2 p-1.5 sm:p-2 bg-zinc-950/95 backdrop-blur-md border border-zinc-800 rounded-full shadow-2xl hover:border-violet-500/50 transition-all">
-            <button
-              type="button"
-              onClick={() => setIsExpanded(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-600/20 text-violet-300 hover:bg-violet-600/30 text-xs font-semibold cursor-pointer transition-colors"
-            >
-              <Phone size={14} className="text-violet-400" />
-              <span>WebRTC Softphone</span>
-              {callState === "connected" && (
-                <span className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  {formatTimer(callTimer)}
-                </span>
-              )}
-              {callState === "dialing" && (
-                <span className="text-amber-400 font-mono text-[11px] animate-pulse">
-                  Dialing...
-                </span>
-              )}
-            </button>
-
-            {callState === "idle" && (
-              <button
-                type="button"
-                onClick={handleSimulateIncoming}
-                title="Simulate incoming ring to test CTI Screen Pop"
-                className="px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-medium transition-colors cursor-pointer"
-              >
-                + Test Ring
-              </button>
-            )}
-
-            {callState === "connected" && (
-              <button
-                type="button"
-                onClick={handleHangup}
-                className="p-1.5 rounded-full bg-rose-600 text-white hover:bg-rose-500 transition-colors cursor-pointer"
-              >
-                <PhoneOff size={13} />
-              </button>
-            )}
-          </div>
-        ) : (
-          /* Expanded Softphone Window */
-          <div className="w-[320px] sm:w-84 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5 duration-200 flex flex-col">
-            {/* Header */}
-            <div className="p-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+      {/* ========================================================================= */}
+      {/* 1. FULL-SCREEN IN-CALL OVERLAY (VISIBLE ON BOTH MOBILE & DESKTOP)        */}
+      {/* ========================================================================= */}
+      {callState !== "idle" && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            {/* Call Header */}
+            <div className="p-4 bg-zinc-900/70 border-b border-zinc-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
                 <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center ${
                     callState === "connected"
                       ? "bg-emerald-500/20 text-emerald-400"
-                      : callState === "dialing" || callState === "ringing_in"
-                      ? "bg-amber-500/20 text-amber-400 animate-pulse"
-                      : "bg-violet-500/20 text-violet-400"
+                      : "bg-amber-500/20 text-amber-400 animate-pulse"
                   }`}
                 >
-                  <Phone size={14} />
+                  <Phone size={16} />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-zinc-100 flex items-center gap-1.5">
-                    <span>WebRTC Dialer</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  </h4>
-                  <span className="text-[10px] text-zinc-400 font-mono">Audio Bridge & PSTN Gateway</span>
+                  <h3 className="text-xs font-bold text-zinc-100 flex items-center gap-1.5">
+                    <span>CallForge Voice Bridge</span>
+                    {callState === "connected" && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    )}
+                  </h3>
+                  <p className="text-[10px] text-zinc-400 font-mono">WebRTC Opus 48kHz HD Audio</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
-                {callState === "idle" && (
-                  <button
-                    type="button"
-                    onClick={handleSimulateIncoming}
-                    title="Simulate incoming call"
-                    className="p-1 text-[10px] rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 px-1.5 cursor-pointer"
-                  >
-                    Sim Ring
-                  </button>
-                )}
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsExpanded(false)}
-                  className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded cursor-pointer"
+                  onClick={() => setShowScreenPop(true)}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition"
+                  title="View Lead CRM Card"
                 >
-                  <ChevronDown size={16} />
+                  <User size={12} /> Lead Info
                 </button>
               </div>
             </div>
 
-            {/* Caller ID selector */}
-            <div className="px-3 py-1.5 bg-zinc-900/40 border-b border-zinc-800/80 flex items-center justify-between text-xs">
-              <span className="text-[10px] uppercase font-bold text-zinc-500">Trunk ID:</span>
-              <select
-                value={selectedCallerId}
-                onChange={(e) => setSelectedCallerId(e.target.value)}
-                disabled={callState !== "idle"}
-                className="text-[11px] font-mono bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none"
-              >
-                {CALLER_IDS.map((c) => (
-                  <option key={c.id} value={c.number}>
-                    {c.number} ({c.label.slice(0, 14)}...)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Call State: Dialing / Ringing Out */}
-            {callState === "dialing" && (
-              <div className="p-4 bg-amber-950/20 border-b border-amber-900/40 text-center space-y-2 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 mx-auto flex items-center justify-center">
-                  <Phone size={18} className="animate-bounce" />
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-zinc-100">{activeLead.name}</h5>
-                  <p className="text-[11px] font-mono text-amber-300">Ringing: {dialInput || activeLead.phone}...</p>
-                  <p className="text-[10px] text-zinc-400 mt-1">Connecting WebRTC audio bridge</p>
-                </div>
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={handleHangup}
-                    className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <PhoneOff size={12} /> Cancel Call
-                  </button>
+            {/* Caller Profile & Status Section */}
+            <div className="p-6 text-center space-y-4">
+              {/* Pulsing Avatar */}
+              <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+                {callState === "connected" && (
+                  <div className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-ping" />
+                )}
+                {callState === "dialing" && (
+                  <div className="absolute inset-0 rounded-full border-2 border-amber-500/40 animate-pulse" />
+                )}
+                <div
+                  className={`w-20 h-20 rounded-full flex items-center justify-center text-xl font-bold shadow-xl border ${
+                    callState === "connected"
+                      ? "bg-gradient-to-tr from-emerald-950 to-emerald-800 text-emerald-300 border-emerald-500/50"
+                      : "bg-gradient-to-tr from-amber-950 to-amber-800 text-amber-300 border-amber-500/50"
+                  }`}
+                >
+                  {activeLead.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
                 </div>
               </div>
-            )}
 
-            {/* Call State: Ringing Inbound */}
-            {callState === "ringing_in" && (
-              <div className="p-4 bg-amber-950/20 border-b border-amber-900/40 text-center space-y-2 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 mx-auto flex items-center justify-center">
-                  <PhoneIncoming size={18} className="animate-bounce" />
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-zinc-100">{activeLead.name}</h5>
-                  <p className="text-[11px] font-mono text-zinc-400">{activeLead.phone}</p>
-                </div>
-                <div className="flex items-center justify-center gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={handleAnswer}
-                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Phone size={12} /> Answer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleHangup}
-                    className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
-                  >
-                    <PhoneOff size={12} /> Decline
-                  </button>
-                </div>
+              {/* Lead Name & Phone */}
+              <div>
+                <h2 className="text-lg font-bold text-zinc-100">{activeLead.name}</h2>
+                <p className="text-sm font-mono text-zinc-400 mt-0.5">{activeLead.phone}</p>
+                <p className="text-[11px] text-zinc-500">{activeLead.company || "Enterprise Prospect"}</p>
               </div>
-            )}
 
-            {/* Call State: Connected or On Hold */}
-            {(callState === "connected" || callState === "on_hold") && (
-              <div className="p-4 bg-zinc-900/60 border-b border-zinc-800 text-center space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="text-left">
-                    <span className="text-[12px] text-zinc-200 font-semibold block">{activeLead.name}</span>
-                    <span className="text-[10px] text-zinc-400 font-mono">{activeLead.phone}</span>
-                  </div>
-                  <span
-                    className={`font-mono font-bold text-xs px-2 py-0.5 rounded ${
-                      callState === "on_hold"
-                        ? "bg-amber-500/20 text-amber-400 animate-pulse"
-                        : "bg-emerald-500/20 text-emerald-400"
-                    }`}
-                  >
-                    {callState === "on_hold" ? "ON HOLD" : formatTimer(callTimer)}
+              {/* Live Status Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono">
+                {callState === "dialing" && (
+                  <span className="text-amber-400 font-semibold animate-pulse flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                    Dialing & Ringing...
                   </span>
-                </div>
+                )}
+                {callState === "ringing_in" && (
+                  <span className="text-amber-400 font-semibold animate-bounce flex items-center gap-1.5">
+                    <PhoneIncoming size={13} />
+                    Incoming Call...
+                  </span>
+                )}
+                {callState === "connected" && (
+                  <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    Connected: {formatTimer(callTimer)}
+                  </span>
+                )}
+                {callState === "on_hold" && (
+                  <span className="text-amber-300 font-semibold flex items-center gap-1.5">
+                    <Pause size={12} />
+                    Call on Hold ({formatTimer(callTimer)})
+                  </span>
+                )}
+              </div>
 
-                {/* Animated Live Audio Waveform */}
-                <div className="p-2 rounded-xl bg-zinc-950/80 border border-zinc-800/80 space-y-1.5">
-                  <div className="flex items-center justify-between text-[10px] text-zinc-400">
-                    <span className="flex items-center gap-1 text-emerald-400">
-                      <Volume2 size={11} /> {agentSpeaking ? "AI Agent Speaking..." : "Audio Stream (48kHz)"}
+              {/* Live Audio Visualizer Bar */}
+              {(callState === "connected" || callState === "on_hold") && (
+                <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                    <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                      <Volume2 size={13} />
+                      {agentSpeaking ? "AI Assistant Speaking..." : "Audio Stream Active"}
                     </span>
-                    <span className="font-mono text-zinc-500">Latency: 18ms</span>
+                    <span className="font-mono text-zinc-500">48kHz / 16ms</span>
                   </div>
-                  <div className="flex items-center justify-center gap-1 h-7 py-1">
-                    {[35, 70, 50, 85, 60, 95, 40, 80, 65, 55, 90, 75, 45, 85].map((h, idx) => (
+
+                  <div className="flex items-center justify-center gap-1.5 h-8">
+                    {[30, 65, 45, 85, 55, 95, 40, 80, 60, 90, 70, 50, 85, 45].map((h, i) => (
                       <div
-                        key={idx}
+                        key={i}
                         className={`w-1 rounded-full transition-all duration-150 ${
                           callState === "on_hold"
                             ? "bg-amber-500/40 h-1.5"
@@ -443,18 +366,20 @@ export const WebRTCSoftphone: React.FC = () => {
                             : "bg-emerald-400 animate-pulse"
                         }`}
                         style={{
-                          height: callState === "on_hold" ? "5px" : `${h * 0.25}px`,
-                          animationDelay: `${idx * 65}ms`,
+                          height: callState === "on_hold" ? "6px" : `${h * 0.28}px`,
+                          animationDelay: `${i * 60}ms`,
                         }}
                       />
                     ))}
                   </div>
                 </div>
+              )}
 
-                {/* AI Interactive Voice Prompt Buttons */}
-                <div className="text-left space-y-1.5">
+              {/* AI Interactive Prompts (In-Call Assistant) */}
+              {callState === "connected" && (
+                <div className="space-y-1.5 text-left">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1">
-                    <Bot size={11} className="text-violet-400" /> Interactive AI Voice Responses:
+                    <Bot size={12} className="text-violet-400" /> Interactive Voice Responses:
                   </span>
                   <div className="grid grid-cols-2 gap-1.5">
                     {AI_QUICK_RESPONSES.map((res, i) => (
@@ -462,7 +387,7 @@ export const WebRTCSoftphone: React.FC = () => {
                         key={i}
                         type="button"
                         onClick={() => handleTriggerAIResponse(res.text)}
-                        className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-medium text-zinc-300 hover:text-white transition-colors text-left truncate cursor-pointer"
+                        className="p-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-medium text-zinc-300 hover:text-white transition-colors text-left truncate cursor-pointer"
                         title={res.text}
                       >
                         {res.label}
@@ -470,65 +395,164 @@ export const WebRTCSoftphone: React.FC = () => {
                     ))}
                   </div>
                 </div>
+              )}
 
-                {/* In-Call Actions Toolbar */}
-                <div className="flex items-center justify-center gap-2 pt-1">
+              {/* Informative Carrier / GSM Notice */}
+              <div className="p-2.5 rounded-xl bg-zinc-900/40 border border-zinc-800 text-left text-[11px] text-zinc-400 flex items-start gap-2">
+                <Info size={14} className="text-violet-400 shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
+                  <span className="font-semibold text-zinc-300">Voice Sandbox Mode:</span> Hearing two-way voice via your device speaker. To make physical cellular calls to target SIM cards, enter your Twilio or Exotel key in Settings.
+                </p>
+              </div>
+
+              {/* Call Controls Toolbar */}
+              <div className="pt-2 flex items-center justify-center gap-4">
+                {callState === "ringing_in" ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleAnswer}
+                      className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full font-bold text-sm flex items-center gap-2 shadow-xl shadow-emerald-600/30 cursor-pointer"
+                    >
+                      <Phone size={16} /> Answer Call
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleHangup}
+                      className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-full font-bold text-sm flex items-center gap-2 shadow-xl shadow-rose-600/30 cursor-pointer"
+                    >
+                      <PhoneOff size={16} /> Decline
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleToggleMute}
+                      className={`p-3.5 rounded-full border transition cursor-pointer ${
+                        isMuted
+                          ? "bg-rose-950/70 border-rose-700 text-rose-300"
+                          : "bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800"
+                      }`}
+                      title={isMuted ? "Unmute Mic" : "Mute Mic"}
+                    >
+                      {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleToggleHold}
+                      className={`p-3.5 rounded-full border transition cursor-pointer ${
+                        callState === "on_hold"
+                          ? "bg-amber-950/70 border-amber-700 text-amber-300"
+                          : "bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800"
+                      }`}
+                      title={callState === "on_hold" ? "Resume Call" : "Hold Call"}
+                    >
+                      {callState === "on_hold" ? <Play size={18} /> : <Pause size={18} />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleHangup}
+                      className="px-6 py-3.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm flex items-center gap-2 shadow-xl shadow-rose-600/30 cursor-pointer transition active:scale-95"
+                    >
+                      <PhoneOff size={18} /> End Call
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. DOCKED SOFTPHONE WIDGET & DIALPAD (IDLE STATE)                          */}
+      {/* ========================================================================= */}
+      {callState === "idle" && (
+        <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 max-w-[calc(100vw-24px)]">
+          {!isDialpadOpen ? (
+            /* Minimized Softphone Pill */
+            <div className="flex items-center gap-2 p-1.5 sm:p-2 bg-zinc-950/95 backdrop-blur-md border border-zinc-800 rounded-full shadow-2xl hover:border-violet-500/50 transition-all">
+              <button
+                type="button"
+                onClick={() => {
+                  audioEngine.unlockAudio();
+                  setIsDialpadOpen(true);
+                }}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-600/20 text-violet-300 hover:bg-violet-600/30 text-xs font-semibold cursor-pointer transition-colors"
+              >
+                <Phone size={14} className="text-violet-400" />
+                <span>WebRTC Softphone</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSimulateIncoming}
+                title="Simulate incoming call ring"
+                className="px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-medium transition-colors cursor-pointer"
+              >
+                + Test Ring
+              </button>
+            </div>
+          ) : (
+            /* Expanded Softphone Dialpad */
+            <div className="w-[310px] sm:w-80 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5 duration-200 flex flex-col">
+              {/* Header */}
+              <div className="p-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-violet-500/20 text-violet-400 flex items-center justify-center">
+                    <Phone size={14} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-zinc-100">WebRTC Dialer</h4>
+                    <span className="text-[10px] text-zinc-400 font-mono">CPaaS Audio Engine</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={handleToggleMute}
-                    className={`p-2 rounded-lg border text-xs cursor-pointer ${
-                      isMuted
-                        ? "bg-rose-950/60 border-rose-800 text-rose-300"
-                        : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
-                    }`}
-                    title={isMuted ? "Unmute" : "Mute"}
+                    onClick={handleSimulateIncoming}
+                    className="p-1 text-[10px] rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 px-1.5 cursor-pointer"
                   >
-                    {isMuted ? <MicOff size={14} /> : <Mic size={14} />}
+                    Sim Ring
                   </button>
-
                   <button
                     type="button"
-                    onClick={handleToggleHold}
-                    className={`p-2 rounded-lg border text-xs cursor-pointer ${
-                      callState === "on_hold"
-                        ? "bg-amber-950/60 border-amber-800 text-amber-300"
-                        : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
-                    }`}
-                    title={callState === "on_hold" ? "Resume" : "Hold"}
+                    onClick={() => setIsDialpadOpen(false)}
+                    className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded cursor-pointer"
                   >
-                    {callState === "on_hold" ? <Play size={14} /> : <Pause size={14} />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowScreenPop(true)}
-                    className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 text-xs cursor-pointer"
-                    title="View Lead Screen Pop"
-                  >
-                    <User size={14} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleHangup}
-                    className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow-lg shadow-rose-600/20"
-                  >
-                    <PhoneOff size={14} /> End Call
+                    <ChevronDown size={16} />
                   </button>
                 </div>
               </div>
-            )}
 
-            {/* Dialpad & Input Area (Idle State) */}
-            {callState === "idle" && (
+              {/* Caller ID selector */}
+              <div className="px-3 py-1.5 bg-zinc-900/40 border-b border-zinc-800/80 flex items-center justify-between text-xs">
+                <span className="text-[10px] uppercase font-bold text-zinc-500">Trunk:</span>
+                <select
+                  value={selectedCallerId}
+                  onChange={(e) => setSelectedCallerId(e.target.value)}
+                  className="text-[11px] font-mono bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none"
+                >
+                  {CALLER_IDS.map((c) => (
+                    <option key={c.id} value={c.number}>
+                      {c.number} ({c.label.slice(0, 12)}...)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Dialpad Input */}
               <div className="p-3 space-y-2.5">
-                {/* Number Input Bar */}
                 <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5">
                   <input
                     type="text"
                     value={dialInput}
                     onChange={(e) => setDialInput(e.target.value)}
-                    placeholder="+91 98765 00000"
+                    placeholder="+91 99887 11002"
                     className="w-full text-sm font-mono bg-transparent text-zinc-100 focus:outline-none placeholder-zinc-600 tracking-wide"
                   />
                   {dialInput && (
@@ -578,15 +602,15 @@ export const WebRTCSoftphone: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleOutboundCall}
-                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/20 transition-colors"
+                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/20 transition-colors active:scale-95"
                 >
                   <Phone size={15} /> Call Customer Number
                 </button>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Screen Pop Card */}
       <ScreenPopCard
@@ -608,7 +632,7 @@ export const WebRTCSoftphone: React.FC = () => {
           duration: formatTimer(callTimer),
         }}
         onSubmitDisposition={() => {
-          // Dispatched
+          // Dispatched cleanly
         }}
       />
     </>

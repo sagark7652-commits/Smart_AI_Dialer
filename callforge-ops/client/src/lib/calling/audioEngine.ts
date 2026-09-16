@@ -14,9 +14,32 @@ class CallAudioEngine {
       this.ctx = new AudioContextClass();
     }
     if (this.ctx.state === "suspended") {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
     return this.ctx;
+  }
+
+  // Explicitly unlock audio and speech synthesis inside direct user touch/click gesture
+  unlockAudio() {
+    try {
+      const ctx = this.getContext();
+      if (ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+
+      if ("speechSynthesis" in window && !window.speechSynthesis.speaking) {
+        const silent = new SpeechSynthesisUtterance(" ");
+        silent.volume = 0.01;
+        window.speechSynthesis.speak(silent);
+      }
+    } catch (e) {
+      console.warn("[AudioEngine] unlockAudio notice", e);
+    }
   }
 
   // 1. Play DTMF tones for keypresses (authentic telecom tones)
