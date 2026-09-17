@@ -1,0 +1,166 @@
+{
+  "leads": [
+    {
+      "id": "lead_ldCa8JU9",
+      "name": "Rajesh Kumar",
+      "phone": "+91 98200 44882",
+      "company": "Kumar Steel Infra Ltd",
+      "source": "Automated Verification",
+      "stage": "Interested",
+      "score": 92,
+      "last": "Just now",
+      "notes": [],
+      "isDnc": false,
+      "createdAt": "2026-09-17T10:25:33.739Z"
+    },
+    {
+      "id": "lead-01",
+      "name": "Aarav Mehta",
+      "phone": "+91 99887 11002",
+      "company": "Northstar Foods Pvt Ltd",
+      "source": "Website Callback",
+      "stage": "Interested",
+      "score": 88,
+      "last": "2 min ago",
+      "notes": [
+        "Customer requested pricing for 12 retail outlets.",
+        "Interested in Hindi voice reminders."
+      ],
+      "isDnc": false,
+      "createdAt": "2026-09-17T09:24:36.034Z"
+    },
+    {
+      "id": "lead-02",
+      "name": "Neha Iyer",
+      "phone": "+91 97654 30781",
+      "company": "Bloom Retail Mart",
+      "source": "Meta Ads Campaign",
+      "stage": "Callback",
+      "score": 74,
+      "last": "8 min ago",
+      "notes": [
+        "Asked for demo call on weekend."
+      ],
+      "isDnc": false,
+      "createdAt": "2026-09-17T08:24:36.035Z"
+    },
+    {
+      "id": "lead-03",
+      "name": "Kabir Singh",
+      "phone": "+91 98990 48210",
+      "company": "Suncore Energy Logistics",
+      "source": "Partner Referral",
+      "stage": "New",
+      "score": 66,
+      "last": "16 min ago",
+      "notes": [
+        "Direct inquiry about IVR routing flows."
+      ],
+      "isDnc": false,
+      "createdAt": "2026-09-17T07:24:36.035Z"
+    },
+    {
+      "id": "lead-04",
+      "name": "Ishita Rao",
+      "phone": "+91 98731 22912",
+      "company": "Mango Tree Labs",
+      "source": "Landing page demo",
+      "stage": "Converted",
+      "score": 94,
+      "last": "24 min ago",
+      "notes": [
+        "Subscribed to Pro Annual calling plan."
+      ],
+      "isDnc": false,
+      "createdAt": "2026-09-17T06:24:36.035Z"
+    },
+    {
+      "id": "lead-05",
+      "name": "Vikram Shah",
+      "phone": "+91 98203 55180",
+      "company": "Bharat Machines Corporation",
+      "source": "Cold outreach import",
+      "stage": "DNC",
+      "score": 38,
+      "last": "31 min ago",
+      "notes": [
+        "Lead requested removal from promotional dialer."
+      ],
+      "isDnc": true,
+      "createdAt": "2026-09-17T05:24:36.035Z"
+    }
+  ],
+  "cdrLogs": [
+    {
+      "id": "call_E3PSjX8P",
+      "customerName": "Rajesh Kumar",
+      "customerPhone": "+91 98200 44882",
+      "agentName": "Asha (AI Voice)",
+      "campaign": "Verified Outbound Dial",
+      "duration": "02:14",
+      "durationSeconds": 134,
+      "status": "Completed",
+      "sentiment": "Positive",
+      "qaScore": 96,
+      "createdAt": "2026-09-17T10:25:33.883Z"
+    },
+    {
+      "id": "call-901",
+      "customerName": "Aarav Mehta",
+      "customerPhone": "+91 99887 11002",
+      "agentName": "Asha (AI Voice)",
+      "campaign": "Festive season follow-up",
+      "duration": "01:42",
+      "durationSeconds": 102,
+      "status": "Completed",
+      "sentiment": "Positive",
+      "qaScore": 96,
+      "createdAt": "2026-09-17T10:14:36.035Z"
+    },
+    {
+      "id": "call-902",
+      "customerName": "Neha Iyer",
+      "customerPhone": "+91 97654 30781",
+      "agentName": "Rahul Verma",
+      "campaign": "Enterprise renewal desk",
+      "duration": "02:18",
+      "durationSeconds": 138,
+      "status": "Completed",
+      "sentiment": "Positive",
+      "qaScore": 89,
+      "createdAt": "2026-09-17T09:54:36.035Z"
+    },
+    {
+      "id": "call-903",
+      "customerName": "Kabir Singh",
+      "customerPhone": "+91 98990 48210",
+      "agentName": "Asha (AI Voice)",
+      "campaign": "Inbound demo callbacks",
+      "duration": "00:45",
+      "durationSeconds": 45,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 82,
+      "createdAt": "2026-09-17T09:24:36.035Z"
+    }
+  ],
+  "carrierConfig": {
+    "provider": "mock",
+    "twilioAccountSid": "ACmocktestaccount9988221100aa",
+    "twilioAuthToken": "",
+    "twilioCallerId": "+18005550199",
+    "exotelApiKey": "",
+    "exotelApiToken": "",
+    "exotelSid": "",
+    "updatedAt": "2026-09-17T10:25:33.922Z"
+  },
+  "subscription": {
+    "planId": "plan_enterprise",
+    "planName": "HyperScale Dedicated",
+    "price": 49999,
+    "status": "active",
+    "callingMinutesRemaining": 6850,
+    "renewalDate": "2026-10-17T10:25:33.916Z",
+    "lastPaymentId": "pay_rzp_verif_99812"
+  }
+}

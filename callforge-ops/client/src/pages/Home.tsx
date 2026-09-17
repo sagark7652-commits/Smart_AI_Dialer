@@ -61,6 +61,7 @@ import { ClickToCallButton } from "../components/calling/crm/ClickToCallButton";
 import { ConsentAuditLedger } from "../components/calling/crm/ConsentAuditLedger";
 import { RoleManagementUI } from "../components/calling/admin/RoleManagementUI";
 import { SystemStatusPage } from "../components/calling/admin/SystemStatusPage";
+import { CarrierConfigCard } from "../components/calling/admin/CarrierConfigCard";
 
 // New Rich Functional Components
 import { CommandPaletteModal } from "../components/calling/global/CommandPaletteModal";
@@ -549,6 +550,29 @@ export default function Home() {
   const [selectedLead, setSelectedLead] = useState<LeadRecord | null>(null);
   const liveCallsCount = INITIAL_AGENTS.filter((a) => a.status === "on_call").length;
 
+  // Fetch persistent leads from backend database on mount
+  useEffect(() => {
+    fetch("/api/calling/leads")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.leads) && data.leads.length > 0) {
+          setLeadsList(
+            data.leads.map((l: any) => ({
+              id: l.id,
+              name: l.name,
+              company: l.company,
+              phone: l.phone,
+              source: l.source,
+              stage: l.stage,
+              score: l.score,
+              last: l.last || "Recently",
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -589,13 +613,37 @@ export default function Home() {
     toast.success(`Executive Daily Report (.csv) downloaded successfully!`);
   };
 
-  const handleAddNewLead = (newLead: LeadRecord) => {
+  const handleAddNewLead = async (newLead: LeadRecord) => {
     setLeadsList((prev) => [newLead, ...prev]);
+    try {
+      await fetch("/api/calling/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newLead.name,
+          phone: newLead.phone,
+          company: newLead.company,
+          source: newLead.source,
+          stage: newLead.stage,
+          score: newLead.score,
+        }),
+      });
+      toast.success("Lead persisted to database!");
+    } catch {
+      // Non-blocking fallback
+    }
   };
 
   const handleUpdateLead = (updated: LeadRecord) => {
     setLeadsList((prev) => prev.map((l) => (l.phone === updated.phone ? updated : l)));
     setSelectedLead(updated);
+    if ((updated as any).id) {
+      fetch(`/api/calling/leads/${(updated as any).id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      }).catch(() => {});
+    }
   };
 
   const activeIndex = navigation.findIndex((item) => item.label === active);
@@ -709,10 +757,17 @@ export default function Home() {
               <div>
                 <p className="eyebrow cyan-text">PLATFORM ADMINISTRATION</p>
                 <h1 className="page-title">Admin, Roles & Telephony Billing</h1>
-                <p className="page-subtitle">Role permissions matrix, auto-recharge settings, and WebRTC network quality diagnostics.</p>
+                <p className="page-subtitle">Role permissions matrix, carrier GSM trunks, auto-recharge settings, and WebRTC network diagnostics.</p>
               </div>
+              <button
+                className="primary-button"
+                onClick={() => setShowProUpgrade(true)}
+              >
+                <Sparkles size={15} /> Upgrade Calling Plan
+              </button>
             </div>
-            <LiveSpendCounter />
+            <LiveSpendCounter onTopUpClick={() => setShowProUpgrade(true)} />
+            <CarrierConfigCard />
             <AutoRechargeConfig />
             <RoleManagementUI />
             <SystemStatusPage />

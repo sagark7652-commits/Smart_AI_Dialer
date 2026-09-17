@@ -280,6 +280,89 @@ class CallAudioEngine {
     }
     this.micAnalyser = null;
   }
+
+  // 7. Speech Recognition for Two-Way Conversational Dialogue
+  private recognition: any = null;
+
+  startSpeechRecognition(
+    onResult: (transcript: string) => void,
+    onError?: (err: any) => void
+  ): boolean {
+    const SpeechRecognitionClass =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognitionClass) {
+      console.warn("[AudioEngine] Speech recognition not supported in this browser.");
+      return false;
+    }
+
+    try {
+      this.stopSpeechRecognition();
+      const reco = new SpeechRecognitionClass();
+      reco.continuous = false;
+      reco.interimResults = false;
+      reco.lang = "hi-IN"; // Supports Hindi & Hinglish
+
+      reco.onresult = (event: any) => {
+        const transcript = event.results[0]?.[0]?.transcript || "";
+        if (transcript) {
+          onResult(transcript);
+        }
+      };
+
+      reco.onerror = (event: any) => {
+        if (onError) onError(event);
+      };
+
+      reco.start();
+      this.recognition = reco;
+      return true;
+    } catch (e) {
+      console.warn("[AudioEngine] Error starting speech recognition", e);
+      if (onError) onError(e);
+      return false;
+    }
+  }
+
+  stopSpeechRecognition() {
+    if (this.recognition) {
+      try {
+        this.recognition.abort();
+      } catch {}
+      this.recognition = null;
+    }
+  }
+
+  // Smart conversational responder for real-time customer voice queries
+  generateConversationalReply(userSpeech: string): string {
+    const lower = userSpeech.toLowerCase();
+
+    if (lower.includes("price") || lower.includes("rate") || lower.includes("cost") || lower.includes("kharcha") || lower.includes("paisa") || lower.includes("rupaye")) {
+      return "CallForge ka prepaid calling rate sirf 60 paise prati minute hai, jisme zero setup fee aur 5000 free test minutes milte hain. Enterprise plans me dedicated PRI trunks aur high concurrency bhi uplabdh hai.";
+    }
+
+    if (lower.includes("hindi") || lower.includes("language") || lower.includes("bhasha") || lower.includes("bolna")) {
+      return "Ji bilkul! CallForge Hindi, Hinglish, Tamil, Telugu, Kannada aur Marathi sabhi Indian regional bhashaon me natural neural tone ke sath baat karta hai.";
+    }
+
+    if (lower.includes("demo") || lower.includes("test") || lower.includes("trial") || lower.includes("dikhao")) {
+      return "Haan zaroor! Hamari technical team aapke sath live screen-share demo schedule kar sakti hai. Aap apna convenient samay bataiye, hum calendar invite bhej denge.";
+    }
+
+    if (lower.includes("trai") || lower.includes("compliance") || lower.includes("rule") || lower.includes("dnc") || lower.includes("legal")) {
+      return "Hamara dialer TRAI TCCCPR regulations aur DoT guidelines ke mutabik 100 percent compliant hai. Outbound calling subah 9 se raat 9 baje tak restricted hai aur national DNC database se real-time auto-scrubbing hoti hai.";
+    }
+
+    if (lower.includes("callback") || lower.includes("baad me") || lower.includes("busy") || lower.includes("meeting")) {
+      return "Samajh gaya ji! Main aapka callback note kar leti hoon. Hamare sales representative aapko shaam ko call karenge. Shukriya aur aapka din shubh ho!";
+    }
+
+    if (lower.includes("kaun") || lower.includes("who are you") || lower.includes("naam") || lower.includes("kya hai")) {
+      return "Main CallForge ki AI voice assistant hoon. Hum enterprise businesses ke liye automated outbound sales aur customer support calling manage karte hain.";
+    }
+
+    return "Ji bilkul, main samajh gayi. CallForge autonomous AI calling platform aapke customer outreach ko 10 guna tez aur cost-effective bana deta hai. Kya main aapke liye ek live demo account activate kar doon?";
+  }
 }
 
 export const audioEngine = new CallAudioEngine();

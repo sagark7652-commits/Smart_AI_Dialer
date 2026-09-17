@@ -32,12 +32,16 @@ export class ExotelProvider implements TelephonyProvider {
 
   async makeCall(payload: TelephonyCallPayload): Promise<TelephonyCallResult> {
     const callId = `exo_${nanoid(12)}`;
+    const apiKey = process.env.EXOTEL_API_KEY || this.apiKey;
+    const apiToken = process.env.EXOTEL_API_TOKEN || this.apiToken;
+    const sid = process.env.EXOTEL_SID || this.sid;
+
     // If live credentials are provided, call Exotel REST API
-    if (this.apiKey && this.apiToken && this.sid) {
+    if (apiKey && apiToken && sid) {
       try {
         // Exotel Outbound Voice API endpoint:
         // https://<API_KEY>:<API_TOKEN>@api.exotel.com/v1/Accounts/<SID>/Calls/connect.json
-        const auth = Buffer.from(`${this.apiKey}:${this.apiToken}`).toString("base64");
+        const auth = Buffer.from(`${apiKey}:${apiToken}`).toString("base64");
         const body = new URLSearchParams({
           From: payload.from.startsWith("+91") ? payload.from : `+91${payload.from}`,
           To: payload.to.startsWith("+91") ? payload.to : `+91${payload.to}`,
@@ -45,7 +49,7 @@ export class ExotelProvider implements TelephonyProvider {
           StatusCallback: payload.webhookUrl || "",
         });
 
-        const res = await fetch(`https://api.exotel.com/v1/Accounts/${this.sid}/Calls/connect.json`, {
+        const res = await fetch(`https://api.exotel.com/v1/Accounts/${sid}/Calls/connect.json`, {
           method: "POST",
           headers: {
             Authorization: `Basic ${auth}`,
@@ -218,11 +222,15 @@ export class TwilioProvider implements TelephonyProvider {
 
   async makeCall(payload: TelephonyCallPayload): Promise<TelephonyCallResult> {
     const callId = `tw_${nanoid(12)}`;
-    if (this.accountSid && this.authToken) {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID || this.accountSid;
+    const authToken = process.env.TWILIO_AUTH_TOKEN || this.authToken;
+    const callerId = payload.from || process.env.TWILIO_CALLER_ID || this.callerId;
+
+    if (accountSid && authToken) {
       try {
-        const fromNumber = payload.from || this.callerId;
+        const fromNumber = callerId;
         const toNumber = payload.to.startsWith("+") ? payload.to : `+91${payload.to.replace(/\D/g, "")}`;
-        const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString("base64");
+        const auth = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
 
         const params = new URLSearchParams();
         params.append("To", toNumber);
@@ -234,7 +242,7 @@ export class TwilioProvider implements TelephonyProvider {
           }</Say></Response>`
         );
 
-        const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Calls.json`, {
+        const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`, {
           method: "POST",
           headers: {
             Authorization: `Basic ${auth}`,

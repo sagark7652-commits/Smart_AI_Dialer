@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { CarrierConfigModal } from "./CarrierConfigModal";
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,6 +27,7 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<"general" | "telephony" | "compliance" | "api">("general");
+  const [showCarrierModal, setShowCarrierModal] = useState(false);
 
   // General state
   const [workspaceName, setWorkspaceName] = useState("Arjun's Workspace");
@@ -298,6 +301,21 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   CONNECTED
                 </span>
               </div>
+
+              {/* Live GSM Cellular Carrier Setup Button */}
+              <div className="p-3.5 rounded-xl bg-violet-950/20 border border-violet-900/40 flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-violet-300 text-xs">Twilio & Exotel GSM Gateway Trunks</div>
+                  <div className="text-[11px] text-zinc-400">Add credentials to place live cellular phone calls to mobile numbers</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCarrierModal(true)}
+                  className="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition cursor-pointer shadow-md shadow-violet-600/30"
+                >
+                  Configure GSM Trunks
+                </button>
+              </div>
             </div>
           )}
 
@@ -395,6 +413,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         </form>
       </div>
+
+      <CarrierConfigModal
+        isOpen={showCarrierModal}
+        onClose={() => setShowCarrierModal(false)}
+      />
     </div>
   );
 }
