@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CreditCard,
   ShieldCheck,
@@ -16,12 +16,48 @@ export const AutoRechargeConfig: React.FC = () => {
   const [rechargeAmount, setRechargeAmount] = useState(25000);
   const [paymentMethod, setPaymentMethod] = useState("upi_autopay");
   const [gstin, setGstin] = useState("27AABCC1234F1Z8");
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetch("/api/calling/billing/autorecharge")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.autoRecharge) {
+          const cfg = data.autoRecharge;
+          if (typeof cfg.enabled === "boolean") setEnabled(cfg.enabled);
+          if (cfg.threshold) setThreshold(cfg.threshold);
+          if (cfg.rechargeAmount) setRechargeAmount(cfg.rechargeAmount);
+          if (cfg.paymentMethod) setPaymentMethod(cfg.paymentMethod);
+          if (cfg.gstin) setGstin(cfg.gstin);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Auto-Recharge Policy Saved", {
-      description: `Wallet will automatically top up ₹${rechargeAmount.toLocaleString()} when balance falls below ₹${threshold.toLocaleString()}.`,
-    });
+    setSaving(true);
+    try {
+      const res = await fetch("/api/calling/billing/autorecharge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled,
+          threshold,
+          rechargeAmount,
+          paymentMethod,
+          gstin,
+        }),
+      });
+      const data = await res.json();
+      toast.success("Auto-Recharge Policy Saved to Storage", {
+        description: `Wallet will automatically top up ₹${rechargeAmount.toLocaleString()} when balance falls below ₹${threshold.toLocaleString()}. (e-Mandate: ${paymentMethod})`,
+      });
+    } catch {
+      toast.error("Failed to save auto-recharge settings");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

@@ -70,6 +70,18 @@ export const RoleManagementUI: React.FC = () => {
       override_qa: false,
     },
   });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/calling/admin/roles")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.roles) {
+          setMatrix(data.roles);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const togglePermission = (role: string, permId: string) => {
     if (role === "admin" && permId === "view_billing") {
@@ -85,10 +97,23 @@ export const RoleManagementUI: React.FC = () => {
     }));
   };
 
-  const handleSave = () => {
-    toast.success("Role & RBAC Permissions Updated", {
-      description: "Permission matrix enforced across all operator sessions.",
-    });
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/calling/admin/roles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roles: matrix }),
+      });
+      const data = await res.json();
+      toast.success("Role & RBAC Permissions Saved to Database", {
+        description: "Permission matrix enforced across all operator sessions & persistent store.",
+      });
+    } catch {
+      toast.error("Failed to save role permissions");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

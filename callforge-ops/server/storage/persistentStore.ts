@@ -53,11 +53,47 @@ export interface StoredSubscription {
   lastPaymentId?: string;
 }
 
+export interface StoredAutoRecharge {
+  enabled: boolean;
+  threshold: number;
+  rechargeAmount: number;
+  paymentMethod: string;
+  gstin: string;
+  updatedAt: string;
+}
+
+export interface StoredIVRNode {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  config: Record<string, any>;
+  next?: string[];
+}
+
+export interface StoredRoleMatrix {
+  roles: Record<string, Record<string, boolean>>;
+  updatedAt: string;
+}
+
+export interface StoredABSplit {
+  splitPercentA: number;
+  splitPercentB: number;
+  scriptA: string;
+  scriptB: string;
+  winnerVariant?: "A" | "B";
+  updatedAt: string;
+}
+
 interface DatabaseStructure {
   leads: StoredLead[];
   cdrLogs: StoredCDR[];
   carrierConfig: StoredCarrierConfig;
   subscription: StoredSubscription;
+  autoRecharge: StoredAutoRecharge;
+  ivrNodes: StoredIVRNode[];
+  rolesMatrix: StoredRoleMatrix;
+  abSplitConfig: StoredABSplit;
 }
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -173,6 +209,118 @@ const INITIAL_CDR: StoredCDR[] = [
   },
 ];
 
+const DEFAULT_AUTO_RECHARGE: StoredAutoRecharge = {
+  enabled: true,
+  threshold: 5000,
+  rechargeAmount: 25000,
+  paymentMethod: "upi_autopay",
+  gstin: "27AABCC1234F1Z8",
+  updatedAt: new Date().toISOString(),
+};
+
+const DEFAULT_IVR_NODES: StoredIVRNode[] = [
+  {
+    id: "node-1",
+    type: "greeting",
+    title: "1. Welcome Greeting",
+    description: "Plays bilingual TRAI audio greeting and compliance disclosure.",
+    config: {
+      audioPrompt: "Welcome to CallForge Solutions. Calls are recorded for quality assurance.",
+      voice: "Asha (Hindi/English)",
+    },
+    next: ["node-2"],
+  },
+  {
+    id: "node-2",
+    type: "menu",
+    title: "2. DTMF Keypress Menu",
+    description: "Press 1 for Autonomous AI qualifier, Press 2 for Enterprise Sales.",
+    config: {
+      options: [
+        { key: "1", target: "node-3", label: "Connect with AI Agent" },
+        { key: "2", target: "node-4", label: "Connect with Live Specialist" },
+      ],
+      timeoutSeconds: 5,
+    },
+    next: ["node-3", "node-4"],
+  },
+  {
+    id: "node-3",
+    type: "ai_agent",
+    title: "3. Asha AI Qualifier",
+    description: "Answers queries, captures lead requirements, schedules calendar appointments.",
+    config: {
+      agent: "Asha · Retail Qualifier",
+      model: "Claude 3.5 Sonnet Telephony",
+      language: "Hinglish",
+    },
+    next: ["node-5"],
+  },
+  {
+    id: "node-4",
+    type: "human_queue",
+    title: "4. Senior Agent Queue",
+    description: "Routes call to available human supervisor with round-robin strategy.",
+    config: {
+      queueName: "Enterprise Tier 1",
+      maxWaitSeconds: 45,
+      fallback: "node-5",
+    },
+    next: ["node-5"],
+  },
+  {
+    id: "node-5",
+    type: "voicemail",
+    title: "5. Voicemail & SMS Confirmation",
+    description: "If busy or after-hours, records audio voicemail and dispatches WhatsApp alert.",
+    config: {
+      sendSms: true,
+      whatsappTemplate: "callforge_enquiry_ack",
+    },
+  },
+];
+
+const DEFAULT_ROLES_MATRIX: StoredRoleMatrix = {
+  roles: {
+    admin: {
+      view_billing: true,
+      start_campaigns: true,
+      barge_whisper: true,
+      export_cdr: true,
+      edit_script: true,
+      override_qa: true,
+    },
+    supervisor: {
+      view_billing: false,
+      start_campaigns: true,
+      barge_whisper: true,
+      export_cdr: true,
+      edit_script: true,
+      override_qa: true,
+    },
+    agent: {
+      view_billing: false,
+      start_campaigns: false,
+      barge_whisper: false,
+      export_cdr: false,
+      edit_script: false,
+      override_qa: false,
+    },
+  },
+  updatedAt: new Date().toISOString(),
+};
+
+const DEFAULT_AB_SPLIT: StoredABSplit = {
+  splitPercentA: 50,
+  splitPercentB: 50,
+  scriptA:
+    "Namaste {lead_name} ji. We are offering an exclusive 20% discount on festive calling agent packs. Would you like to schedule a 10-minute demo with our team?",
+  scriptB:
+    "Namaste {lead_name} ji! Most retail businesses in {city} are saving 4 hours daily using CallForge AI calling. Can we demonstrate how it handles your festive inbound rush?",
+  winnerVariant: "B",
+  updatedAt: new Date().toISOString(),
+};
+
 class PersistentStorage {
   private data: DatabaseStructure;
 
@@ -191,7 +339,14 @@ class PersistentStorage {
     try {
       if (fs.existsSync(DB_FILE)) {
         const raw = fs.readFileSync(DB_FILE, "utf-8");
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        // Ensure defaults if keys are missing in existing file
+        if (!parsed.autoRecharge) parsed.autoRecharge = DEFAULT_AUTO_RECHARGE;
+        if (!parsed.ivrNodes || !Array.isArray(parsed.ivrNodes)) parsed.ivrNodes = DEFAULT_IVR_NODES;
+        if (!parsed.rolesMatrix || !parsed.rolesMatrix.roles) parsed.rolesMatrix = DEFAULT_ROLES_MATRIX;
+        if (!parsed.abSplitConfig) parsed.abSplitConfig = DEFAULT_AB_SPLIT;
+        this.save(parsed);
+        return parsed;
       }
     } catch (e) {
       console.warn("[PersistentStorage] Failed reading storage file, initializing default", e);
@@ -218,6 +373,10 @@ class PersistentStorage {
         callingMinutesRemaining: 4850,
         renewalDate: new Date(Date.now() + 30 * 86400000).toISOString(),
       },
+      autoRecharge: DEFAULT_AUTO_RECHARGE,
+      ivrNodes: DEFAULT_IVR_NODES,
+      rolesMatrix: DEFAULT_ROLES_MATRIX,
+      abSplitConfig: DEFAULT_AB_SPLIT,
     };
 
     this.save(defaultData);
@@ -316,6 +475,61 @@ class PersistentStorage {
     };
     this.save(this.data);
     return this.data.subscription;
+  }
+
+  // --- Auto-Recharge Operations ---
+  getAutoRecharge(): StoredAutoRecharge {
+    return this.data.autoRecharge || DEFAULT_AUTO_RECHARGE;
+  }
+
+  updateAutoRecharge(settings: Partial<StoredAutoRecharge>): StoredAutoRecharge {
+    this.data.autoRecharge = {
+      ...(this.data.autoRecharge || DEFAULT_AUTO_RECHARGE),
+      ...settings,
+      updatedAt: new Date().toISOString(),
+    };
+    this.save(this.data);
+    return this.data.autoRecharge;
+  }
+
+  // --- Visual IVR Operations ---
+  getIVRNodes(): StoredIVRNode[] {
+    return this.data.ivrNodes && this.data.ivrNodes.length > 0 ? this.data.ivrNodes : DEFAULT_IVR_NODES;
+  }
+
+  saveIVRNodes(nodes: StoredIVRNode[]): StoredIVRNode[] {
+    this.data.ivrNodes = nodes;
+    this.save(this.data);
+    return this.data.ivrNodes;
+  }
+
+  // --- Roles & RBAC Matrix Operations ---
+  getRoleMatrix(): Record<string, Record<string, boolean>> {
+    return this.data.rolesMatrix?.roles || DEFAULT_ROLES_MATRIX.roles;
+  }
+
+  saveRoleMatrix(roles: Record<string, Record<string, boolean>>): Record<string, Record<string, boolean>> {
+    this.data.rolesMatrix = {
+      roles,
+      updatedAt: new Date().toISOString(),
+    };
+    this.save(this.data);
+    return this.data.rolesMatrix.roles;
+  }
+
+  // --- A/B Voice & Pitch Split Operations ---
+  getABSplit(): StoredABSplit {
+    return this.data.abSplitConfig || DEFAULT_AB_SPLIT;
+  }
+
+  updateABSplit(config: Partial<StoredABSplit>): StoredABSplit {
+    this.data.abSplitConfig = {
+      ...(this.data.abSplitConfig || DEFAULT_AB_SPLIT),
+      ...config,
+      updatedAt: new Date().toISOString(),
+    };
+    this.save(this.data);
+    return this.data.abSplitConfig;
   }
 }
 

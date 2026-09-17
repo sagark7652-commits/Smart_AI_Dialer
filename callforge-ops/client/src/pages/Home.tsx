@@ -39,6 +39,12 @@ import {
   PhoneCall,
   Shield,
   X,
+  UserCheck,
+  MapPin,
+  Building,
+  CheckCircle2,
+  RotateCw,
+  Send,
 } from "lucide-react";
 
 // Calling Component Imports (All 8 Categories)
@@ -73,6 +79,7 @@ import { HelpCenterModal } from "../components/calling/global/HelpCenterModal";
 import { UserProfileModal } from "../components/calling/global/UserProfileModal";
 import { ClaudeScriptEditor } from "../components/calling/campaigns/ClaudeScriptEditor";
 import { SettingsModal } from "../components/calling/global/SettingsModal";
+import { CampaignDetailModal, CampaignRecord } from "../components/calling/campaigns/CampaignDetailModal";
 
 const navigation = [
   { label: "Overview", icon: LayoutDashboard },
@@ -238,6 +245,8 @@ function Overview({
 // 2. Campaigns Screen
 function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; onTestCall: () => void }) {
   const [subView, setSubView] = useState<"runs" | "editor">("runs");
+  const [selectedCampaign, setSelectedCampaign] = useState<CampaignRecord | null>(null);
+  const [showCampaignDetail, setShowCampaignDetail] = useState(false);
   const [scriptValue, setScriptValue] = useState(
     "Hamare paas 40 concurrent AI agent lines par festive season me 20% discount offer chal raha hai with direct TRAI DLT registration support."
   );
@@ -291,13 +300,24 @@ function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; o
       {subView === "runs" ? (
         <div className="grid gap-3">
           {campaigns.map((c) => (
-            <div key={c.name} className="p-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 flex items-center justify-between">
+            <div
+              key={c.name}
+              onClick={() => {
+                setSelectedCampaign(c);
+                setShowCampaignDetail(true);
+              }}
+              title="Click to inspect campaign pacing, dialer queue, and live controls"
+              className="p-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 flex items-center justify-between cursor-pointer hover:border-violet-500/70 hover:bg-zinc-900/60 transition group"
+            >
               <div className="flex items-center gap-4">
-                <div className={`p-2.5 rounded-lg bg-${c.color}-500/20 text-${c.color}-400 border border-${c.color}-500/30`}>
+                <div className={`p-2.5 rounded-lg bg-${c.color}-500/20 text-${c.color}-400 border border-${c.color}-500/30 group-hover:scale-105 transition-transform`}>
                   <Megaphone size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-zinc-100">{c.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-violet-300 transition-colors">{c.name}</h3>
+                    <span className="text-[10px] text-zinc-400 border border-zinc-700/60 px-1.5 py-0.2 rounded font-mono">Click to Inspect</span>
+                  </div>
                   <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
                     <span className="font-mono text-zinc-300">Pacing: {c.mode}</span>
                     <span>•</span>
@@ -332,14 +352,138 @@ function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; o
           />
         </div>
       )}
+
+      {/* Campaign Detail Drill-down Modal */}
+      <CampaignDetailModal
+        isOpen={showCampaignDetail}
+        onClose={() => setShowCampaignDetail(false)}
+        campaign={selectedCampaign}
+        onTestCall={onTestCall}
+        onOpenEditor={() => {
+          setShowCampaignDetail(false);
+          setSubView("editor");
+        }}
+      />
     </div>
   );
 }
 
-// 3. Agent Workspace Screen
+// 3. Agent Workspace Screen (Full Operational Telephony Desk)
 function AgentWorkspace() {
+  const [activeCaller, setActiveCaller] = useState({
+    id: "call-live-102",
+    name: "Anjali Sharma",
+    phone: "+91 98765 14482",
+    company: "Sharma Retail Mart Pvt Ltd",
+    city: "Mumbai, Maharashtra",
+    intentScore: 92,
+    intentSummary: "Requested annual pricing for 12 storefronts during Meta Ads lead campaign.",
+    source: "Inbound Callback Queue",
+    lastCall: "Yesterday, 16:30",
+    lastOutcome: "Call back today at 11am",
+    assignedCampaign: "Festive season follow-up",
+    dncStatus: "Verified Clean",
+  });
+
+  const [callDuration, setCallDuration] = useState(84); // 01:24
+  const [outcome, setOutcome] = useState("interested");
+  const [callbackTime, setCallbackTime] = useState("Tomorrow at 11:30 AM");
+  const [notes, setNotes] = useState("Customer confirmed 12 retail locations. Demo scheduled.");
+  const [autoDNC, setAutoDNC] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [wrapUpSeconds, setWrapUpSeconds] = useState(45);
+
+  // Active call duration timer
+  useEffect(() => {
+    const t = setInterval(() => {
+      setCallDuration((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // ACW timer
+  useEffect(() => {
+    const t = setInterval(() => {
+      setWrapUpSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const formatTimer = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, "0");
+    const s = (secs % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const handleSubmitDisposition = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/calling/agent/disposition", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadPhone: activeCaller.phone,
+          leadName: activeCaller.name,
+          disposition: outcome === "interested" ? "Interested" : outcome === "callback" ? "Callback" : outcome === "dnc" ? "DNC" : "Completed",
+          notes: notes,
+          durationSeconds: callDuration,
+        }),
+      });
+      const data = await res.json();
+      toast.success("Call Outcome Submitted & Saved to Database", {
+        description: `Lead '${activeCaller.name}' marked as ${outcome.toUpperCase()} and CDR entry generated.`,
+      });
+
+      // Rotate to next lead in queue
+      setActiveCaller({
+        id: `call-live-${Date.now().toString().slice(-3)}`,
+        name: "Rohit Deshmukh",
+        phone: "+91 98204 88123",
+        company: "Deshmukh Agro Warehousing",
+        city: "Pune, Maharashtra",
+        intentScore: 86,
+        intentSummary: "Interested in automated voice order confirmations for mandi supplies.",
+        source: "Website Direct Callback",
+        lastCall: "3 days ago",
+        lastOutcome: "Requested quotation",
+        assignedCampaign: "Enterprise renewal desk",
+        dncStatus: "Verified Clean",
+      });
+      setCallDuration(12);
+      setNotes("");
+      setWrapUpSeconds(60);
+    } catch {
+      toast.error("Failed to submit call disposition");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSimulateNextLead = () => {
+    setActiveCaller({
+      id: `call-live-${Date.now().toString().slice(-3)}`,
+      name: "Meera Venkatesh",
+      phone: "+91 97410 99881",
+      company: "Venkatesh Logistics Solutions",
+      city: "Bangalore, Karnataka",
+      intentScore: 94,
+      intentSummary: "High priority renewal: Wants 30 AI concurrent channels.",
+      source: "Partner Referral Desk",
+      lastCall: "Today, 10:15",
+      lastOutcome: "Requested urgent callback",
+      assignedCampaign: "Enterprise renewal desk",
+      dncStatus: "Verified Clean",
+    });
+    setCallDuration(5);
+    setNotes("");
+    setWrapUpSeconds(60);
+    toast.info("CTI Queue Popped Next Caller: Meera Venkatesh");
+  };
+
   return (
     <div className="page-enter space-y-4">
+      {/* Top Header */}
       <div className="hero-row">
         <div>
           <p className="eyebrow cyan-text">TELEPHONY DESK & SOFTPHONE</p>
@@ -347,18 +491,209 @@ function AgentWorkspace() {
           <p className="page-subtitle">Full WebRTC audio bridge, active caller telemetry, live CRM screen-pop & wrap-up.</p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSimulateNextLead}
+            className="soft-button hover:bg-zinc-800 transition"
+            title="Pop Next Lead in Queue"
+          >
+            <RotateCw size={14} /> Next Queue Lead
+          </button>
           <AgentStatusDropdown />
         </div>
       </div>
 
-      <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/20 flex items-center justify-between">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold text-zinc-200">WebRTC Client Active</h3>
-          <p className="text-xs text-zinc-400">Opus 48kHz Codec • Round-trip latency: 24ms • SRTP encrypted</p>
+      {/* Real-time Telemetry Bar */}
+      <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="h-3 w-3 rounded-full bg-emerald-400 animate-ping" />
+          <div>
+            <h3 className="text-xs font-bold text-zinc-100 flex items-center gap-2">
+              WebRTC Live Audio Active • Channel: SIP/airtel-pri-01
+              <span className="text-[10px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-1.5 py-0.2 rounded font-mono">
+                CALL IN PROGRESS: {formatTimer(callDuration)}
+              </span>
+            </h3>
+            <p className="text-[11px] text-zinc-400 font-mono mt-0.5">
+              Opus 48kHz Codec • RTT: 24ms • SRTP Encrypted • Asterisk SBC Registered
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-mono text-emerald-400">Registered to Asterisk SBC</span>
+
+        <div className="flex items-center gap-4 text-xs font-mono">
+          <div className="text-right">
+            <span className="text-zinc-500 text-[10px] block">Calls Today</span>
+            <span className="text-zinc-200 font-bold">28 Placed</span>
+          </div>
+          <div className="text-right">
+            <span className="text-zinc-500 text-[10px] block">Avg Talk Time</span>
+            <span className="text-emerald-400 font-bold">02:45 min</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Two-Column Telephony Operational Desk */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Left Column: CTI Screen Pop & Caller Intelligence */}
+        <div className="p-5 rounded-xl border border-violet-500/40 bg-zinc-950 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-violet-600/20 text-violet-400 flex items-center justify-center font-bold text-base border border-violet-500/40">
+                {activeCaller.name.split(" ").map((n) => n[0]).join("")}
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-1.5 py-0.2 rounded">
+                    CTI Screen Pop Live
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">• TRAI Clean</span>
+                </div>
+                <h3 className="text-base font-bold text-zinc-100 mt-0.5">{activeCaller.name}</h3>
+              </div>
+            </div>
+
+            <ClickToCallButton phoneNumber={activeCaller.phone} leadName={activeCaller.name} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
+              <span className="text-[10px] text-zinc-500 block">Phone Number</span>
+              <span className="font-mono font-bold text-zinc-200">{activeCaller.phone}</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
+              <span className="text-[10px] text-zinc-500 block">Organization</span>
+              <span className="font-medium text-zinc-200 truncate block">{activeCaller.company}</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
+              <span className="text-[10px] text-zinc-500 block">City & Region</span>
+              <span className="font-medium text-zinc-200">{activeCaller.city}</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
+              <span className="text-[10px] text-zinc-500 block">AI Intent Score</span>
+              <span className="font-mono font-bold text-emerald-400">{activeCaller.intentScore}/100 (High)</span>
+            </div>
+          </div>
+
+          {/* Intent Summary */}
+          <div className="p-3 rounded-lg bg-violet-950/20 border border-violet-800/40 text-xs space-y-1">
+            <div className="flex items-center gap-1.5 text-violet-400 font-semibold text-[11px]">
+              <Sparkles size={13} /> AI Caller Requirement Analysis
+            </div>
+            <p className="text-zinc-300 text-[11px] leading-relaxed font-mono">
+              "{activeCaller.intentSummary}"
+            </p>
+          </div>
+
+          {/* CRM Past History */}
+          <div className="p-3 rounded-lg bg-zinc-900/40 border border-zinc-800 text-xs space-y-1 text-zinc-400">
+            <div className="flex justify-between text-[11px]">
+              <span>Last Touch: <strong className="text-zinc-300">{activeCaller.lastCall}</strong></span>
+              <span>Outcome: <strong className="text-cyan-400">{activeCaller.lastOutcome}</strong></span>
+            </div>
+            <div className="text-[10px] text-zinc-500">Assigned: {activeCaller.assignedCampaign}</div>
+          </div>
+        </div>
+
+        {/* Right Column: After-Call Work (ACW) & Disposition Panel */}
+        <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950 space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-cyan-600/20 text-cyan-400 flex items-center justify-center">
+                <UserCheck size={16} />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-zinc-100">After-Call Work (ACW) & Disposition</h3>
+                <p className="text-[11px] text-zinc-400">Log outcome, schedule callback, and sync to CRM</p>
+              </div>
+            </div>
+
+            <div className="text-right font-mono">
+              <span className="text-[10px] text-zinc-500 block">Wrap-up Timer</span>
+              <span className={`text-xs font-bold ${wrapUpSeconds < 15 ? "text-rose-400" : "text-amber-400"}`}>
+                {wrapUpSeconds}s remaining
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmitDisposition} className="space-y-3.5 text-xs">
+            <div>
+              <label className="text-[11px] font-semibold text-zinc-300 block mb-1.5">
+                Call Outcome (Disposition)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "interested", label: "Interested / Demo Booked", tone: "emerald" },
+                  { id: "callback", label: "Callback Requested", tone: "cyan" },
+                  { id: "not_interested", label: "Not Interested", tone: "amber" },
+                  { id: "dnc", label: "DNC / Never Call Again", tone: "rose" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setOutcome(item.id);
+                      if (item.id === "dnc") setAutoDNC(true);
+                    }}
+                    className={`p-2 rounded-lg text-left text-xs font-semibold border transition cursor-pointer flex items-center justify-between ${
+                      outcome === item.id
+                        ? "bg-violet-600/30 border-violet-500 text-white shadow-xs"
+                        : "bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:bg-zinc-850"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {outcome === item.id && <CheckCircle2 size={13} className="text-violet-400" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {outcome === "callback" && (
+              <div>
+                <label className="text-[11px] font-semibold text-zinc-300 block mb-1">
+                  Scheduled Callback Time (IST)
+                </label>
+                <input
+                  type="text"
+                  value={callbackTime}
+                  onChange={(e) => setCallbackTime(e.target.value)}
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="text-[11px] font-semibold text-zinc-300 block mb-1">
+                Wrap-up Notes & Follow-up Context
+              </label>
+              <textarea
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Type customer comments, objection details, or demo schedule info..."
+                className="w-full p-2.5 text-xs bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 focus:outline-none focus:border-violet-500 font-mono resize-none leading-relaxed"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 text-[11px] text-zinc-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoDNC}
+                  onChange={(e) => setAutoDNC(e.target.checked)}
+                  className="accent-rose-500 rounded"
+                />
+                <span>Add number to National DNC Registry scrub</span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
+              >
+                <Send size={13} /> {isSubmitting ? "Saving..." : "Submit Call Outcome & Next"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

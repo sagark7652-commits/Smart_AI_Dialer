@@ -19,12 +19,13 @@
       "phone": "+91 99887 11002",
       "company": "Northstar Foods Pvt Ltd",
       "source": "Website Callback",
-      "stage": "Interested",
+      "stage": "Converted",
       "score": 88,
-      "last": "2 min ago",
+      "last": "Just now",
       "notes": [
         "Customer requested pricing for 12 retail outlets.",
-        "Interested in Hindi voice reminders."
+        "Interested in Hindi voice reminders.",
+        "[4:30:16 pm] Disposition: Converted - Client signed up for Annual Calling Enterprise Plan on the call."
       ],
       "isDnc": false,
       "createdAt": "2026-09-17T09:24:36.034Z"
@@ -91,6 +92,19 @@
     }
   ],
   "cdrLogs": [
+    {
+      "id": "call_HYuw2G0C",
+      "customerName": "Aarav Mehta",
+      "customerPhone": "+91 99887 11002",
+      "agentName": "Arjun Mehta (Logged Agent)",
+      "campaign": "Active Dialing Queue",
+      "duration": "02:34",
+      "durationSeconds": 154,
+      "status": "Completed",
+      "sentiment": "Positive",
+      "qaScore": 98,
+      "createdAt": "2026-09-17T11:00:16.956Z"
+    },
     {
       "id": "call_E3PSjX8P",
       "customerName": "Rajesh Kumar",
@@ -162,5 +176,62 @@
     "callingMinutesRemaining": 6850,
     "renewalDate": "2026-10-17T10:25:33.916Z",
     "lastPaymentId": "pay_rzp_verif_99812"
+  },
+  "autoRecharge": {
+    "enabled": true,
+    "threshold": 7500,
+    "rechargeAmount": 35000,
+    "paymentMethod": "upi_autopay",
+    "gstin": "27AABCC9999F1Z9",
+    "updatedAt": "2026-09-17T11:00:16.937Z"
+  },
+  "ivrNodes": [
+    {
+      "id": "node-1",
+      "type": "greeting",
+      "title": "1. Welcome Greeting",
+      "description": "Plays bilingual TRAI audio greeting.",
+      "config": {
+        "audioPrompt": "Welcome to CallForge Enterprise Solutions.",
+        "voice": "Asha"
+      }
+    }
+  ],
+  "rolesMatrix": {
+    "roles": {
+      "admin": {
+        "view_billing": true,
+        "start_campaigns": true,
+        "barge_whisper": true,
+        "export_cdr": true,
+        "edit_script": true,
+        "override_qa": true
+      },
+      "supervisor": {
+        "view_billing": true,
+        "start_campaigns": true,
+        "barge_whisper": true,
+        "export_cdr": true,
+        "edit_script": true,
+        "override_qa": true
+      },
+      "agent": {
+        "view_billing": false,
+        "start_campaigns": true,
+        "barge_whisper": false,
+        "export_cdr": false,
+        "edit_script": false,
+        "override_qa": false
+      }
+    },
+    "updatedAt": "2026-09-17T11:00:16.949Z"
+  },
+  "abSplitConfig": {
+    "splitPercentA": 20,
+    "splitPercentB": 80,
+    "scriptA": "Variant A Test Prompt",
+    "scriptB": "Variant B Winning Pitch",
+    "winnerVariant": "B",
+    "updatedAt": "2026-09-17T11:00:16.952Z"
   }
 }

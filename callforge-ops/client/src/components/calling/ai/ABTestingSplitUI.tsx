@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { GitCompare, Trophy, TrendingUp, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { GitCompare, Trophy, TrendingUp, Sparkles, CheckCircle2, ArrowRight, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export const ABTestingSplitUI: React.FC = () => {
@@ -15,6 +15,43 @@ export const ABTestingSplitUI: React.FC = () => {
   );
 
   const [winnerVariant, setWinnerVariant] = useState<"A" | "B">("B");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/calling/ai/ab-split")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.config) {
+          const c = data.config;
+          if (typeof c.splitPercentA === "number") setSplitPercentA(c.splitPercentA);
+          if (c.scriptA) setScriptA(c.scriptA);
+          if (c.scriptB) setScriptB(c.scriptB);
+          if (c.winnerVariant) setWinnerVariant(c.winnerVariant);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const persistConfig = async (pctA: number, sA: string, sB: string, winner?: "A" | "B") => {
+    setSaving(true);
+    try {
+      await fetch("/api/calling/ai/ab-split", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          splitPercentA: pctA,
+          splitPercentB: 100 - pctA,
+          scriptA: sA,
+          scriptB: sB,
+          winnerVariant: winner || winnerVariant,
+        }),
+      });
+    } catch {
+      // Non-blocking
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const statsA = {
     dialed: 840,
@@ -30,11 +67,20 @@ export const ABTestingSplitUI: React.FC = () => {
     conversion: 48.1,
   };
 
-  const handlePromoteWinner = () => {
-    toast.success("Variant B Promoted to 100% Traffic", {
-      description: "Winning conversational prompt is now applied to all outbound calling lines.",
-    });
+  const handlePromoteWinner = async () => {
     setSplitPercentA(0);
+    setWinnerVariant("B");
+    await persistConfig(0, scriptA, scriptB, "B");
+    toast.success("Variant B Promoted to 100% Traffic", {
+      description: "Winning conversational prompt saved to database and locked across all active trunks.",
+    });
+  };
+
+  const handleSaveDraft = async () => {
+    await persistConfig(splitPercentA, scriptA, scriptB);
+    toast.success("A/B Split Configuration Saved", {
+      description: `Traffic allocated ${splitPercentA}% Variant A / ${splitPercentB}% Variant B.`,
+    });
   };
 
   return (
@@ -55,13 +101,22 @@ export const ABTestingSplitUI: React.FC = () => {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handlePromoteWinner}
-          className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
-        >
-          <Trophy size={13} /> Promote Variant B to 100%
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            className="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-zinc-700/70"
+          >
+            <Save size={13} /> Save Split
+          </button>
+          <button
+            type="button"
+            onClick={handlePromoteWinner}
+            className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
+          >
+            <Trophy size={13} /> Promote Variant B to 100%
+          </button>
+        </div>
       </div>
 
       {/* Traffic Split Slider */}

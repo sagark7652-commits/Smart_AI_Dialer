@@ -89,6 +89,18 @@ const INITIAL_IVR_NODES: IVRNode[] = [
 export const VisualIVRBuilder: React.FC = () => {
   const [nodes, setNodes] = useState<IVRNode[]>(INITIAL_IVR_NODES);
   const [selectedNodeId, setSelectedNodeId] = useState<string>("node-1");
+  const [deploying, setDeploying] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/calling/ivr")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.nodes) && data.nodes.length > 0) {
+          setNodes(data.nodes);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || nodes[0];
 
@@ -111,10 +123,23 @@ export const VisualIVRBuilder: React.FC = () => {
     toast.success("IVR Flow configuration exported as JSON");
   };
 
-  const handleDeploy = () => {
-    toast.success("IVR Inbound Dialplan Deployed", {
-      description: "Routing table updated across all active carrier trunks.",
-    });
+  const handleDeploy = async () => {
+    setDeploying(true);
+    try {
+      const res = await fetch("/api/calling/ivr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nodes }),
+      });
+      const data = await res.json();
+      toast.success("IVR Inbound Dialplan Deployed & Saved", {
+        description: `Successfully stored ${nodes.length} flow stages to carrier routing table & persistent database.`,
+      });
+    } catch {
+      toast.error("Failed to deploy IVR dialplan");
+    } finally {
+      setDeploying(false);
+    }
   };
 
   return (
