@@ -16,6 +16,7 @@ describe("CallForge Backend: 4 Core Architecture Pillars", () => {
         dialerMode: "predictive",
         callerId: "+91-140-778899",
         script: "Namaste, this is CreatorAI.",
+        callingWindow: { startHour: 0, endHour: 24, timezone: "Asia/Kolkata" },
         leads: [
           { phone: "+91 98200 11111", name: "Ramesh Sharma", company: "Sharma Ltd" },
           { phone: "+91 98200 22222", name: "Sunita Rao", company: "Rao Tech" },

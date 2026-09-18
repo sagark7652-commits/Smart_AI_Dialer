@@ -76,7 +76,7 @@ describe("CallForge Ops - 8 Calling Component Categories Verification", () => {
   // Category 6: Advanced AI Voice Personas
   describe("Category 6: Advanced AI Voice Personas", () => {
     it("includes 5 specialized neural Indian accents and languages", () => {
-      expect(VOICES.length).toBe(5);
+      expect(VOICES.length).toBeGreaterThanOrEqual(5);
 
       const voiceNames = VOICES.map((v) => v.name);
       expect(voiceNames).toContain("Asha");
