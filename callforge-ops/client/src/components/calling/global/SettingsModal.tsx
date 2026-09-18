@@ -30,7 +30,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [showCarrierModal, setShowCarrierModal] = useState(false);
 
   // General state
-  const [workspaceName, setWorkspaceName] = useState("Arjun's Workspace");
+  const [workspaceName, setWorkspaceName] = useState(() => {
+    try {
+      const saved = localStorage.getItem("creatorai_auth_user");
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u.name) return `${u.name}'s Workspace`;
+      }
+    } catch {}
+    return "Enterprise Workspace";
+  });
   const [callerId, setCallerId] = useState("+91 22 6988 4000 (Mumbai PBX)");
   const [defaultLanguage, setDefaultLanguage] = useState("Hindi + Hinglish");
 

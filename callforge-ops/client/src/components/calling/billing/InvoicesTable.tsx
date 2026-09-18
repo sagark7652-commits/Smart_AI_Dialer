@@ -95,7 +95,15 @@ export const InvoicesTable: React.FC = () => {
       doc.text("State Code: 27 | Place of Supply: 27-MH", 40, 184);
 
       // Right Column: Customer Details
-      doc.text("Customer: Arjun / CallForge Ops Workspace", 320, 128);
+      let customerName = "Enterprise Customer";
+      try {
+        const saved = localStorage.getItem("creatorai_auth_user");
+        if (saved) {
+          const u = JSON.parse(saved);
+          if (u.name) customerName = u.name;
+        }
+      } catch {}
+      doc.text(`Customer: ${customerName} / CallForge Ops Workspace`, 320, 128);
       doc.text("Customer GSTIN: 27AABCC1234F1Z8", 320, 142);
       doc.text(`Payment Instrument: ${inv.paymentMethod}`, 320, 156);
       doc.text("Reconciliation ID: TXN-" + Math.floor(10000000 + Math.random() * 90000000), 320, 170);

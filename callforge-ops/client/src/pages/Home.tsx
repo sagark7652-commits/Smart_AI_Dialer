@@ -145,10 +145,12 @@ function Overview({
   onNavigate,
   onNewCampaign,
   onExportReport,
+  userName,
 }: {
   onNavigate: (label: string, subTab?: "billing" | "admin") => void;
   onNewCampaign: () => void;
   onExportReport: () => void;
+  userName?: string;
 }) {
   const [timeframe, setTimeframe] = useState("Today");
   return (
@@ -158,7 +160,7 @@ function Overview({
           <p className="eyebrow violet-text">
             TUESDAY, 15 SEPTEMBER 2026 <span className="live-dot" /> LIVE OPERATIONS
           </p>
-          <h1 className="page-title">Good evening, <span>Arjun</span>.</h1>
+          <h1 className="page-title">Good evening, <span>{userName || "Workspace Admin"}</span>.</h1>
           <p className="page-subtitle">Here’s how your AI calling floor & carrier trunks are performing today.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -1034,6 +1036,7 @@ export default function Home() {
           onNavigate={setActive}
           onNewCampaign={() => setShowCampaignBuilder(true)}
           onExportReport={handleDownloadExecutiveReport}
+          userName={currentUser.name}
         />
       );
       break;
@@ -1212,9 +1215,9 @@ export default function Home() {
           onClick={() => setShowUserProfile(true)}
           title="Open Workspace & Profile Settings"
         >
-          <span className="workspace-avatar">A</span>
+          <span className="workspace-avatar">{userInitials}</span>
           <div>
-            <strong>Arjun’s workspace</strong>
+            <strong>{currentUser.name ? `${currentUser.name}’s workspace` : "Enterprise workspace"}</strong>
             <span>Pro plan · Mumbai</span>
           </div>
           <ChevronDown size={15} />
@@ -1299,7 +1302,7 @@ export default function Home() {
           </div>
 
           <div className="top-actions">
-            <AgentStatusDropdown />
+            <AgentStatusDropdown agentName={currentUser.name} />
             <div className="status-chip">
               <span className="status-dot" />
               Trunks Operational

@@ -72,12 +72,23 @@ interface AgentStatusDropdownProps {
 export const AgentStatusDropdown: React.FC<AgentStatusDropdownProps> = ({
   currentStatus = "ready",
   onStatusChange,
-  agentName = "Arjun Mehta",
+  agentName,
   className = "",
 }) => {
   const [status, setStatus] = useState<AgentStatusType>(currentStatus);
   const [isOpen, setIsOpen] = useState(false);
   const [secondsInStatus, setSecondsInStatus] = useState(0);
+
+  const effectiveAgentName = agentName || (() => {
+    try {
+      const saved = localStorage.getItem("creatorai_auth_user");
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u.name) return u.name;
+      }
+    } catch {}
+    return "Agent Operator";
+  })();
 
   useEffect(() => {
     setStatus(currentStatus);
@@ -140,7 +151,7 @@ export const AgentStatusDropdown: React.FC<AgentStatusDropdownProps> = ({
               <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 block">
                 Agent Status Control
               </span>
-              <span className="text-xs text-zinc-300 font-medium">{agentName}</span>
+              <span className="text-xs text-zinc-300 font-medium">{effectiveAgentName}</span>
             </div>
 
             {Object.values(AGENT_STATUSES).map((item) => {

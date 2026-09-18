@@ -749,7 +749,7 @@ export const WebRTCSoftphone: React.FC = () => {
         onClose={() => setShowScreenPop(false)}
         lead={activeLead}
         onTransfer={() => {
-          toast.success("Warm transfer placed to supervisor Arjun");
+          toast.success("Warm transfer placed to telephony supervisor");
         }}
       />
 
