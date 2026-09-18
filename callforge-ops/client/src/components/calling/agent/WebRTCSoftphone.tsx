@@ -317,47 +317,52 @@ export const WebRTCSoftphone: React.FC = () => {
       {/* 1. FULL-SCREEN IN-CALL OVERLAY (VISIBLE ON BOTH MOBILE & DESKTOP)        */}
       {/* ========================================================================= */}
       {callState !== "idle" && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            {/* Call Header */}
-            <div className="p-4 bg-zinc-900/70 border-b border-zinc-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in duration-150">
+          <div className="w-full max-w-[370px] max-h-[88vh] bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
+            {/* Compact Call Header */}
+            <div className="px-3.5 py-2.5 bg-zinc-900/85 border-b border-zinc-800/80 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                     callState === "connected"
                       ? "bg-emerald-500/20 text-emerald-400"
                       : "bg-amber-500/20 text-amber-400 animate-pulse"
                   }`}
                 >
-                  <Phone size={16} />
+                  <Phone size={14} />
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-zinc-100 flex items-center gap-1.5">
-                    <span>CallForge Voice Bridge</span>
+                    <span>CallForge Voice</span>
                     {callState === "connected" && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                     )}
                   </h3>
-                  <p className="text-[10px] text-zinc-400 font-mono">WebRTC Opus 48kHz HD Audio</p>
+                  <p className="text-[9px] text-zinc-400 font-mono">HD Audio Bridge</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
+                {callState === "connected" && (
+                  <span className="text-[11px] font-mono font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-800/40">
+                    {formatTimer(callTimer)}
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowScreenPop(true)}
-                  className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition"
+                  className="px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-medium flex items-center gap-1 cursor-pointer transition"
                   title="View Lead CRM Card"
                 >
-                  <User size={12} /> Lead Info
+                  <User size={11} /> Lead
                 </button>
               </div>
             </div>
 
-            {/* Caller Profile & Status Section */}
-            <div className="p-6 text-center space-y-4">
-              {/* Pulsing Avatar */}
-              <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+            {/* Scrollable Compact Body */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5 text-center">
+              {/* Compact Pulsing Avatar */}
+              <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
                 {callState === "connected" && (
                   <div className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-ping" />
                 )}
@@ -365,7 +370,7 @@ export const WebRTCSoftphone: React.FC = () => {
                   <div className="absolute inset-0 rounded-full border-2 border-amber-500/40 animate-pulse" />
                 )}
                 <div
-                  className={`w-20 h-20 rounded-full flex items-center justify-center text-xl font-bold shadow-xl border ${
+                  className={`w-14 h-14 rounded-full flex items-center justify-center text-base font-bold shadow-lg border ${
                     callState === "connected"
                       ? "bg-gradient-to-tr from-emerald-950 to-emerald-800 text-emerald-300 border-emerald-500/50"
                       : "bg-gradient-to-tr from-amber-950 to-amber-800 text-amber-300 border-amber-500/50"
@@ -380,64 +385,64 @@ export const WebRTCSoftphone: React.FC = () => {
 
               {/* Lead Name & Phone */}
               <div>
-                <h2 className="text-lg font-bold text-zinc-100">{activeLead.name}</h2>
-                <p className="text-sm font-mono text-zinc-400 mt-0.5">{activeLead.phone}</p>
-                <p className="text-[11px] text-zinc-500">{activeLead.company || "Enterprise Prospect"}</p>
+                <h2 className="text-sm font-bold text-zinc-100">{activeLead.name}</h2>
+                <p className="text-xs font-mono text-zinc-400">{activeLead.phone}</p>
+                <p className="text-[10px] text-zinc-500">{activeLead.company || "Enterprise Prospect"}</p>
               </div>
 
               {/* Live Status Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] font-mono">
                 {callState === "dialing" && (
-                  <span className="text-amber-400 font-semibold animate-pulse flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                  <span className="text-amber-400 font-semibold animate-pulse flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
                     Dialing & Ringing...
                   </span>
                 )}
                 {callState === "ringing_in" && (
-                  <span className="text-amber-400 font-semibold animate-bounce flex items-center gap-1.5">
-                    <PhoneIncoming size={13} />
+                  <span className="text-amber-400 font-semibold animate-bounce flex items-center gap-1">
+                    <PhoneIncoming size={12} />
                     Incoming Call...
                   </span>
                 )}
                 {callState === "connected" && (
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    Connected: {formatTimer(callTimer)}
+                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Live Audio Connected
                   </span>
                 )}
                 {callState === "on_hold" && (
-                  <span className="text-amber-300 font-semibold flex items-center gap-1.5">
-                    <Pause size={12} />
+                  <span className="text-amber-300 font-semibold flex items-center gap-1">
+                    <Pause size={11} />
                     Call on Hold ({formatTimer(callTimer)})
                   </span>
                 )}
               </div>
 
-              {/* Live Audio Visualizer Bar */}
+              {/* Compact Audio Visualizer */}
               {(callState === "connected" || callState === "on_hold") && (
-                <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-zinc-400">
-                    <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                      <Volume2 size={13} />
-                      {agentSpeaking ? "AI Assistant Speaking..." : "Audio Stream Active"}
+                <div className="p-2 rounded-xl bg-zinc-900/50 border border-zinc-800/80 space-y-1">
+                  <div className="flex items-center justify-between text-[10px] text-zinc-400">
+                    <span className="flex items-center gap-1 text-emerald-400 font-medium">
+                      <Volume2 size={11} />
+                      {agentSpeaking ? "AI Speaking..." : "Audio Active"}
                     </span>
-                    <span className="font-mono text-zinc-500">48kHz / 16ms</span>
+                    <span className="font-mono text-zinc-500 text-[9px]">48kHz HD</span>
                   </div>
 
-                  <div className="flex items-center justify-center gap-1.5 h-8">
-                    {[30, 65, 45, 85, 55, 95, 40, 80, 60, 90, 70, 50, 85, 45].map((h, i) => (
+                  <div className="flex items-center justify-center gap-1 h-5">
+                    {[25, 55, 35, 75, 45, 85, 35, 70, 50, 80, 60, 40, 75, 35].map((h, i) => (
                       <div
                         key={i}
-                        className={`w-1 rounded-full transition-all duration-150 ${
+                        className={`w-0.5 rounded-full transition-all duration-150 ${
                           callState === "on_hold"
-                            ? "bg-amber-500/40 h-1.5"
+                            ? "bg-amber-500/40 h-1"
                             : agentSpeaking
                             ? "bg-violet-400 animate-pulse"
                             : "bg-emerald-400 animate-pulse"
                         }`}
                         style={{
-                          height: callState === "on_hold" ? "6px" : `${h * 0.28}px`,
-                          animationDelay: `${i * 60}ms`,
+                          height: callState === "on_hold" ? "4px" : `${h * 0.2}px`,
+                          animationDelay: `${i * 50}ms`,
                         }}
                       />
                     ))}
@@ -445,28 +450,28 @@ export const WebRTCSoftphone: React.FC = () => {
                 </div>
               )}
 
-              {/* Live Conversational Dialogue History */}
+              {/* Dialogue Transcript */}
               {conversationLogs.length > 0 && (
-                <div className="p-3 rounded-2xl bg-zinc-900/70 border border-zinc-800 text-left space-y-2 max-h-40 overflow-y-auto">
-                  <div className="flex items-center justify-between text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+                <div className="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800 text-left space-y-1.5 max-h-24 overflow-y-auto">
+                  <div className="flex items-center justify-between text-[9px] text-zinc-400 font-bold uppercase">
                     <span className="flex items-center gap-1">
-                      <Sparkles size={12} className="text-violet-400" /> Live Conversation Dialogue
+                      <Sparkles size={10} className="text-violet-400" /> Speech Dialogue
                     </span>
-                    <span className="font-mono text-emerald-400 text-[10px]">Two-Way Speech</span>
+                    <span className="font-mono text-emerald-400 text-[9px]">Two-Way</span>
                   </div>
-                  <div className="space-y-1.5 text-xs">
+                  <div className="space-y-1 text-xs">
                     {conversationLogs.map((log, idx) => (
                       <div
                         key={idx}
-                        className={`p-2.5 rounded-xl text-[11px] leading-relaxed animate-in fade-in duration-100 ${
+                        className={`p-1.5 rounded-lg text-[10px] leading-relaxed ${
                           log.sender === "user"
-                            ? "bg-emerald-950/50 border border-emerald-700/50 text-emerald-200 ml-4"
-                            : "bg-zinc-900 border border-zinc-800 text-zinc-200 mr-4"
+                            ? "bg-emerald-950/40 border border-emerald-700/40 text-emerald-200 ml-2"
+                            : "bg-zinc-900 border border-zinc-800 text-zinc-200 mr-2"
                         }`}
                       >
-                        <div className="flex items-center justify-between text-[9px] text-zinc-400 mb-1 font-mono">
+                        <div className="flex items-center justify-between text-[8px] text-zinc-400 mb-0.5 font-mono">
                           <span className={log.sender === "user" ? "text-emerald-400 font-bold" : "text-violet-400 font-bold"}>
-                            {log.sender === "user" ? "You (Customer Voice)" : "Asha (AI Voice)"}
+                            {log.sender === "user" ? "You" : "AI"}
                           </span>
                           <span>{log.time}</span>
                         </div>
@@ -477,19 +482,19 @@ export const WebRTCSoftphone: React.FC = () => {
                 </div>
               )}
 
-              {/* AI Interactive Prompts (In-Call Assistant) */}
+              {/* AI Quick Prompts (Compact) */}
               {callState === "connected" && (
-                <div className="space-y-1.5 text-left">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1">
-                    <Bot size={12} className="text-violet-400" /> Quick Voice Prompts:
+                <div className="space-y-1 text-left">
+                  <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+                    <Bot size={11} className="text-violet-400" /> Quick Responses:
                   </span>
-                  <div className="grid grid-cols-2 gap-1.5">
+                  <div className="grid grid-cols-2 gap-1">
                     {AI_QUICK_RESPONSES.map((res, i) => (
                       <button
                         key={i}
                         type="button"
                         onClick={() => handleTriggerAIResponse(res.text)}
-                        className="p-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-medium text-zinc-300 hover:text-white transition-colors text-left truncate cursor-pointer"
+                        className="p-1.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-medium text-zinc-300 hover:text-white transition-colors text-left truncate cursor-pointer"
                         title={res.text}
                       >
                         {res.label}
@@ -499,108 +504,95 @@ export const WebRTCSoftphone: React.FC = () => {
                 </div>
               )}
 
-              {/* Informative Carrier / GSM Notice with Direct Setup Action */}
-              <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-left text-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-emerald-400 flex items-center gap-1.5 text-[11px]">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    WebRTC Voice Bridge (Live Speaker Audio)
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[10px] font-mono font-semibold">
-                    ACTIVE
-                  </span>
-                </div>
-                <p className="text-[11px] text-zinc-300 leading-relaxed">
-                  Aapka call CallForge AI Engine se live connected hai aur do-tarfa speaker aur mic audio chal raha hai.
-                </p>
-                <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between gap-2">
-                  <div className="text-[11px] text-zinc-400">
-                    <span className="text-zinc-200 font-semibold block">📞 Asli Mobile SIM Par Call?</span>
-                    <span className="text-[10px] text-zinc-500">Twilio ya Exotel account connect karein</span>
-                  </div>
+              {/* Compact Notice */}
+              <div className="p-2 rounded-xl bg-zinc-900/40 border border-zinc-800/80 text-left text-[10px] text-zinc-400 flex items-center justify-between">
+                <span>📞 SIM Outbound Call:</span>
+                <button
+                  type="button"
+                  onClick={() => setShowCarrierModal(true)}
+                  className="text-violet-400 hover:text-violet-300 font-semibold underline"
+                >
+                  Carrier Setup
+                </button>
+              </div>
+            </div>
+
+            {/* Sticky Bottom Call Controls Toolbar (Always in View!) */}
+            <div className="p-3 bg-zinc-950 border-t border-zinc-800/90 flex items-center justify-center gap-2 shrink-0">
+              {callState === "ringing_in" ? (
+                <>
                   <button
                     type="button"
-                    onClick={() => setShowCarrierModal(true)}
-                    className="px-2.5 py-1 rounded-lg bg-violet-600/30 hover:bg-violet-600/50 text-violet-300 border border-violet-500/40 text-[11px] font-semibold transition cursor-pointer shrink-0"
+                    onClick={handleAnswer}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/30 cursor-pointer transition active:scale-95"
                   >
-                    Setup Carrier
+                    <Phone size={14} /> Answer
                   </button>
-                </div>
-              </div>
+                  <button
+                    type="button"
+                    onClick={handleHangup}
+                    className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-rose-600/30 cursor-pointer transition active:scale-95"
+                  >
+                    <PhoneOff size={14} /> Decline
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Speak into Mic */}
+                  <button
+                    type="button"
+                    onClick={handleStartListening}
+                    disabled={isListening}
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                      isListening
+                        ? "bg-rose-600 text-white animate-pulse"
+                        : "bg-violet-600/30 hover:bg-violet-600/40 border border-violet-500/40 text-violet-200"
+                    }`}
+                    title="Speak into Microphone"
+                  >
+                    <Mic size={14} className={isListening ? "animate-bounce" : ""} />
+                    <span>{isListening ? "Listening..." : "Mic"}</span>
+                  </button>
 
-              {/* Call Controls Toolbar */}
-              <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-                {callState === "ringing_in" ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleAnswer}
-                      className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full font-bold text-sm flex items-center gap-2 shadow-xl shadow-emerald-600/30 cursor-pointer"
-                    >
-                      <Phone size={16} /> Answer Call
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleHangup}
-                      className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-full font-bold text-sm flex items-center gap-2 shadow-xl shadow-rose-600/30 cursor-pointer"
-                    >
-                      <PhoneOff size={16} /> Decline
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {/* Speak to Agent Button */}
-                    <button
-                      type="button"
-                      onClick={handleStartListening}
-                      disabled={isListening}
-                      className={`px-4 py-3 rounded-full text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-lg ${
-                        isListening
-                          ? "bg-rose-600 border border-rose-500 text-white animate-pulse"
-                          : "bg-violet-600 hover:bg-violet-500 border border-violet-500 text-white shadow-violet-600/30"
-                      }`}
-                      title="Speak to Agent into your microphone (Hindi / English)"
-                    >
-                      <Mic size={16} className={isListening ? "animate-bounce" : ""} />
-                      <span>{isListening ? "Listening..." : "Speak to Agent"}</span>
-                    </button>
+                  {/* Mute */}
+                  <button
+                    type="button"
+                    onClick={handleToggleMute}
+                    className={`p-2.5 rounded-xl border transition cursor-pointer ${
+                      isMuted
+                        ? "bg-rose-950/70 border-rose-700 text-rose-300"
+                        : "bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800"
+                    }`}
+                    title={isMuted ? "Unmute Mic" : "Mute Mic"}
+                  >
+                    {isMuted ? <MicOff size={15} /> : <Mic size={15} />}
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={handleToggleMute}
-                      className={`p-3.5 rounded-full border transition cursor-pointer ${
-                        isMuted
-                          ? "bg-rose-950/70 border-rose-700 text-rose-300"
-                          : "bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800"
-                      }`}
-                      title={isMuted ? "Unmute Mic" : "Mute Mic"}
-                    >
-                      {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
-                    </button>
+                  {/* Hold */}
+                  <button
+                    type="button"
+                    onClick={handleToggleHold}
+                    className={`p-2.5 rounded-xl border transition cursor-pointer ${
+                      callState === "on_hold"
+                        ? "bg-amber-950/70 border-amber-700 text-amber-300"
+                        : "bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800"
+                    }`}
+                    title={callState === "on_hold" ? "Resume" : "Hold"}
+                  >
+                    {callState === "on_hold" ? <Play size={15} /> : <Pause size={15} />}
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={handleToggleHold}
-                      className={`p-3.5 rounded-full border transition cursor-pointer ${
-                        callState === "on_hold"
-                          ? "bg-amber-950/70 border-amber-700 text-amber-300"
-                          : "bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800"
-                      }`}
-                      title={callState === "on_hold" ? "Resume Call" : "Hold Call"}
-                    >
-                      {callState === "on_hold" ? <Play size={18} /> : <Pause size={18} />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleHangup}
-                      className="px-6 py-3.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm flex items-center gap-2 shadow-xl shadow-rose-600/30 cursor-pointer transition active:scale-95"
-                    >
-                      <PhoneOff size={18} /> End Call
-                    </button>
-                  </>
-                )}
-              </div>
+                  {/* BIG RED END CALL BUTTON - ALWAYS VISIBLE! */}
+                  <button
+                    type="button"
+                    onClick={handleHangup}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-rose-600/30 cursor-pointer transition active:scale-95"
+                    title="Hang up call"
+                  >
+                    <PhoneOff size={15} /> End Call
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
