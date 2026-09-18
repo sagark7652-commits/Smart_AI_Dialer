@@ -192,11 +192,11 @@
   },
   "autoRecharge": {
     "enabled": true,
-    "threshold": 7500,
-    "rechargeAmount": 35000,
+    "threshold": 5000,
+    "rechargeAmount": 25000,
     "paymentMethod": "upi_autopay",
-    "gstin": "27AABCC9999F1Z9",
-    "updatedAt": "2026-09-17T11:00:16.937Z"
+    "gstin": "27AABCC1234F1Z8",
+    "updatedAt": "2026-09-18T15:53:34.499Z"
   },
   "ivrNodes": [
     {
@@ -240,12 +240,12 @@
     "updatedAt": "2026-09-17T11:00:16.949Z"
   },
   "abSplitConfig": {
-    "splitPercentA": 20,
-    "splitPercentB": 80,
-    "scriptA": "Variant A Test Prompt",
-    "scriptB": "Variant B Winning Pitch",
+    "splitPercentA": 30,
+    "splitPercentB": 70,
+    "scriptA": "Script A test",
+    "scriptB": "Script B test",
     "winnerVariant": "B",
-    "updatedAt": "2026-09-17T11:00:16.952Z"
+    "updatedAt": "2026-09-18T15:53:34.509Z"
   },
   "walletBalance": 33450,
   "transactions": [
