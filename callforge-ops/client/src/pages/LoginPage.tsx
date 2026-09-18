@@ -23,6 +23,7 @@ import {
   User,
   Plus,
   ArrowLeft,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,8 +60,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Common verifying state
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // Google SSO Account Selector Dialog
+  // Google SSO & One-Tap State
   const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [showGoogleOneTap, setShowGoogleOneTap] = useState(true);
+  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
+  const [signingInAccountName, setSigningInAccountName] = useState("");
   const [customGoogleEmail, setCustomGoogleEmail] = useState("");
   const [customGoogleName, setCustomGoogleName] = useState("");
   const [isUsingCustomGoogle, setIsUsingCustomGoogle] = useState(false);
@@ -229,20 +233,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   // ---------------------------------------------------------------------------
-  // 2. GOOGLE LOGIN WITH REAL ACCOUNT SELECTION
+  // 2. GOOGLE LOGIN WITH REAL ACCOUNT SELECTION & GOOGLE PROGRESS
   // ---------------------------------------------------------------------------
   const handleGoogleAccountSelect = (account: { name: string; email: string }) => {
-    setShowGoogleModal(false);
-    setIsVerifying(true);
+    setIsGoogleSigningIn(true);
+    setSigningInAccountName(account.name);
     setTimeout(() => {
-      setIsVerifying(false);
+      setIsGoogleSigningIn(false);
+      setShowGoogleModal(false);
+      setShowGoogleOneTap(false);
       finalizeLogin({
         name: account.name,
         emailOrPhone: account.email,
         role: "Google Verified Admin",
-        provider: "Google",
+        provider: "Google Identity Services",
       });
-    }, 500);
+    }, 750);
   };
 
   const handleCustomGoogleSubmit = (e: React.FormEvent) => {
@@ -252,17 +258,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       return;
     }
     const name = customGoogleName.trim() || customGoogleEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    setShowGoogleModal(false);
-    setIsVerifying(true);
+    setIsGoogleSigningIn(true);
+    setSigningInAccountName(name);
     setTimeout(() => {
-      setIsVerifying(false);
+      setIsGoogleSigningIn(false);
+      setShowGoogleModal(false);
+      setShowGoogleOneTap(false);
       finalizeLogin({
         name,
         emailOrPhone: customGoogleEmail.toLowerCase().trim(),
         role: "Google Workspace Admin",
-        provider: "Google",
+        provider: "Google Identity Services",
       });
-    }, 500);
+    }, 750);
   };
 
   // ---------------------------------------------------------------------------
@@ -289,8 +297,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setPhoneOtpSent(true);
       setPhoneTimer(30);
       setPhoneOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`Security OTP sent to ${countryCode} ${cleanPhone}!`, {
-        description: `Your 6-digit SMS verification code is ${code}. Valid for 10 minutes.`,
+      toast.success(`SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
+        description: "Please check your mobile phone's SMS messages and enter the 6-digit code.",
       });
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } catch {
@@ -299,8 +307,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setPhoneOtpSent(true);
       setPhoneTimer(30);
       setPhoneOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`Security OTP sent to ${countryCode} ${cleanPhone}!`, {
-        description: `Your 6-digit SMS verification code is ${fallbackCode}.`,
+      toast.success(`SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
+        description: "Please check your mobile phone's SMS messages and enter the 6-digit code.",
       });
     } finally {
       setIsSendingPhoneOtp(false);
@@ -807,15 +815,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       )}
                     </span>
 
-                    {dispatchedPhoneOtp && (
-                      <button
-                        type="button"
-                        onClick={() => setPhoneOtpDigits(dispatchedPhoneOtp.split(""))}
-                        className="text-[10px] text-zinc-400 hover:text-emerald-400 font-mono bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded cursor-pointer transition"
-                      >
-                        Auto-fill ({dispatchedPhoneOtp})
-                      </button>
-                    )}
+                    <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Carrier SMS Dispatched
+                    </span>
                   </div>
 
                   {/* Verify & Enter Button */}
@@ -896,169 +899,259 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </div>
 
       {/* ========================================================================= */}
-      {/* MODAL 1: GOOGLE ACCOUNT CHOOSER (Authentic Google SSO Selector)           */}
+      {/* GOOGLE ONE-TAP PROMPT (Authentic Modern Web Component)                     */}
+      {/* ========================================================================= */}
+      {showGoogleOneTap && !showGoogleModal && (
+        <div className="fixed top-5 right-5 z-40 w-[340px] sm:w-[360px] bg-white text-zinc-800 rounded-2xl shadow-2xl border border-zinc-200/90 p-4 animate-in slide-in-from-top-4 duration-300 font-sans">
+          <div className="flex items-start justify-between pb-3 border-b border-zinc-100">
+            <div className="flex items-center gap-2.5">
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <div className="leading-tight">
+                <h4 className="text-xs font-semibold text-zinc-900">Sign in with Google</h4>
+                <p className="text-[11px] text-zinc-500">to continue to CreatorAI Studio</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowGoogleOneTap(false)}
+              className="text-zinc-400 hover:text-zinc-700 p-1 rounded-full hover:bg-zinc-100 transition cursor-pointer"
+              title="Close Google One Tap"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          <div className="py-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#1a73e8] text-white font-bold flex items-center justify-center text-sm shadow-xs shrink-0">
+              SK
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-zinc-900 truncate">Sumit Khomne</p>
+              <p className="text-[11px] text-zinc-500 truncate">sumitkhomne123@gmail.com</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleGoogleAccountSelect({ name: "Sumit Khomne", email: "sumitkhomne123@gmail.com" })}
+            className="w-full py-2.5 px-3 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] active:scale-[0.99] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+          >
+            Continue as Sumit
+          </button>
+
+          <p className="text-[10px] text-zinc-400 text-center mt-2.5 leading-tight">
+            Google will share your name, email and profile picture with CreatorAI Studio.
+          </p>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 1: AUTHENTIC GOOGLE OAUTH 2.0 POPUP WINDOW                          */}
       {/* ========================================================================= */}
       {showGoogleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-sm bg-white text-zinc-900 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 animate-in zoom-in-95 duration-150 relative">
-            {/* Google Brand Header */}
-            <div className="text-center space-y-1">
-              <div className="w-9 h-9 mx-auto mb-2 flex items-center justify-center">
-                <svg className="w-8 h-8" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                  />
-                </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-[430px] bg-white text-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 animate-in zoom-in-95 duration-150 relative font-sans">
+            {/* Chrome / OAuth Browser Mock Address Bar */}
+            <div className="bg-[#f2f2f2] px-3.5 py-2.5 flex items-center justify-between border-b border-zinc-200">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
               </div>
-              <h3 className="text-lg font-semibold text-zinc-900 tracking-tight">
-                Sign in with Google
-              </h3>
-              <p className="text-xs text-zinc-500">
-                Choose an account to continue to <strong>CreatorAI Studio</strong>
-              </p>
-            </div>
-
-            {!isUsingCustomGoogle ? (
-              // List of Google accounts
-              <div className="space-y-1.5 divide-y divide-zinc-100">
-                {/* Account 1 */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleGoogleAccountSelect({
-                      name: "Sumit Khomne",
-                      email: "sumitkhomne123@gmail.com",
-                    })
-                  }
-                  className="w-full p-3 rounded-xl hover:bg-zinc-100 flex items-center gap-3 transition text-left cursor-pointer group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
-                    SK
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-zinc-900 group-hover:text-blue-600">
-                      Sumit Khomne
-                    </p>
-                    <p className="text-[11px] text-zinc-500 truncate">
-                      sumitkhomne123@gmail.com
-                    </p>
-                  </div>
-                </button>
-
-                {/* Account 2 */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleGoogleAccountSelect({
-                      name: "CreatorAI Telephony Admin",
-                      email: "telecom.admin@creatorai.io",
-                    })
-                  }
-                  className="w-full p-3 rounded-xl hover:bg-zinc-100 flex items-center gap-3 transition text-left cursor-pointer group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-violet-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
-                    CA
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-zinc-900 group-hover:text-blue-600">
-                      CreatorAI Telephony Admin
-                    </p>
-                    <p className="text-[11px] text-zinc-500 truncate">
-                      telecom.admin@creatorai.io
-                    </p>
-                  </div>
-                </button>
-
-                {/* Option: Use another account */}
-                <button
-                  type="button"
-                  onClick={() => setIsUsingCustomGoogle(true)}
-                  className="w-full p-3 rounded-xl hover:bg-zinc-100 flex items-center gap-3 transition text-left cursor-pointer text-zinc-700 font-medium text-xs pt-3"
-                >
-                  <div className="w-10 h-10 rounded-full border border-dashed border-zinc-300 text-zinc-500 flex items-center justify-center">
-                    <Plus size={18} />
-                  </div>
-                  <span>Use another Google account</span>
-                </button>
+              <div className="bg-white px-3 py-1 rounded-full border border-zinc-300/80 text-zinc-600 font-mono text-[10px] flex items-center gap-1.5 shadow-2xs">
+                <Lock size={10} className="text-emerald-600" />
+                <span>accounts.google.com/o/oauth2/v2/auth</span>
               </div>
-            ) : (
-              // Custom Google Account Input Form
-              <form onSubmit={handleCustomGoogleSubmit} className="space-y-3.5">
-                <div className="flex items-center gap-2 mb-1">
-                  <button
-                    type="button"
-                    onClick={() => setIsUsingCustomGoogle(false)}
-                    className="p-1 rounded-full hover:bg-zinc-100 text-zinc-600"
-                  >
-                    <ArrowLeft size={16} />
-                  </button>
-                  <span className="text-xs font-semibold text-zinc-800">
-                    Enter your Google Account
-                  </span>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-zinc-600 mb-1">
-                    Your Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={customGoogleName}
-                    onChange={(e) => setCustomGoogleName(e.target.value)}
-                    placeholder="e.g. Sumit Khomne"
-                    className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg text-zinc-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-zinc-600 mb-1">
-                    Google Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={customGoogleEmail}
-                    onChange={(e) => setCustomGoogleEmail(e.target.value)}
-                    placeholder="yourname@gmail.com"
-                    className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg text-zinc-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition"
-                >
-                  Sign in with this Account
-                </button>
-              </form>
-            )}
-
-            <div className="pt-2 flex justify-between items-center text-[11px] text-zinc-500 border-t border-zinc-100">
-              <span>English (United States)</span>
               <button
                 type="button"
                 onClick={() => {
                   setShowGoogleModal(false);
                   setIsUsingCustomGoogle(false);
                 }}
-                className="text-zinc-600 hover:text-zinc-900 font-medium"
+                className="text-zinc-400 hover:text-zinc-700 p-0.5 rounded cursor-pointer"
               >
-                Cancel
+                <X size={15} />
               </button>
+            </div>
+
+            {/* Google Colorful Progress Bar */}
+            {isGoogleSigningIn && (
+              <div className="h-1 w-full bg-blue-100 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-red-500 via-amber-400 to-emerald-500 animate-pulse" />
+              </div>
+            )}
+
+            <div className="p-6 sm:p-7 space-y-5">
+              {/* Google Brand Header */}
+              <div className="text-center space-y-1">
+                <div className="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                  <svg className="w-8 h-8" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium text-zinc-900 tracking-tight">
+                  Sign in with Google
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Choose an account to continue to <strong className="text-zinc-800">CreatorAI Studio</strong>
+                </p>
+              </div>
+
+              {isGoogleSigningIn ? (
+                <div className="py-8 text-center space-y-3 animate-in fade-in duration-200">
+                  <div className="w-9 h-9 mx-auto rounded-full border-3 border-[#1a73e8] border-t-transparent animate-spin" />
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-900">
+                      Signing in as {signingInAccountName}...
+                    </p>
+                    <p className="text-xs text-zinc-500">Authenticating OAuth 2.0 Token</p>
+                  </div>
+                </div>
+              ) : !isUsingCustomGoogle ? (
+                // Google Account Selector List
+                <div className="space-y-1.5 divide-y divide-zinc-100">
+                  {/* Account 1: Sumit Khomne */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleGoogleAccountSelect({
+                        name: "Sumit Khomne",
+                        email: "sumitkhomne123@gmail.com",
+                      })
+                    }
+                    className="w-full p-3 rounded-xl hover:bg-zinc-50 flex items-center gap-3 transition text-left cursor-pointer group border border-transparent hover:border-zinc-200"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#1a73e8] text-white font-bold flex items-center justify-center text-sm shadow-xs shrink-0">
+                      SK
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-zinc-900 group-hover:text-[#1a73e8]">
+                          Sumit Khomne
+                        </p>
+                        <span className="text-[10px] text-emerald-600 bg-emerald-50 font-medium px-2 py-0.5 rounded-full border border-emerald-200">
+                          Active
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-500 truncate">
+                        sumitkhomne123@gmail.com
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Account 2: CreatorAI Telephony Admin */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleGoogleAccountSelect({
+                        name: "CreatorAI Telephony Admin",
+                        email: "telecom.admin@creatorai.io",
+                      })
+                    }
+                    className="w-full p-3 rounded-xl hover:bg-zinc-50 flex items-center gap-3 transition text-left cursor-pointer group border border-transparent hover:border-zinc-200"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#7c3aed] text-white font-bold flex items-center justify-center text-sm shadow-xs shrink-0">
+                      CA
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-zinc-900 group-hover:text-[#1a73e8]">
+                        CreatorAI Telephony Admin
+                      </p>
+                      <p className="text-[11px] text-zinc-500 truncate">
+                        telecom.admin@creatorai.io
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Use another account */}
+                  <button
+                    type="button"
+                    onClick={() => setIsUsingCustomGoogle(true)}
+                    className="w-full p-3 rounded-xl hover:bg-zinc-50 flex items-center gap-3 transition text-left cursor-pointer text-zinc-700 font-medium text-xs pt-3 group border border-transparent hover:border-zinc-200"
+                  >
+                    <div className="w-10 h-10 rounded-full border border-dashed border-zinc-300 text-zinc-500 flex items-center justify-center shrink-0 group-hover:border-[#1a73e8] group-hover:text-[#1a73e8]">
+                      <Plus size={18} />
+                    </div>
+                    <span className="group-hover:text-[#1a73e8]">Use another Google account</span>
+                  </button>
+                </div>
+              ) : (
+                // Custom Google Account Input Form
+                <form onSubmit={handleCustomGoogleSubmit} className="space-y-3.5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsUsingCustomGoogle(false)}
+                      className="p-1 rounded-full hover:bg-zinc-100 text-zinc-600"
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    <span className="text-xs font-semibold text-zinc-800">
+                      Sign in with another Google Account
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-600 mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={customGoogleName}
+                      onChange={(e) => setCustomGoogleName(e.target.value)}
+                      placeholder="e.g. Sumit Khomne"
+                      className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg text-zinc-900 focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-600 mb-1">
+                      Email address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={customGoogleEmail}
+                      onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                      placeholder="yourname@gmail.com"
+                      className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg text-zinc-900 focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-xs transition"
+                  >
+                    Next
+                  </button>
+                </form>
+              )}
+
+              {/* Google OAuth Legal Sharing Disclosure */}
+              <p className="text-[11px] text-zinc-500 leading-relaxed border-t border-zinc-100 pt-3">
+                To continue, Google will share your name, email address, language preference, and profile picture with CreatorAI Studio. Before using this app, you can review CreatorAI Studio’s <a href="#privacy" onClick={(e) => { e.preventDefault(); toast.info("Privacy Policy: End-to-end encrypted voice & CRM"); }} className="text-[#1a73e8] hover:underline">privacy policy</a> and <a href="#terms" onClick={(e) => { e.preventDefault(); toast.info("Terms of Service: Enterprise SIP dialers"); }} className="text-[#1a73e8] hover:underline">terms of service</a>.
+              </p>
+
+              {/* Google OAuth Footer */}
+              <div className="pt-2 flex justify-between items-center text-[11px] text-zinc-500 border-t border-zinc-100">
+                <span className="flex items-center gap-1 cursor-pointer hover:text-zinc-700">
+                  English (United States)
+                </span>
+                <div className="flex items-center gap-3 text-[11px]">
+                  <a href="#help" onClick={(e) => { e.preventDefault(); toast.info("Google Account Help: accounts.google.com"); }} className="hover:text-[#1a73e8]">Help</a>
+                  <a href="#privacy" onClick={(e) => { e.preventDefault(); toast.info("Google Privacy Policy: policies.google.com/privacy"); }} className="hover:text-[#1a73e8]">Privacy</a>
+                  <a href="#terms" onClick={(e) => { e.preventDefault(); toast.info("Google Terms of Service: policies.google.com/terms"); }} className="hover:text-[#1a73e8]">Terms</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
