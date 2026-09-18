@@ -1,6 +1,21 @@
 {
   "leads": [
     {
+      "id": "lead_R81jtzp9",
+      "name": "Audit Check",
+      "phone": "+919800098000",
+      "company": "QA Test",
+      "source": "Meta Ads Instant Form",
+      "stage": "New",
+      "score": 85,
+      "last": "Just now",
+      "notes": [
+        "Ingested via inbound webhook (Meta Ads Instant Form). Timestamp: 2026-09-18T16:44:15.722Z"
+      ],
+      "isDnc": false,
+      "createdAt": "2026-09-18T16:44:15.725Z"
+    },
+    {
       "id": "lead_NXncNuM4",
       "name": "Pooja Hegde",
       "phone": "+919988776655",
@@ -409,6 +424,15 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_fPQLYd1b",
+      "action": "Inbound Lead Webhook",
+      "user": "Webhook Integration",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-09-18T16:44:15.734Z",
+      "details": "Auto-captured Audit Check (+919800098000) from Meta Ads Instant Form.",
+      "category": "campaign"
+    },
     {
       "id": "log_9SlEC-ZH",
       "action": "Inbound Lead Webhook",
