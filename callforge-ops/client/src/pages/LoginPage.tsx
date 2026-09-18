@@ -337,165 +337,45 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#090a0f] text-zinc-100 flex flex-col lg:flex-row relative overflow-hidden font-sans selection:bg-violet-600 selection:text-white">
+    <div className="min-h-screen w-full bg-[#090a0f] text-zinc-100 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans selection:bg-violet-600 selection:text-white">
       {/* Background Subtle Gradient Blobs */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -right-40 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 left-1/3 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* ========================================================================= */}
-      {/* 1. LEFT PANEL: The Visual & Brand Showcase                                */}
-      {/* ========================================================================= */}
-      <div className="w-full lg:w-1/2 p-8 lg:p-14 flex flex-col justify-between relative z-10 border-b lg:border-b-0 lg:border-r border-zinc-800/80 bg-gradient-to-br from-zinc-950/80 via-zinc-900/40 to-black">
+      {/* Centered Authentication Card */}
+      <div className="w-full max-w-md bg-zinc-950/85 border border-zinc-800/90 backdrop-blur-xl rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 relative z-10 space-y-6">
         {/* Brand Header */}
-        <div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-500 p-0.5 shadow-lg shadow-violet-600/30 flex items-center justify-center">
-              <div className="w-full h-full bg-[#0d0e15] rounded-[10px] flex items-center justify-center">
-                <Bot size={22} className="text-violet-400 animate-pulse" />
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
-                  CreatorAI <span className="text-violet-400">Studio</span>
-                </h2>
-                <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                  v2.4 Enterprise
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-400">
-                Autonomous AI Calling Agent & Cloud Dialer
-              </p>
+        <div className="flex flex-col items-center justify-center text-center space-y-2 mb-1">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-500 p-0.5 shadow-lg shadow-violet-600/30 flex items-center justify-center">
+            <div className="w-full h-full bg-[#0d0e15] rounded-[14px] flex items-center justify-center">
+              <Bot size={26} className="text-violet-400" />
             </div>
           </div>
-
-          {/* Value Proposition Headline */}
-          <div className="max-w-md space-y-3 mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-[11px] font-semibold text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>TRAI NDNC Certified Telephony Platform</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              The Ultimate AI Calling Agent & Cloud Dialer.
-            </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-              Deploy autonomous voice agents that speak 10+ Indian languages with under 400ms latency. Auto-dial campaigns, capture CRM leads, and generate compliance-ready tax invoices.
-            </p>
-          </div>
-        </div>
-
-        {/* Hero Graphic: Simulated Futuristic Live Calling Dashboard Widget */}
-        <div className="my-6 relative">
-          <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950/70 backdrop-blur-xl shadow-2xl shadow-violet-950/30 relative overflow-hidden group">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent" />
-
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-xs shadow-emerald-400" />
-                <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider font-mono">
-                  Live Operations Node (ap-south-1)
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-zinc-400">Carrier SLA:</span>
-                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">
-                  99.98% Up
-                </span>
-              </div>
-            </div>
-
-            {/* Live Metrics Grid */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
-                <span className="text-[10px] text-zinc-400 uppercase font-medium block mb-1">
-                  Active Streams
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-bold font-mono text-white">42</span>
-                  <span className="text-[10px] text-emerald-400 font-mono">Calls</span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
-                <span className="text-[10px] text-zinc-400 uppercase font-medium block mb-1">
-                  Voice Latency
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-bold font-mono text-cyan-400">380</span>
-                  <span className="text-[10px] text-zinc-400 font-mono">ms</span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
-                <span className="text-[10px] text-zinc-400 uppercase font-medium block mb-1">
-                  Auto-QA Score
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-bold font-mono text-violet-400">96.4</span>
-                  <span className="text-[10px] text-violet-400 font-mono">%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Simulated Audio Spectrum Bars */}
-            <div className="p-3 rounded-xl bg-zinc-900/40 border border-zinc-800/60 flex items-center justify-between gap-1.5">
-              <div className="flex items-center gap-2">
-                <Activity size={15} className="text-violet-400 shrink-0" />
-                <span className="text-[11px] font-medium text-zinc-300">
-                  Sarvam AI Bulbul V2 (Hindi / English Neural Stream)
-                </span>
-              </div>
-              <div className="flex items-end gap-1 h-5 shrink-0">
-                {[40, 70, 95, 60, 85, 100, 45, 90, 65, 80, 50, 75, 95, 60].map((h, i) => (
-                  <div
-                    key={i}
-                    className="w-1 bg-gradient-to-t from-violet-600 to-cyan-400 rounded-full animate-pulse"
-                    style={{
-                      height: `${h}%`,
-                      animationDelay: `${(i * 0.12).toFixed(2)}s`,
-                      animationDuration: "1.2s",
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Customer Proof & Security Badges */}
-        <div className="pt-4 border-t border-zinc-800/70">
-          <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-[11px] text-zinc-400">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-emerald-400" />
-              <span>SOC2 Type II Certified</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Building2 size={14} className="text-violet-400" />
-              <span>ISO/IEC 27001</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Globe size={14} className="text-cyan-400" />
-              <span>10M+ Calls Connected</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 2. RIGHT PANEL: The Authentication Form                                    */}
-      {/* ========================================================================= */}
-      <div className="w-full lg:w-1/2 p-6 sm:p-12 lg:p-16 flex flex-col justify-center relative z-10 bg-[#0c0d13]">
-        <div className="max-w-md w-full mx-auto space-y-6">
-          {/* Welcome Heading */}
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">
-              Sign in to your Workspace
-            </h2>
-            <p className="text-xs text-zinc-400 mt-1">
-              Select your sign-in method to access enterprise dialers and AI agents
+            <div className="flex items-center justify-center gap-2">
+              <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+                CreatorAI <span className="text-violet-400">Studio</span>
+              </h2>
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                v2.4
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Autonomous AI Calling Agent & Cloud Dialer
             </p>
           </div>
+        </div>
+
+        {/* Welcome Heading */}
+        <div className="text-center pb-1">
+          <h3 className="text-base font-semibold tracking-tight text-zinc-200">
+            Sign in to your Workspace
+          </h3>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Select your sign-in method to access enterprise dialers and AI agents
+          </p>
+        </div>
 
           {/* Google OAuth (Full Width & Clean - Windows login removed per user request) */}
           <button
@@ -971,7 +851,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* ========================================================================= */}
       {/* MODAL 1: GOOGLE ACCOUNT CHOOSER (Authentic Google SSO Selector)           */}
