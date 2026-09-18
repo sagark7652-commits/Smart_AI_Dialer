@@ -13,7 +13,6 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { callingRouter } from "../calling/routes";
-import { clinicRouter } from "../clinic/routes";
 import { dialerWorker } from "../calling/queue";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -49,8 +48,6 @@ async function startServer() {
 
   // High-throughput calling and dialer API
   app.use("/api/calling", callingRouter);
-  // Clinic Management System 2026 API
-  app.use("/api/clinic", clinicRouter);
   // tRPC API
   app.use(
     "/api/trpc",

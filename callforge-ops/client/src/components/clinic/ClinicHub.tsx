@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { toast } from "sonner";
 import {
   Activity,
@@ -8,36 +8,30 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
-  Download,
   FileCheck,
-  FilePlus,
   FileText,
   Filter,
   HeartPulse,
   Info,
-  Layers,
   Megaphone,
   Pill,
   Phone,
   PhoneCall,
   Plus,
   Printer,
-  QrCode,
   RefreshCw,
   Search,
-  Send,
   Sparkles,
   Stethoscope,
   Trash2,
   TrendingUp,
   User,
-  UserCheck,
   Users,
   Volume2,
   X,
 } from "lucide-react";
 
-// Types
+// Interfaces for UI Data
 export interface ClinicAppointment {
   id: string;
   tokenNumber: number;
@@ -104,27 +98,206 @@ export interface ClinicInvoice {
   createdAt: string;
 }
 
+// Initial Mock Datasets (Pure UI State)
+const INITIAL_APPOINTMENTS: ClinicAppointment[] = [
+  {
+    id: "apt-01",
+    tokenNumber: 1,
+    patientName: "Amit Patel",
+    patientPhone: "+91 98201 44520",
+    patientAge: 38,
+    gender: "Male",
+    doctorName: "Dr. Arjun Mehta (MD Medicine)",
+    slot: "10:00 AM",
+    status: "Consulting",
+    chiefComplaint: "Persistent dry cough, mild fever since 3 days",
+    fee: 500,
+    paid: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "apt-02",
+    tokenNumber: 2,
+    patientName: "Sunita Deshmukh",
+    patientPhone: "+91 98450 11982",
+    patientAge: 52,
+    gender: "Female",
+    doctorName: "Dr. Arjun Mehta (MD Medicine)",
+    slot: "10:20 AM",
+    status: "Waiting",
+    chiefComplaint: "Routine hypertension & diabetes follow-up",
+    fee: 500,
+    paid: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "apt-03",
+    tokenNumber: 3,
+    patientName: "Rahul Joshi",
+    patientPhone: "+91 97110 88231",
+    patientAge: 29,
+    gender: "Male",
+    doctorName: "Dr. Arjun Mehta (MD Medicine)",
+    slot: "10:40 AM",
+    status: "Waiting",
+    chiefComplaint: "Severe migraine and neck stiffness",
+    fee: 500,
+    paid: false,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "apt-04",
+    tokenNumber: 4,
+    patientName: "Pooja Sharma",
+    patientPhone: "+91 98990 33412",
+    patientAge: 34,
+    gender: "Female",
+    doctorName: "Dr. Arjun Mehta (MD Medicine)",
+    slot: "11:00 AM",
+    status: "Waiting",
+    chiefComplaint: "Seasonal allergy and throat irritation",
+    fee: 500,
+    paid: true,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+const INITIAL_PATIENTS: ClinicPatient[] = [
+  {
+    id: "pat-01",
+    name: "Amit Patel",
+    phone: "+91 98201 44520",
+    age: 38,
+    gender: "Male",
+    bloodGroup: "B+",
+    allergies: ["Sulfa drugs"],
+    vitals: { bp: "124/82", pulse: 78, spo2: 98, weight: 72, temperature: 99.1 },
+    history: [
+      {
+        date: "12 Aug 2026",
+        diagnosis: "Upper Respiratory Tract Infection",
+        medicines: [
+          { name: "Amoxicillin 500mg", dosage: "1-0-1", duration: "5 days" },
+          { name: "Paracetamol 650mg", dosage: "1-0-1", duration: "3 days" },
+        ],
+        notes: "Advised warm saline gargles and steam inhalation.",
+      },
+    ],
+  },
+  {
+    id: "pat-02",
+    name: "Sunita Deshmukh",
+    phone: "+91 98450 11982",
+    age: 52,
+    gender: "Female",
+    bloodGroup: "O+",
+    allergies: [],
+    vitals: { bp: "138/88", pulse: 74, spo2: 99, weight: 65, temperature: 98.4 },
+    history: [
+      {
+        date: "01 Sep 2026",
+        diagnosis: "Essential Hypertension Stage 1",
+        medicines: [{ name: "Telmisartan 40mg", dosage: "1-0-0", duration: "30 days" }],
+        notes: "BP under control. Advised low sodium diet.",
+      },
+    ],
+  },
+];
+
+const INITIAL_MEDICINES: ClinicMedicine[] = [
+  {
+    id: "med-01",
+    name: "Paracetamol 650mg (Dolo)",
+    category: "Tablet",
+    batchNo: "DL-8841",
+    stockQty: 480,
+    unitPrice: 32,
+    expiryDate: "12/2027",
+    reorderLevel: 50,
+  },
+  {
+    id: "med-02",
+    name: "Amoxicillin 500mg (Mox)",
+    category: "Capsule",
+    batchNo: "MX-2091",
+    stockQty: 240,
+    unitPrice: 85,
+    expiryDate: "08/2027",
+    reorderLevel: 30,
+  },
+  {
+    id: "med-03",
+    name: "Pantoprazole 40mg (Pan-40)",
+    category: "Tablet",
+    batchNo: "PN-4019",
+    stockQty: 320,
+    unitPrice: 95,
+    expiryDate: "05/2028",
+    reorderLevel: 40,
+  },
+  {
+    id: "med-04",
+    name: "Cough Syrup (Ascoril-D 100ml)",
+    category: "Syrup",
+    batchNo: "AS-1102",
+    stockQty: 18,
+    unitPrice: 125,
+    expiryDate: "03/2027",
+    reorderLevel: 25,
+  },
+  {
+    id: "med-05",
+    name: "Cetirizine 10mg (Cetzine)",
+    category: "Tablet",
+    batchNo: "CZ-9081",
+    stockQty: 500,
+    unitPrice: 28,
+    expiryDate: "11/2027",
+    reorderLevel: 50,
+  },
+];
+
+const INITIAL_INVOICES: ClinicInvoice[] = [
+  {
+    id: "inv-101",
+    invoiceNo: "INV-2026-0891",
+    patientName: "Amit Patel",
+    patientPhone: "+91 98201 44520",
+    consultationFee: 500,
+    pharmacyAmount: 117,
+    labAmount: 0,
+    discount: 0,
+    totalAmount: 617,
+    paymentMode: "UPI",
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: "inv-102",
+    invoiceNo: "INV-2026-0892",
+    patientName: "Sunita Deshmukh",
+    patientPhone: "+91 98450 11982",
+    consultationFee: 500,
+    pharmacyAmount: 95,
+    labAmount: 250,
+    discount: 45,
+    totalAmount: 800,
+    paymentMode: "Cash",
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+  },
+];
+
 interface ClinicHubProps {
   onCallPatient?: (phone: string, name: string) => void;
 }
 
 export function ClinicHub({ onCallPatient }: ClinicHubProps) {
   const [activeTab, setActiveTab] = useState<"queue" | "doctor" | "pharmacy" | "billing" | "voice">("queue");
-  const [loading, setLoading] = useState(false);
 
-  // Clinic state
-  const [appointments, setAppointments] = useState<ClinicAppointment[]>([]);
-  const [patients, setPatients] = useState<ClinicPatient[]>([]);
-  const [medicines, setMedicines] = useState<ClinicMedicine[]>([]);
-  const [invoices, setInvoices] = useState<ClinicInvoice[]>([]);
-  const [stats, setStats] = useState({
-    totalTokensToday: 4,
-    waitingCount: 3,
-    consultingCount: 1,
-    completedCount: 0,
-    todayRevenue: 1417,
-    lowStockCount: 1,
-  });
+  // Pure UI Reactive States
+  const [appointments, setAppointments] = useState<ClinicAppointment[]>(INITIAL_APPOINTMENTS);
+  const [patients, setPatients] = useState<ClinicPatient[]>(INITIAL_PATIENTS);
+  const [medicines, setMedicines] = useState<ClinicMedicine[]>(INITIAL_MEDICINES);
+  const [invoices, setInvoices] = useState<ClinicInvoice[]>(INITIAL_INVOICES);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -135,7 +308,7 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
   const [showAddMedModal, setShowAddMedModal] = useState(false);
   const [showDispenseModal, setShowDispenseModal] = useState<ClinicMedicine | null>(null);
   const [showNewInvoiceModal, setShowNewInvoiceModal] = useState(false);
-  const [selectedPatientForRx, setSelectedPatientForRx] = useState<ClinicPatient | null>(null);
+  const [selectedPatientForRx, setSelectedPatientForRx] = useState<ClinicPatient | null>(INITIAL_PATIENTS[0]);
   const [printRxModal, setPrintRxModal] = useState<{
     patient: ClinicPatient;
     diagnosis: string;
@@ -146,52 +319,38 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
   const [printInvoiceModal, setPrintInvoiceModal] = useState<ClinicInvoice | null>(null);
 
   // Doctor Consultation Form State
-  const [rxDiagnosis, setRxDiagnosis] = useState("");
+  const [rxDiagnosis, setRxDiagnosis] = useState("Acute Bronchial Infection");
   const [rxMedicines, setRxMedicines] = useState<Array<{ name: string; dosage: string; duration: string }>>([
-    { name: "Paracetamol 650mg", dosage: "1-0-1 (After Food)", duration: "3 days" },
+    { name: "Paracetamol 650mg (Dolo)", dosage: "1-0-1 (After Food)", duration: "3 days" },
+    { name: "Pantoprazole 40mg (Pan-40)", dosage: "1-0-0 (Morning Empty Stomach)", duration: "5 days" },
   ]);
-  const [rxNotes, setRxNotes] = useState("Rest adequately, drink plenty of fluids, and avoid cold drinks.");
+  const [rxNotes, setRxNotes] = useState("Take warm saline gargles, steam inhalation, and complete the full antibiotic course.");
   const [doctorVitals, setDoctorVitals] = useState<PatientVitals>({
-    bp: "120/80",
-    pulse: 74,
+    bp: "124/82",
+    pulse: 78,
     spo2: 98,
-    weight: 68,
-    temperature: 98.6,
+    weight: 72,
+    temperature: 99.1,
   });
 
-  // Fetch initial data
-  const loadClinicData = async () => {
-    setLoading(true);
-    try {
-      const [resAppts, resPatients, resMeds, resInvoices, resStats] = await Promise.all([
-        fetch("/api/clinic/appointments").then((r) => r.json()).catch(() => null),
-        fetch("/api/clinic/patients").then((r) => r.json()).catch(() => null),
-        fetch("/api/clinic/pharmacy").then((r) => r.json()).catch(() => null),
-        fetch("/api/clinic/invoices").then((r) => r.json()).catch(() => null),
-        fetch("/api/clinic/overview").then((r) => r.json()).catch(() => null),
-      ]);
+  // Dynamic Metrics Calculation
+  const stats = useMemo(() => {
+    const totalTokensToday = appointments.length;
+    const waitingCount = appointments.filter((a) => a.status === "Waiting").length;
+    const consultingCount = appointments.filter((a) => a.status === "Consulting").length;
+    const completedCount = appointments.filter((a) => a.status === "Completed").length;
+    const todayRevenue = invoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0);
+    const lowStockCount = medicines.filter((m) => m.stockQty <= m.reorderLevel).length;
 
-      if (resAppts?.appointments) setAppointments(resAppts.appointments);
-      if (resPatients?.patients) {
-        setPatients(resPatients.patients);
-        if (resPatients.patients.length > 0 && !selectedPatientForRx) {
-          setSelectedPatientForRx(resPatients.patients[0]);
-          setDoctorVitals(resPatients.patients[0].vitals || doctorVitals);
-        }
-      }
-      if (resMeds?.medicines) setMedicines(resMeds.medicines);
-      if (resInvoices?.invoices) setInvoices(resInvoices.invoices);
-      if (resStats?.stats) setStats(resStats.stats);
-    } catch (err) {
-      console.error("Failed to load clinic data", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadClinicData();
-  }, []);
+    return {
+      totalTokensToday,
+      waitingCount,
+      consultingCount,
+      completedCount,
+      todayRevenue,
+      lowStockCount,
+    };
+  }, [appointments, invoices, medicines]);
 
   // Filtered appointments
   const filteredAppointments = useMemo(() => {
@@ -210,7 +369,7 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
     return appointments.find((a) => a.status === "Waiting");
   }, [appointments]);
 
-  // Audio Token Call Out (TTS Announcement)
+  // Audio Token Announcement
   const announceTokenAudio = (tokenNum: number, name: string) => {
     if ("speechSynthesis" in window) {
       try {
@@ -222,88 +381,47 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
         utterance.lang = "en-IN";
         window.speechSynthesis.speak(utterance);
       } catch {
-        // speech synthesis fallback silent
+        // speech synthesis fallback
       }
     }
   };
 
-  // Action: Call Next Patient
-  const handleCallNextPatient = async () => {
+  // UI Action: Call Next Patient
+  const handleCallNextPatient = () => {
     if (!nextWaitingPatient) {
       toast.info("No patients waiting in queue!");
       return;
     }
 
-    try {
-      const res = await fetch(`/api/clinic/appointments/${nextWaitingPatient.id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Consulting" }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        announceTokenAudio(nextWaitingPatient.tokenNumber, nextWaitingPatient.patientName);
-        toast.success(`Calling Token #${nextWaitingPatient.tokenNumber}: ${nextWaitingPatient.patientName}`);
+    setAppointments((prev) =>
+      prev.map((apt) => (apt.id === nextWaitingPatient.id ? { ...apt, status: "Consulting" } : apt))
+    );
 
-        // Set in doctor tab
-        const matched = patients.find((p) => p.phone === nextWaitingPatient.patientPhone);
-        if (matched) {
-          setSelectedPatientForRx(matched);
-          setDoctorVitals(matched.vitals);
-        }
+    announceTokenAudio(nextWaitingPatient.tokenNumber, nextWaitingPatient.patientName);
+    toast.success(`Calling Token #${nextWaitingPatient.tokenNumber}: ${nextWaitingPatient.patientName}`);
 
-        loadClinicData();
-      }
-    } catch {
-      toast.error("Failed to update token status");
+    const matched = patients.find((p) => p.phone === nextWaitingPatient.patientPhone);
+    if (matched) {
+      setSelectedPatientForRx(matched);
+      setDoctorVitals(matched.vitals);
     }
   };
 
-  // Action: Update Appointment Status
-  const handleUpdateStatus = async (id: string, newStatus: ClinicAppointment["status"]) => {
-    try {
-      const res = await fetch(`/api/clinic/appointments/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Token status updated to ${newStatus}`);
-        loadClinicData();
-      }
-    } catch {
-      toast.error("Error updating appointment");
-    }
+  // UI Action: Update Appointment Status
+  const handleUpdateStatus = (id: string, newStatus: ClinicAppointment["status"]) => {
+    setAppointments((prev) =>
+      prev.map((apt) => (apt.id === id ? { ...apt, status: newStatus } : apt))
+    );
+    toast.success(`Token status updated to ${newStatus}`);
   };
 
-  // Action: Trigger AI Voice Reminder Call
-  const handleTriggerVoiceReminder = async (apt: ClinicAppointment) => {
-    try {
-      const res = await fetch("/api/clinic/reminders/trigger-call", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patientName: apt.patientName,
-          patientPhone: apt.patientPhone,
-          doctorName: apt.doctorName,
-          slot: apt.slot,
-          tokenNumber: apt.tokenNumber,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`AI Voice Call queued for ${apt.patientName} (${apt.patientPhone})`);
-      } else {
-        toast.error(data.error || "Failed to trigger call");
-      }
-    } catch {
-      toast.error("Network error triggering AI voice call");
-    }
+  // UI Action: Trigger Voice Reminder Call
+  const handleTriggerVoiceReminder = (apt: ClinicAppointment) => {
+    toast.success(`AI Voice Reminder Call queued for ${apt.patientName} (${apt.patientPhone})`);
   };
 
-  // Action: Save Doctor Consultation & Rx
-  const handleSaveConsultation = async () => {
+  // UI Action: Save Doctor Consultation & Rx
+  const handleSaveConsultation = () => {
     if (!selectedPatientForRx) {
       toast.error("Please select a patient first");
       return;
@@ -313,48 +431,45 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
       return;
     }
 
-    try {
-      // 1. Save Vitals
-      await fetch(`/api/clinic/patients/${selectedPatientForRx.id}/vitals`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(doctorVitals),
-      });
-
-      // 2. Save Consultation Rx
-      const res = await fetch(`/api/clinic/patients/${selectedPatientForRx.id}/consult`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          diagnosis: rxDiagnosis,
-          medicines: rxMedicines,
-          notes: rxNotes,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        // Also find active appointment and mark completed
-        const apt = appointments.find(
-          (a) => a.patientPhone === selectedPatientForRx.phone && a.status !== "Completed"
-        );
-        if (apt) {
-          await handleUpdateStatus(apt.id, "Completed");
+    // Update patient vitals & add history
+    setPatients((prev) =>
+      prev.map((p) => {
+        if (p.id === selectedPatientForRx.id) {
+          return {
+            ...p,
+            vitals: doctorVitals,
+            history: [
+              {
+                date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+                diagnosis: rxDiagnosis,
+                medicines: rxMedicines,
+                notes: rxNotes,
+              },
+              ...p.history,
+            ],
+          };
         }
+        return p;
+      })
+    );
 
-        toast.success("Digital Prescription & Consultation saved successfully!");
-        setPrintRxModal({
-          patient: selectedPatientForRx,
-          diagnosis: rxDiagnosis,
-          medicines: rxMedicines,
-          notes: rxNotes,
-          vitals: doctorVitals,
-        });
-        loadClinicData();
-      }
-    } catch {
-      toast.error("Failed to save digital prescription");
-    }
+    // Auto mark appointment completed
+    setAppointments((prev) =>
+      prev.map((apt) =>
+        apt.patientPhone === selectedPatientForRx.phone && apt.status !== "Completed"
+          ? { ...apt, status: "Completed" }
+          : apt
+      )
+    );
+
+    toast.success("Digital Prescription & Consultation saved successfully!");
+    setPrintRxModal({
+      patient: selectedPatientForRx,
+      diagnosis: rxDiagnosis,
+      medicines: rxMedicines,
+      notes: rxNotes,
+      vitals: doctorVitals,
+    });
   };
 
   return (
@@ -371,17 +486,17 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
             Clinic Management & OPD Floor
           </h1>
           <p className="page-subtitle text-zinc-400 text-sm">
-            Live patient token queue, doctor EMR & prescription pad, pharmacy inventory, OPD billing, and AI automated voice reminders.
+            Live patient token queue, doctor EMR & prescription pad, pharmacy inventory, OPD billing, and patient softphone dialing.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             className="soft-button flex items-center gap-2 hover:bg-zinc-800 transition text-xs font-semibold px-3 py-2 rounded-lg border border-zinc-700 text-zinc-300"
-            onClick={loadClinicData}
+            onClick={() => toast.success("OPD Floor refreshed")}
             title="Refresh OPD Floor"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
+            <RefreshCw size={14} /> Refresh
           </button>
           <button
             className="primary-button bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg shadow-emerald-950/40 transition"
@@ -535,7 +650,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
       ========================================================================== */}
       {activeTab === "queue" && (
         <div className="space-y-4">
-          {/* Action Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/80">
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-2.5 text-zinc-500" size={15} />
@@ -568,7 +682,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
             </div>
           </div>
 
-          {/* Tokens Grid / Table */}
           <div className="panel border border-zinc-800/90 rounded-xl overflow-hidden bg-zinc-900/30">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
@@ -587,7 +700,7 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                   {filteredAppointments.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="text-center py-12 text-zinc-500">
-                        No appointments found matching filter. Click <strong>"Book Walk-in / Token"</strong> to register.
+                        No appointments found. Click <strong>"Book Walk-in / Token"</strong> to register a patient.
                       </td>
                     </tr>
                   ) : (
@@ -669,40 +782,36 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            {/* Announce Token via Speaker */}
                             <button
                               onClick={() => announceTokenAudio(apt.tokenNumber, apt.patientName)}
-                              title="Announce Token on Clinic Speaker"
+                              title="Announce Token on Speaker"
                               className="p-1.5 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-amber-400 transition"
                             >
                               <Volume2 size={14} />
                             </button>
 
-                            {/* Direct Softphone Dial */}
                             <button
                               onClick={() => {
                                 if (onCallPatient) {
                                   onCallPatient(apt.patientPhone, apt.patientName);
                                 } else {
-                                  toast.info(`Dialing ${apt.patientName} (${apt.patientPhone}) on softphone`);
+                                  toast.info(`Dialing ${apt.patientName} (${apt.patientPhone})`);
                                 }
                               }}
-                              title="Call Patient via CallForge Softphone"
+                              title="Call Patient on Softphone"
                               className="p-1.5 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 transition"
                             >
                               <PhoneCall size={14} />
                             </button>
 
-                            {/* Outbound AI Automated Voice Reminder */}
                             <button
                               onClick={() => handleTriggerVoiceReminder(apt)}
-                              title="Send Outbound AI Voice Reminder"
+                              title="Send Voice Reminder"
                               className="p-1.5 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-violet-400 transition"
                             >
                               <Megaphone size={14} />
                             </button>
 
-                            {/* Open in Doctor Cabin */}
                             <button
                               onClick={() => {
                                 const matched = patients.find((p) => p.phone === apt.patientPhone);
@@ -712,7 +821,7 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                                 }
                                 setActiveTab("doctor");
                               }}
-                              title="Open in Doctor Consultation Desk"
+                              title="Open in Doctor Cabin"
                               className="p-1.5 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-blue-400 transition"
                             >
                               <Stethoscope size={14} />
@@ -734,7 +843,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
       ========================================================================== */}
       {activeTab === "doctor" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Left: Patient Directory & Selection */}
           <div className="lg:col-span-4 space-y-3">
             <div className="p-3 bg-zinc-900/40 rounded-xl border border-zinc-800/80">
               <div className="text-xs font-semibold text-zinc-200 mb-2 flex items-center justify-between">
@@ -770,11 +878,9 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
             </div>
           </div>
 
-          {/* Right: Consultation Desk & Rx Pad */}
           <div className="lg:col-span-8 space-y-4">
             {selectedPatientForRx ? (
               <div className="panel border border-zinc-800/90 rounded-xl p-5 bg-zinc-900/30 space-y-5">
-                {/* Header Profile Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-zinc-800">
                   <div>
                     <div className="flex items-center gap-2">
@@ -819,7 +925,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                   </div>
                 </div>
 
-                {/* Vitals Recording Strip */}
                 <div>
                   <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <HeartPulse size={14} className="text-rose-400" /> Patient Vitals (EMR)
@@ -881,25 +986,23 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                   </div>
                 </div>
 
-                {/* Clinical Diagnosis */}
                 <div>
                   <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <FileText size={14} className="text-blue-400" /> Clinical Diagnosis & Findings
+                    <FileText size={14} className="text-blue-400" /> Clinical Diagnosis
                   </h4>
                   <input
                     type="text"
                     value={rxDiagnosis}
                     onChange={(e) => setRxDiagnosis(e.target.value)}
-                    placeholder="e.g. Acute Bronchitis, Allergic Rhinitis, Type 2 Diabetes..."
+                    placeholder="e.g. Acute Bronchitis, Seasonal Allergy..."
                     className="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-hidden focus:border-emerald-500"
                   />
                 </div>
 
-                {/* Prescription Pad */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <Pill size={14} className="text-emerald-400" /> Digital Rx Prescription Pad
+                      <Pill size={14} className="text-emerald-400" /> Prescription Pad
                     </h4>
                     <button
                       onClick={() =>
@@ -923,7 +1026,7 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                         <div className="flex-1">
                           <input
                             type="text"
-                            placeholder="Medicine Name (e.g. Paracetamol 650mg, Pan-40)"
+                            placeholder="Medicine Name (e.g. Paracetamol 650mg)"
                             value={med.name}
                             onChange={(e) => {
                               const updated = [...rxMedicines];
@@ -978,7 +1081,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                   </div>
                 </div>
 
-                {/* Advice Notes */}
                 <div>
                   <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <Info size={14} className="text-amber-400" /> Advice & Dietary Notes
@@ -992,21 +1094,18 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                   />
                 </div>
 
-                {/* Bottom Actions */}
                 <div className="flex items-center justify-between pt-3 border-t border-zinc-800">
                   <div className="text-xs text-zinc-400 flex items-center gap-2">
                     <CheckCircle2 size={14} className="text-emerald-400" />
-                    Auto-links with Pharmacy & Billing
+                    Interactive Rx Pad
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleSaveConsultation}
-                      className="primary-button bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition"
-                    >
-                      <FileCheck size={14} /> Save Rx & Complete Consultation
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleSaveConsultation}
+                    className="primary-button bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition"
+                  >
+                    <FileCheck size={14} /> Save Rx & Complete Consultation
+                  </button>
                 </div>
               </div>
             ) : (
@@ -1172,22 +1271,22 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Megaphone size={18} className="text-violet-400" />
-                Autonomous Clinic Voice Reminders & Follow-up Bot
+                Clinic Voice Reminders & Follow-up Bot UI
               </h3>
               <p className="text-xs text-zinc-400 mt-1">
-                Powered directly by CallForge's dialer worker. Automatically places voice reminder calls for upcoming OPD tokens.
+                Preview automated outbound reminders for upcoming OPD appointments and tokens.
               </p>
             </div>
             <span className="px-3 py-1 rounded-full bg-emerald-950/40 text-emerald-300 border border-emerald-800/50 text-xs font-semibold flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Engine Online (TRAI TCCCPR Compliant)
+              Telephony Voice Studio
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-3">
               <h4 className="text-xs font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                <Sparkles size={14} className="text-amber-400" /> Voice Prompt (Hinglish / Hindi)
+                <Sparkles size={14} className="text-amber-400" /> Voice Script Template (Hinglish / Hindi)
               </h4>
               <p className="text-xs text-zinc-300 leading-relaxed font-mono bg-zinc-900/80 p-3 rounded-lg border border-zinc-800">
                 "Namaste {'{patient_name}'} ji. Yeh Dr. Arjun Mehta ke clinic se automated reminder call hai. Aapka OPD token number #{'{token_number}'} scheduled hai. Kripya samay se 10 minute pehle clinic padharein. Dhanyawad!"
@@ -1204,7 +1303,7 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                 <PhoneCall size={14} className="text-emerald-400" /> Quick Dispatch Single Patient
               </h4>
               <p className="text-xs text-zinc-400">
-                Trigger an instantaneous AI voice call to test the reminder system on any mobile number.
+                Trigger an automated voice reminder simulation to test the calling cadence.
               </p>
               <div className="space-y-2">
                 {appointments.slice(0, 3).map((apt) => (
@@ -1244,39 +1343,56 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
             </div>
 
             <form
-              onSubmit={async (e) => {
+              onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.currentTarget;
                 const formData = new FormData(form);
+                const pName = String(formData.get("name") || "Walk-in Patient");
+                const pPhone = String(formData.get("phone") || "+91 98000 00000");
+                const pAge = Number(formData.get("age")) || 30;
+                const pGender = (formData.get("gender") as any) || "Male";
+                const pFee = Number(formData.get("fee")) || 500;
+                const pComplaint = String(formData.get("complaint") || "Consultation");
+                const pPaid = formData.get("paid") === "true";
 
-                try {
-                  const res = await fetch("/api/clinic/appointments", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      patientName: formData.get("name"),
-                      patientPhone: formData.get("phone"),
-                      patientAge: Number(formData.get("age")),
-                      gender: formData.get("gender"),
-                      doctorName: "Dr. Arjun Mehta (MD Medicine)",
-                      slot: formData.get("slot") || "Immediate",
-                      chiefComplaint: formData.get("complaint"),
-                      fee: Number(formData.get("fee")) || 500,
-                      paid: formData.get("paid") === "true",
-                    }),
-                  });
+                const newTokenNum = appointments.reduce((max, a) => Math.max(max, a.tokenNumber), 0) + 1;
+                const newApt: ClinicAppointment = {
+                  id: `apt-${Date.now()}`,
+                  tokenNumber: newTokenNum,
+                  patientName: pName,
+                  patientPhone: pPhone,
+                  patientAge: pAge,
+                  gender: pGender,
+                  doctorName: "Dr. Arjun Mehta (MD Medicine)",
+                  slot: "Immediate",
+                  status: "Waiting",
+                  chiefComplaint: pComplaint,
+                  fee: pFee,
+                  paid: pPaid,
+                  createdAt: new Date().toISOString(),
+                };
 
-                  const data = await res.json();
-                  if (data.success) {
-                    toast.success(`Token #${data.appointment.tokenNumber} issued to ${data.appointment.patientName}!`);
-                    setShowBookModal(false);
-                    loadClinicData();
-                  } else {
-                    toast.error(data.error || "Failed to book");
-                  }
-                } catch {
-                  toast.error("Error booking appointment");
+                setAppointments([newApt, ...appointments]);
+
+                // Auto register patient if new
+                if (!patients.some((p) => p.phone === pPhone)) {
+                  setPatients([
+                    ...patients,
+                    {
+                      id: `pat-${Date.now()}`,
+                      name: pName,
+                      phone: pPhone,
+                      age: pAge,
+                      gender: pGender,
+                      bloodGroup: "B+",
+                      vitals: { bp: "120/80", pulse: 72, spo2: 98, weight: 65, temperature: 98.6 },
+                      history: [],
+                    },
+                  ]);
                 }
+
+                toast.success(`Token #${newTokenNum} issued to ${pName}!`);
+                setShowBookModal(false);
               }}
               className="space-y-3 text-xs"
             >
@@ -1330,7 +1446,7 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                 <input
                   name="complaint"
                   type="text"
-                  placeholder="e.g. High fever, stomach ache since yesterday"
+                  placeholder="e.g. High fever, stomach ache"
                   defaultValue="General Checkup & Fever"
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-100 focus:outline-hidden focus:border-emerald-500"
                 />
@@ -1396,37 +1512,25 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
             </div>
 
             <form
-              onSubmit={async (e) => {
+              onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.currentTarget;
                 const formData = new FormData(form);
+                const medName = String(formData.get("name") || "Medicine");
+                const newMed: ClinicMedicine = {
+                  id: `med-${Date.now()}`,
+                  name: medName,
+                  category: (formData.get("category") as any) || "Tablet",
+                  batchNo: String(formData.get("batchNo") || "BT-100"),
+                  stockQty: Number(formData.get("stockQty")) || 100,
+                  unitPrice: Number(formData.get("unitPrice")) || 50,
+                  expiryDate: String(formData.get("expiryDate") || "12/2027"),
+                  reorderLevel: Number(formData.get("reorderLevel")) || 30,
+                };
 
-                try {
-                  const res = await fetch("/api/clinic/pharmacy", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      name: formData.get("name"),
-                      category: formData.get("category"),
-                      batchNo: formData.get("batchNo"),
-                      stockQty: Number(formData.get("stockQty")),
-                      unitPrice: Number(formData.get("unitPrice")),
-                      expiryDate: formData.get("expiryDate"),
-                      reorderLevel: Number(formData.get("reorderLevel")),
-                    }),
-                  });
-
-                  const data = await res.json();
-                  if (data.success) {
-                    toast.success(`Medicine ${data.medicine.name} added to stock!`);
-                    setShowAddMedModal(false);
-                    loadClinicData();
-                  } else {
-                    toast.error(data.error || "Failed to add medicine");
-                  }
-                } catch {
-                  toast.error("Error adding medicine");
-                }
+                setMedicines([...medicines, newMed]);
+                toast.success(`Medicine ${medName} added to stock!`);
+                setShowAddMedModal(false);
               }}
               className="space-y-3 text-xs"
             >
@@ -1462,7 +1566,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                     required
                     name="batchNo"
                     type="text"
-                    placeholder="BT-9021"
                     defaultValue="BT-5541"
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-100 font-mono focus:outline-hidden"
                   />
@@ -1542,30 +1645,23 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
             </div>
 
             <form
-              onSubmit={async (e) => {
+              onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.currentTarget;
                 const formData = new FormData(form);
-                const qty = Number(formData.get("qty"));
+                const qty = Number(formData.get("qty")) || 1;
 
-                try {
-                  const res = await fetch(`/api/clinic/pharmacy/${showDispenseModal.id}/dispense`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ qty }),
-                  });
-
-                  const data = await res.json();
-                  if (data.success) {
-                    toast.success(`Dispensed ${qty} units of ${showDispenseModal.name}`);
-                    setShowDispenseModal(null);
-                    loadClinicData();
-                  } else {
-                    toast.error(data.error || "Dispense failed");
-                  }
-                } catch {
-                  toast.error("Error during dispensing");
+                if (qty > showDispenseModal.stockQty) {
+                  toast.error(`Only ${showDispenseModal.stockQty} units available in stock!`);
+                  return;
                 }
+
+                setMedicines((prev) =>
+                  prev.map((m) => (m.id === showDispenseModal.id ? { ...m, stockQty: m.stockQty - qty } : m))
+                );
+
+                toast.success(`Dispensed ${qty} units of ${showDispenseModal.name}`);
+                setShowDispenseModal(null);
               }}
               className="space-y-4 text-xs"
             >
@@ -1619,38 +1715,35 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
             </div>
 
             <form
-              onSubmit={async (e) => {
+              onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.currentTarget;
                 const formData = new FormData(form);
 
-                try {
-                  const res = await fetch("/api/clinic/invoices", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      patientName: formData.get("patientName"),
-                      patientPhone: formData.get("patientPhone"),
-                      consultationFee: Number(formData.get("consultationFee")),
-                      pharmacyAmount: Number(formData.get("pharmacyAmount")),
-                      labAmount: Number(formData.get("labAmount")),
-                      discount: Number(formData.get("discount")),
-                      paymentMode: formData.get("paymentMode"),
-                    }),
-                  });
+                const cFee = Number(formData.get("consultationFee")) || 0;
+                const pAmount = Number(formData.get("pharmacyAmount")) || 0;
+                const lAmount = Number(formData.get("labAmount")) || 0;
+                const disc = Number(formData.get("discount")) || 0;
+                const total = Math.max(0, cFee + pAmount + lAmount - disc);
 
-                  const data = await res.json();
-                  if (data.success) {
-                    toast.success(`Invoice ${data.invoice.invoiceNo} generated successfully!`);
-                    setShowNewInvoiceModal(false);
-                    setPrintInvoiceModal(data.invoice);
-                    loadClinicData();
-                  } else {
-                    toast.error(data.error || "Failed to generate invoice");
-                  }
-                } catch {
-                  toast.error("Error creating invoice");
-                }
+                const newInv: ClinicInvoice = {
+                  id: `inv-${Date.now()}`,
+                  invoiceNo: `INV-2026-${(invoices.length + 893).toString().padStart(4, "0")}`,
+                  patientName: String(formData.get("patientName") || "Patient"),
+                  patientPhone: String(formData.get("patientPhone") || "+91 98000 00000"),
+                  consultationFee: cFee,
+                  pharmacyAmount: pAmount,
+                  labAmount: lAmount,
+                  discount: disc,
+                  totalAmount: total,
+                  paymentMode: (formData.get("paymentMode") as any) || "UPI",
+                  createdAt: new Date().toISOString(),
+                };
+
+                setInvoices([newInv, ...invoices]);
+                toast.success(`Invoice ${newInv.invoiceNo} generated successfully!`);
+                setShowNewInvoiceModal(false);
+                setPrintInvoiceModal(newInv);
               }}
               className="space-y-3 text-xs"
             >
@@ -1660,7 +1753,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                   required
                   name="patientName"
                   type="text"
-                  placeholder="Patient Name"
                   defaultValue={selectedPatientForRx?.name || "Amit Patel"}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-zinc-100 focus:outline-hidden focus:border-emerald-500"
                 />
@@ -1757,7 +1849,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
       {printRxModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white text-zinc-900 rounded-2xl w-full max-w-2xl p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            {/* Clinic Letterhead */}
             <div className="border-b-2 border-emerald-600 pb-4 flex justify-between items-start">
               <div>
                 <h2 className="text-2xl font-bold text-emerald-800 flex items-center gap-2">
@@ -1779,7 +1870,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               </button>
             </div>
 
-            {/* Patient Details & Vitals Strip */}
             <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-xs grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <span className="text-zinc-500 font-medium block">Patient Name</span>
@@ -1811,7 +1901,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               </div>
             </div>
 
-            {/* Diagnosis */}
             <div>
               <span className="text-xs uppercase tracking-wider font-bold text-zinc-500 block mb-1">
                 Clinical Diagnosis
@@ -1821,7 +1910,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               </p>
             </div>
 
-            {/* Rx Symbol & Medicines Table */}
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl font-serif font-black text-emerald-800">℞</span>
@@ -1850,13 +1938,11 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               </table>
             </div>
 
-            {/* Advice */}
             <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-200 text-xs">
               <span className="font-bold text-zinc-700 block mb-0.5">Special Advice / Instructions:</span>
               <p className="text-zinc-600">{printRxModal.notes}</p>
             </div>
 
-            {/* Signature Block */}
             <div className="pt-6 flex justify-between items-end">
               <div className="text-[11px] text-zinc-500">
                 Generated via CallForge Clinic Suite 2026<br />
@@ -1869,7 +1955,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
               <button
                 onClick={() => setPrintRxModal(null)}
@@ -1878,9 +1963,7 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
                 Close
               </button>
               <button
-                onClick={() => {
-                  window.print();
-                }}
+                onClick={() => window.print()}
                 className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow"
               >
                 <Printer size={14} /> Print Prescription (Ctrl + P)
@@ -1896,7 +1979,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
       {printInvoiceModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white text-zinc-900 rounded-2xl w-full max-w-lg p-8 space-y-5 shadow-2xl">
-            {/* Header */}
             <div className="border-b-2 border-emerald-600 pb-3 flex justify-between items-start">
               <div>
                 <h3 className="text-xl font-bold text-emerald-800">DR. ARJUN MEHTA CLINIC</h3>
@@ -1907,7 +1989,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               </button>
             </div>
 
-            {/* Meta */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <span className="text-zinc-500 block">Invoice No:</span>
@@ -1936,7 +2017,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               </div>
             </div>
 
-            {/* Line Items */}
             <div className="border-t border-b border-zinc-200 py-3 space-y-2 text-xs">
               <div className="flex justify-between text-zinc-700">
                 <span>Doctor Consultation Charges</span>
@@ -1958,7 +2038,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               )}
             </div>
 
-            {/* Total */}
             <div className="flex justify-between items-center text-sm font-bold text-zinc-900 pt-1">
               <span>Total Amount Paid</span>
               <span className="text-xl text-emerald-700 font-mono">₹{printInvoiceModal.totalAmount}</span>
@@ -1968,7 +2047,6 @@ export function ClinicHub({ onCallPatient }: ClinicHubProps) {
               Thank you for visiting Dr. Arjun Mehta Clinic. Wishing you good health!
             </div>
 
-            {/* Buttons */}
             <div className="flex justify-end gap-3 pt-3">
               <button
                 onClick={() => setPrintInvoiceModal(null)}
