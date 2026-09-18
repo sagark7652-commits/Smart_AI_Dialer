@@ -26,6 +26,24 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
 
   if (!isOpen) return null;
 
+  const currentUser = (() => {
+    try {
+      const saved = localStorage.getItem("creatorai_auth_user");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      name: "Workspace Admin",
+      emailOrPhone: "admin@callforge.io",
+      role: "Super Admin",
+    };
+  })();
+
+  const initials = (() => {
+    const parts = (currentUser.name || "User").trim().split(" ");
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return parts[0].slice(0, 2).toUpperCase();
+  })();
+
   const apiKey = "cf_live_98ab77d612e0944cb9128f";
 
   const handleCopy = () => {
@@ -48,14 +66,14 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
         <div className="p-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-950 flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-violet-600 text-white font-bold text-lg flex items-center justify-center shadow-lg shadow-violet-600/30">
-              AM
+              {initials}
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Arjun Mehta</h3>
-              <p className="text-xs text-zinc-400">arjun.mehta@callforge.io</p>
+              <h3 className="text-base font-bold text-white">{currentUser.name}</h3>
+              <p className="text-xs text-zinc-400">{currentUser.emailOrPhone}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                  Super Admin
+                  {currentUser.role || "Enterprise User"}
                 </span>
                 <span className="text-[10px] text-zinc-400">Mumbai PBX Cluster</span>
               </div>

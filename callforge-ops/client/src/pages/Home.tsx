@@ -905,6 +905,25 @@ export default function Home() {
   const [selectedLead, setSelectedLead] = useState<LeadRecord | null>(null);
   const liveCallsCount = INITIAL_AGENTS.filter((a) => a.status === "on_call").length;
 
+  // Active authenticated user profile (dynamic per Google/Email login)
+  const [currentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("creatorai_auth_user");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      name: "Workspace Admin",
+      emailOrPhone: "admin@callforge.io",
+      role: "Super Admin",
+    };
+  });
+
+  const userInitials = useMemo(() => {
+    const parts = (currentUser.name || "User").trim().split(" ");
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return parts[0].slice(0, 2).toUpperCase();
+  }, [currentUser.name]);
+
   // Fetch persistent leads from backend database on mount
   const fetchLeads = () => {
     fetch("/api/calling/leads")
@@ -1258,12 +1277,12 @@ export default function Home() {
           <div
             className="user-row cursor-pointer hover:bg-zinc-900/60 p-2 rounded-lg transition"
             onClick={() => setShowUserProfile(true)}
-            title="Open Admin Profile"
+            title={`Open Profile: ${currentUser.name}`}
           >
-            <span className="workspace-avatar user">AM</span>
+            <span className="workspace-avatar user font-bold">{userInitials}</span>
             <div>
-              <strong>Arjun Mehta</strong>
-              <span>Owner · Mumbai</span>
+              <strong>{currentUser.name}</strong>
+              <span className="truncate">{currentUser.emailOrPhone}</span>
             </div>
             <MoreHorizontal size={16} className="muted" />
           </div>
@@ -1300,11 +1319,11 @@ export default function Home() {
 
             {/* User Profile Avatar */}
             <div
-              className="top-avatar cursor-pointer hover:ring-2 hover:ring-violet-500 transition"
+              className="top-avatar cursor-pointer hover:ring-2 hover:ring-violet-500 transition font-bold"
               onClick={() => setShowUserProfile(true)}
-              title="Arjun Mehta (Admin Profile)"
+              title={`${currentUser.name} (${currentUser.role || "Admin"})`}
             >
-              AM
+              {userInitials}
             </div>
           </div>
         </header>
