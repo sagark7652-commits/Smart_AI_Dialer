@@ -45,10 +45,7 @@ import {
   CheckCircle2,
   RotateCw,
   Send,
-  Stethoscope,
 } from "lucide-react";
-
-import { ClinicHub } from "../components/clinic/ClinicHub";
 
 // Calling Component Imports (All 8 Categories)
 import { CampaignBuilderModal } from "../components/calling/campaigns/CampaignBuilderModal";
@@ -86,7 +83,6 @@ import { CampaignDetailModal, CampaignRecord } from "../components/calling/campa
 
 const navigation = [
   { label: "Overview", icon: LayoutDashboard },
-  { label: "Clinic Hub", icon: Stethoscope },
   { label: "Campaigns", icon: Megaphone },
   { label: "Agent Workspace", icon: Headphones },
   { label: "Leads & CRM", icon: Users },
@@ -995,25 +991,6 @@ export default function Home() {
           onNavigate={setActive}
           onNewCampaign={() => setShowCampaignBuilder(true)}
           onExportReport={handleDownloadExecutiveReport}
-        />
-      );
-      break;
-    case "Clinic Hub":
-      content = (
-        <ClinicHub
-          onCallPatient={(phone, name) => {
-            setSelectedLead({
-              name,
-              company: "Clinic Patient",
-              phone,
-              source: "OPD Reception",
-              stage: "In Consultation",
-              score: 95,
-              last: "Just now",
-            });
-            toast.success(`Connected to softphone for patient: ${name} (${phone})`);
-            setActive("Agent Workspace");
-          }}
         />
       );
       break;

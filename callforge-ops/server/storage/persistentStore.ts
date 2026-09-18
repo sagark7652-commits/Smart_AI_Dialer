@@ -317,6 +317,7 @@ const DEFAULT_AB_SPLIT: StoredABSplit = {
     "Namaste {lead_name} ji. We are offering an exclusive 20% discount on festive calling agent packs. Would you like to schedule a 10-minute demo with our team?",
   scriptB:
     "Namaste {lead_name} ji! Most retail businesses in {city} are saving 4 hours daily using CallForge AI calling. Can we demonstrate how it handles your festive inbound rush?",
+  winnerVariant: "B",
   updatedAt: new Date().toISOString(),
 };
 
