@@ -129,6 +129,17 @@ export interface StoredAuditLog {
   category: "billing" | "security" | "carrier" | "campaign" | "system";
 }
 
+export interface StoredWhatsAppMessage {
+  id: string;
+  recipientName: string;
+  recipientPhone: string;
+  templateName: string;
+  body: string;
+  status: "delivered" | "read" | "sent" | "failed";
+  timestamp: string;
+  disposition: string;
+}
+
 interface DatabaseStructure {
   leads: StoredLead[];
   cdrLogs: StoredCDR[];
@@ -143,6 +154,7 @@ interface DatabaseStructure {
   invoices: StoredInvoice[];
   teamMembers: StoredTeamMember[];
   auditLogs: StoredAuditLog[];
+  whatsappLogs: StoredWhatsAppMessage[];
 }
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -550,6 +562,7 @@ class PersistentStorage {
         if (!parsed.invoices || !Array.isArray(parsed.invoices)) parsed.invoices = DEFAULT_INVOICES;
         if (!parsed.teamMembers || !Array.isArray(parsed.teamMembers)) parsed.teamMembers = DEFAULT_TEAM_MEMBERS;
         if (!parsed.auditLogs || !Array.isArray(parsed.auditLogs)) parsed.auditLogs = DEFAULT_AUDIT_LOGS;
+        if (!parsed.whatsappLogs || !Array.isArray(parsed.whatsappLogs)) parsed.whatsappLogs = [];
         this.save(parsed);
         return parsed;
       }
@@ -587,6 +600,7 @@ class PersistentStorage {
       invoices: DEFAULT_INVOICES,
       teamMembers: DEFAULT_TEAM_MEMBERS,
       auditLogs: DEFAULT_AUDIT_LOGS,
+      whatsappLogs: [],
     };
 
     this.save(defaultData);
@@ -625,6 +639,49 @@ class PersistentStorage {
     this.data.leads[idx] = { ...this.data.leads[idx], ...updates };
     this.save(this.data);
     return this.data.leads[idx];
+  }
+
+  bulkAddLeads(
+    rawLeads: Array<Omit<StoredLead, "id" | "createdAt" | "notes"> & { notes?: string[] }>
+  ): { added: number; total: number; leads: StoredLead[] } {
+    const newlyAdded: StoredLead[] = [];
+    const existingPhones = new Set(this.data.leads.map((l) => l.phone));
+
+    for (const item of rawLeads) {
+      if (!item.phone || existingPhones.has(item.phone)) continue;
+      const lead: StoredLead = {
+        id: `lead_${nanoid(8)}`,
+        name: item.name || "Enterprise Lead",
+        phone: item.phone,
+        company: item.company || "General Prospect",
+        source: item.source || "CSV Bulk Ingestion",
+        stage: item.stage || "New",
+        score: typeof item.score === "number" ? item.score : 70,
+        last: "Just imported",
+        notes: item.notes || ["Imported via Bulk CSV Uploader."],
+        isDnc: item.isDnc || false,
+        createdAt: new Date().toISOString(),
+      };
+      this.data.leads.unshift(lead);
+      existingPhones.add(lead.phone);
+      newlyAdded.push(lead);
+    }
+
+    if (newlyAdded.length > 0) {
+      this.addAuditLog(
+        "Bulk Leads Imported",
+        "Arjun Mehta (Admin)",
+        `Imported ${newlyAdded.length} new leads into dialing queue.`,
+        "campaign"
+      );
+      this.save(this.data);
+    }
+
+    return {
+      added: newlyAdded.length,
+      total: this.data.leads.length,
+      leads: newlyAdded,
+    };
   }
 
   // --- CDR Logs Operations ---
@@ -926,6 +983,43 @@ class PersistentStorage {
     }
     this.save(this.data);
     return log;
+  }
+
+  // --- WhatsApp Automation Operations ---
+  getWhatsAppLogs(): StoredWhatsAppMessage[] {
+    return this.data.whatsappLogs || [];
+  }
+
+  sendWhatsAppMessage(msg: {
+    recipientName: string;
+    recipientPhone: string;
+    templateName: string;
+    body: string;
+    disposition?: string;
+  }): StoredWhatsAppMessage {
+    const newMsg: StoredWhatsAppMessage = {
+      id: `wa_${nanoid(8)}`,
+      recipientName: msg.recipientName,
+      recipientPhone: msg.recipientPhone,
+      templateName: msg.templateName,
+      body: msg.body,
+      status: "delivered",
+      timestamp: new Date().toISOString(),
+      disposition: msg.disposition || "Interested",
+    };
+
+    if (!this.data.whatsappLogs) this.data.whatsappLogs = [];
+    this.data.whatsappLogs.unshift(newMsg);
+
+    this.addAuditLog(
+      "WhatsApp Follow-up Sent",
+      "Arjun Mehta (Automated)",
+      `Delivered template '${msg.templateName}' to ${msg.recipientPhone} (${msg.recipientName}).`,
+      "campaign"
+    );
+
+    this.save(this.data);
+    return newMsg;
   }
 }
 

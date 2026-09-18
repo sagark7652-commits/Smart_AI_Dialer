@@ -76,6 +76,7 @@ import { CommandPaletteModal } from "../components/calling/global/CommandPalette
 import { NotificationCenter } from "../components/calling/global/NotificationCenter";
 import { LeadDetailsDrawer, LeadRecord } from "../components/calling/crm/LeadDetailsDrawer";
 import { AddLeadModal } from "../components/calling/crm/AddLeadModal";
+import { BulkLeadImportModal } from "../components/calling/crm/BulkLeadImportModal";
 import { ProUpgradeModal } from "../components/calling/global/ProUpgradeModal";
 import { HelpCenterModal } from "../components/calling/global/HelpCenterModal";
 import { UserProfileModal } from "../components/calling/global/UserProfileModal";
@@ -706,10 +707,12 @@ function AgentWorkspace() {
 function LeadsScreen({
   leads,
   onAddLeadClick,
+  onBulkImportClick,
   onSelectLead,
 }: {
   leads: LeadRecord[];
   onAddLeadClick: () => void;
+  onBulkImportClick?: () => void;
   onSelectLead: (lead: LeadRecord) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -734,9 +737,21 @@ function LeadsScreen({
           <h1 className="page-title">Leads & Contacts</h1>
           <p className="page-subtitle">One live record for every contact, outcome, callback, and click-to-call action.</p>
         </div>
-        <button className="primary-button" onClick={onAddLeadClick}>
-          <Plus size={16} /> Add lead
-        </button>
+        <div className="flex items-center gap-2">
+          {onBulkImportClick && (
+            <button
+              type="button"
+              className="soft-button flex items-center gap-1.5 cursor-pointer text-xs"
+              onClick={onBulkImportClick}
+            >
+              <Upload size={14} className="text-violet-400" />
+              <span>Bulk CSV Import</span>
+            </button>
+          )}
+          <button className="primary-button" onClick={onAddLeadClick}>
+            <Plus size={16} /> Add lead
+          </button>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -884,12 +899,13 @@ export default function Home() {
   const [showHelpCenter, setShowHelpCenter] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showAddLead, setShowAddLead] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadRecord | null>(null);
   const liveCallsCount = INITIAL_AGENTS.filter((a) => a.status === "on_call").length;
 
   // Fetch persistent leads from backend database on mount
-  useEffect(() => {
+  const fetchLeads = () => {
     fetch("/api/calling/leads")
       .then((res) => res.json())
       .then((data) => {
@@ -909,6 +925,10 @@ export default function Home() {
         }
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchLeads();
   }, []);
 
   // Global Keyboard Shortcuts
@@ -1013,6 +1033,7 @@ export default function Home() {
         <LeadsScreen
           leads={leadsList}
           onAddLeadClick={() => setShowAddLead(true)}
+          onBulkImportClick={() => setShowBulkImport(true)}
           onSelectLead={(ld) => setSelectedLead(ld)}
         />
       );
@@ -1320,6 +1341,12 @@ export default function Home() {
         isOpen={showAddLead}
         onClose={() => setShowAddLead(false)}
         onAddLead={handleAddNewLead}
+      />
+
+      <BulkLeadImportModal
+        isOpen={showBulkImport}
+        onClose={() => setShowBulkImport(false)}
+        onImportSuccess={fetchLeads}
       />
 
       <LeadDetailsDrawer

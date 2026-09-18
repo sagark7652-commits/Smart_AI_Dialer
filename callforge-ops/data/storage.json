@@ -1,6 +1,36 @@
 {
   "leads": [
     {
+      "id": "lead_NXncNuM4",
+      "name": "Pooja Hegde",
+      "phone": "+919988776655",
+      "company": "Hegde Retail",
+      "source": "Meta Ads Instant Form",
+      "stage": "New",
+      "score": 85,
+      "last": "Just now",
+      "notes": [
+        "Ingested via inbound webhook (Meta Ads Instant Form). Timestamp: 2026-09-18T16:23:53.366Z"
+      ],
+      "isDnc": false,
+      "createdAt": "2026-09-18T16:23:53.366Z"
+    },
+    {
+      "id": "lead_WslWBfUg",
+      "name": "Sanjay Rawat",
+      "phone": "+919811122233",
+      "company": "Rawat Logistics",
+      "source": "Bulk CSV",
+      "stage": "New",
+      "score": 70,
+      "last": "Just imported",
+      "notes": [
+        "Imported via Bulk CSV Uploader."
+      ],
+      "isDnc": false,
+      "createdAt": "2026-09-18T16:23:53.363Z"
+    },
+    {
       "id": "lead_ldCa8JU9",
       "name": "Rajesh Kumar",
       "phone": "+91 98200 44882",
@@ -380,6 +410,33 @@
   ],
   "auditLogs": [
     {
+      "id": "log_9SlEC-ZH",
+      "action": "Inbound Lead Webhook",
+      "user": "Webhook Integration",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-09-18T16:23:53.367Z",
+      "details": "Auto-captured Pooja Hegde (+919988776655) from Meta Ads Instant Form.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_AVDD8cbH",
+      "action": "Bulk Leads Imported",
+      "user": "Arjun Mehta (Admin)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-09-18T16:23:53.363Z",
+      "details": "Imported 1 new leads into dialing queue.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_b0yqG5LV",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-09-18T16:23:35.284Z",
+      "details": "Delivered template 'festive_brochure' to +919820098200 (Arjun Verma).",
+      "category": "campaign"
+    },
+    {
       "id": "log_Pjp8uHhI",
       "action": "Wallet Recharged",
       "user": "Arjun Mehta (Admin)",
@@ -423,6 +480,18 @@
       "timestamp": "2026-09-16T09:15:00.000Z",
       "details": "Festive Season follow-up launched with 2,480 leads.",
       "category": "campaign"
+    }
+  ],
+  "whatsappLogs": [
+    {
+      "id": "wa_A0GRv6G5",
+      "recipientName": "Arjun Verma",
+      "recipientPhone": "+919820098200",
+      "templateName": "festive_brochure",
+      "body": "Namaste Arjun, here is your voucher",
+      "status": "delivered",
+      "timestamp": "2026-09-18T16:23:35.284Z",
+      "disposition": "Interested"
     }
   ]
 }

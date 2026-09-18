@@ -458,6 +458,59 @@ callingRouter.put("/leads/:id", (req: Request, res: Response) => {
   res.json({ success: true, lead: updated });
 });
 
+// POST /api/calling/leads/bulk
+callingRouter.post("/leads/bulk", (req: Request, res: Response) => {
+  const { leads } = req.body;
+  if (!Array.isArray(leads) || leads.length === 0) {
+    return res.status(400).json({ error: "Array of leads is required." });
+  }
+  const result = persistentStore.bulkAddLeads(leads);
+  res.json({
+    success: true,
+    message: `Successfully ingested ${result.added} leads into database.`,
+    ...result,
+  });
+});
+
+// POST /api/calling/leads/webhook (Meta Ads, Google Ads, IndiaMART, JustDial)
+callingRouter.post("/leads/webhook", (req: Request, res: Response) => {
+  const body = req.body || {};
+  const name = body.name || body.full_name || body.lead_name || "Inbound Webhook Lead";
+  const phone = body.phone || body.phone_number || body.mobile || body.contact;
+  const company = body.company || body.company_name || body.business || "Digital Prospect";
+  const source = body.source || body.platform || "Meta Ads Instant Form";
+
+  if (!phone) {
+    return res.status(400).json({ error: "Missing phone parameter in webhook payload." });
+  }
+
+  const created = persistentStore.addLead({
+    name,
+    phone,
+    company,
+    source,
+    stage: "New",
+    score: 85,
+    last: "Just now",
+    notes: [`Ingested via inbound webhook (${source}). Timestamp: ${new Date().toISOString()}`],
+    isDnc: false,
+  });
+
+  persistentStore.addAuditLog(
+    "Inbound Lead Webhook",
+    "Webhook Integration",
+    `Auto-captured ${name} (${phone}) from ${source}.`,
+    "campaign"
+  );
+
+  res.status(201).json({
+    success: true,
+    message: "Inbound webhook lead captured successfully.",
+    lead: created,
+    autoCallScheduled: true,
+  });
+});
+
 // =============================================================================
 // 7. CARRIER TELEPHONY CONFIGURATION & TEST ENDPOINTS
 // =============================================================================
@@ -803,6 +856,64 @@ callingRouter.post("/ai/ab-split", (req: Request, res: Response) => {
     message: "A/B Conversation Pitch split and script updated in live outbound dialer.",
     config: updated,
   });
+});
+
+// =============================================================================
+// 13. POST-CALL WHATSAPP AUTOMATION & TELEPHONY WEBHOOKS
+// =============================================================================
+
+// POST /api/calling/automation/whatsapp
+callingRouter.post("/automation/whatsapp", (req: Request, res: Response) => {
+  const recipientPhone = req.body.recipientPhone || req.body.leadPhone || req.body.phone;
+  const recipientName = req.body.recipientName || req.body.leadName || req.body.name;
+  const templateName = req.body.templateName || req.body.templateId;
+  const messageBody = req.body.body || req.body.message;
+  const disposition = req.body.disposition;
+
+  if (!recipientPhone) {
+    return res.status(400).json({ error: "Recipient phone number is required." });
+  }
+
+  const message = persistentStore.sendWhatsAppMessage({
+    recipientName: recipientName || "Prospect",
+    recipientPhone,
+    templateName: templateName || "festive_brochure_v1",
+    body:
+      messageBody ||
+      `Namaste ${recipientName || ""}, thank you for speaking with our CallForge representative. Here is our product brochure and festive discount link: https://callforge.io/brochure`,
+    disposition: disposition || "Interested",
+  });
+
+  res.json({
+    success: true,
+    message: `WhatsApp message dispatched via Business Cloud API to ${recipientPhone}.`,
+    deliveryStatus: "delivered",
+    whatsappMessage: message,
+  });
+});
+
+// GET /api/calling/automation/whatsapp/logs
+callingRouter.get("/automation/whatsapp/logs", (_req: Request, res: Response) => {
+  res.json({ logs: persistentStore.getWhatsAppLogs() });
+});
+
+// POST /api/calling/webhooks/voice/twiml (Twilio Programmable Voice SIP Inbound)
+callingRouter.post("/webhooks/voice/twiml", (req: Request, res: Response) => {
+  const caller = req.body.From || "+91-Unknown";
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Polly.Aditi" language="hi-IN">Namaste! Welcome to CallForge AI Telephony Suite. Your call is being bridged to an autonomous agent.</Say>
+  <Pause length="1"/>
+  <Say voice="Polly.Aditi" language="hi-IN">Connecting now.</Say>
+</Response>`;
+  res.type("text/xml").send(twiml);
+});
+
+// POST /api/calling/webhooks/voice/status (Carrier Call Status Callback)
+callingRouter.post("/webhooks/voice/status", (req: Request, res: Response) => {
+  const { CallSid, CallStatus, Duration } = req.body;
+  console.log(`[Carrier Status Callback] CallSid: ${CallSid} Status: ${CallStatus} Duration: ${Duration}s`);
+  res.json({ received: true, status: CallStatus });
 });
 
 

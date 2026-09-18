@@ -12,9 +12,11 @@ import {
   Clock,
   Tag,
   User,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ClickToCallButton } from "./ClickToCallButton";
+import { WhatsAppFollowUpModal } from "./WhatsAppFollowUpModal";
 
 export interface LeadRecord {
   name: string;
@@ -46,6 +48,7 @@ export function LeadDetailsDrawer({
 
   const [currentStage, setCurrentStage] = useState(lead.stage || "New");
   const [isDnc, setIsDnc] = useState(lead.isDnc || lead.stage === "DNC");
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [notes, setNotes] = useState<string[]>(
     lead.notes || [
@@ -149,12 +152,23 @@ export function LeadDetailsDrawer({
             </div>
           </div>
 
-          {/* Quick Click-to-Call Action */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-800 bg-zinc-900/50">
-            <div className="text-xs text-zinc-300">
-              Direct Telephony Bridge
+          {/* Quick Telephony & WhatsApp Actions */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-800 bg-zinc-900/50">
+              <div className="text-xs text-zinc-300">
+                Direct Telephony Bridge
+              </div>
+              <ClickToCallButton phoneNumber={lead.phone} leadName={lead.name} />
             </div>
-            <ClickToCallButton phoneNumber={lead.phone} leadName={lead.name} />
+
+            <button
+              type="button"
+              onClick={() => setShowWhatsApp(true)}
+              className="w-full py-2 px-3 rounded-lg border border-emerald-800/60 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <MessageSquare size={14} className="text-emerald-400" />
+              <span>Send WhatsApp Follow-up (Auto Template)</span>
+            </button>
           </div>
 
           {/* Stage & Compliance Section */}
@@ -275,6 +289,14 @@ export function LeadDetailsDrawer({
           </button>
         </div>
       </div>
+
+      <WhatsAppFollowUpModal
+        isOpen={showWhatsApp}
+        onClose={() => setShowWhatsApp(false)}
+        leadName={lead.name}
+        leadPhone={lead.phone}
+        disposition={currentStage}
+      />
     </div>
   );
 }

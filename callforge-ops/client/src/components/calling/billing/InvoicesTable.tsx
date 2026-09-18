@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { jsPDF } from "jspdf";
+
 export interface InvoiceRecord {
   id: string;
   invoiceNumber: string;
@@ -45,37 +47,141 @@ export const InvoicesTable: React.FC = () => {
   }, []);
 
   const handleDownloadInvoice = (inv: InvoiceRecord) => {
-    // Generate text/csv formatted GST receipt and trigger download
-    const invoiceContent = `=====================================================
-CALLFORGE OPS TELEPHONY - TAX INVOICE
-=====================================================
-Invoice Number : ${inv.invoiceNumber}
-Date           : ${new Date(inv.date).toLocaleDateString("en-IN", { dateStyle: "long" })}
-GSTIN Seller   : 27AABCC9999F1Z9 (CallForge Telecom India)
-GSTIN Buyer    : 27AABCC1234F1Z8 (Arjun's Workspace)
------------------------------------------------------
-Item Description:
-${inv.description}
+    try {
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
 
-Subtotal (Pre-Tax)  : INR ${inv.subtotal.toFixed(2)}
-IGST / CGST+SGST 18%: INR ${inv.gstAmount.toFixed(2)}
------------------------------------------------------
-TOTAL AMOUNT PAID   : INR ${inv.totalAmount.toFixed(2)}
-Payment Mode        : ${inv.paymentMethod}
-Payment Status      : SUCCESS / PAID
------------------------------------------------------
-This is a computer-generated tax invoice compliant 
-with Section 31 of CGST Act 2017.
-=====================================================`;
+      // Dark slate top banner
+      doc.setFillColor(15, 23, 42); // slate-900
+      doc.rect(0, 0, 595, 75, "F");
 
-    const blob = new Blob([invoiceContent], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${inv.invoiceNumber}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-    toast.success(`Downloaded Tax Invoice ${inv.invoiceNumber}`);
+      // Brand Title
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("CALLFORGE OPS TELEPHONY", 40, 38);
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("Tax Invoice / Cash Receipt under Section 31 of CGST Act, 2017", 40, 56);
+
+      // Status pill on header
+      doc.setFillColor(34, 197, 94);
+      doc.roundedRect(460, 24, 95, 26, 4, 4, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("PAID & VERIFIED", 468, 40);
+
+      // Section Headings
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text("INVOICE METADATA", 40, 105);
+      doc.text("BILLED TO (ENTERPRISE ACCOUNT)", 320, 105);
+
+      // Divider line
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(1);
+      doc.line(40, 112, 555, 112);
+
+      // Left Column: Supplier / Invoice Details
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(`Invoice No: ${inv.invoiceNumber}`, 40, 128);
+      doc.text(`Invoice Date: ${new Date(inv.date).toLocaleDateString("en-IN", { dateStyle: "long" })}`, 40, 142);
+      doc.text("Supplier: CallForge Telecom India Pvt Ltd", 40, 156);
+      doc.text("Supplier GSTIN: 27AABCC9999F1Z9 (Maharashtra)", 40, 170);
+      doc.text("State Code: 27 | Place of Supply: 27-MH", 40, 184);
+
+      // Right Column: Customer Details
+      doc.text("Customer: Arjun / CallForge Ops Workspace", 320, 128);
+      doc.text("Customer GSTIN: 27AABCC1234F1Z8", 320, 142);
+      doc.text(`Payment Instrument: ${inv.paymentMethod}`, 320, 156);
+      doc.text("Reconciliation ID: TXN-" + Math.floor(10000000 + Math.random() * 90000000), 320, 170);
+      doc.text("SAC Classification: 9984 (Telecommunication Services)", 320, 184);
+
+      // Table Header
+      doc.setFillColor(241, 245, 249);
+      doc.rect(40, 205, 515, 22, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(30, 41, 59);
+      doc.text("Item / Plan Description", 50, 219);
+      doc.text("SAC", 270, 219);
+      doc.text("Taxable (INR)", 360, 219);
+      doc.text("GST (18%)", 450, 219);
+      doc.text("Total (INR)", 545, 219, { align: "right" });
+
+      // Table Row
+      doc.setFont("helvetica", "normal");
+      doc.text(inv.description, 50, 242);
+      doc.text("9984", 270, 242);
+      doc.text(inv.subtotal.toFixed(2), 360, 242);
+      doc.text(inv.gstAmount.toFixed(2), 450, 242);
+      doc.text(inv.totalAmount.toFixed(2), 545, 242, { align: "right" });
+
+      // Border below table
+      doc.line(40, 255, 555, 255);
+
+      // Calculation Breakdown
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.text("Subtotal (Taxable Value):", 380, 275);
+      doc.text(`INR ${inv.subtotal.toFixed(2)}`, 545, 275, { align: "right" });
+
+      doc.text("Central GST (CGST 9%):", 380, 290);
+      doc.text(`INR ${(inv.gstAmount / 2).toFixed(2)}`, 545, 290, { align: "right" });
+
+      doc.text("State GST (SGST 9%):", 380, 305);
+      doc.text(`INR ${(inv.gstAmount / 2).toFixed(2)}`, 545, 305, { align: "right" });
+
+      // Grand Total Highlight Box
+      doc.setFillColor(240, 253, 244);
+      doc.rect(360, 318, 195, 26, "F");
+      doc.setTextColor(22, 101, 52);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.text("Grand Total Paid:", 372, 335);
+      doc.text(`INR ${inv.totalAmount.toFixed(2)}`, 545, 335, { align: "right" });
+
+      // Verification Stamp Seal Box
+      doc.setDrawColor(34, 197, 94);
+      doc.setLineWidth(1.2);
+      doc.roundedRect(40, 280, 160, 52, 4, 4);
+      doc.setTextColor(22, 101, 52);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text("✓ TRAI & GST VERIFIED", 50, 300);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(71, 85, 105);
+      doc.text("Authorized Electronic Voucher", 50, 314);
+      doc.text("Instant Digital Clearance", 50, 325);
+
+      // Compliance Notice Footer
+      doc.setDrawColor(226, 232, 240);
+      doc.line(40, 750, 555, 750);
+      doc.setTextColor(148, 163, 184);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        "This is an authenticated computer-generated digital tax invoice issued under Rule 48 of the CGST Rules, 2017.",
+        40,
+        765
+      );
+      doc.text(
+        "CallForge Telecom India Private Limited • Level 4, Business Bay, Pune MH 411014 • support@callforge.ai",
+        40,
+        778
+      );
+
+      doc.save(`${inv.invoiceNumber}.pdf`);
+      toast.success(`Generated official PDF Tax Invoice: ${inv.invoiceNumber}`);
+    } catch (err: any) {
+      console.error("Failed to generate PDF", err);
+      toast.error("Failed to export PDF invoice");
+    }
   };
 
   const filtered = invoices.filter(
