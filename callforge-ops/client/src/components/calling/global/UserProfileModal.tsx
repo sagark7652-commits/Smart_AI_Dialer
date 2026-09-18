@@ -154,20 +154,36 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
         {/* Footer */}
         <div className="p-4 border-t border-zinc-800 bg-zinc-900/30 flex items-center justify-between">
           <button
+            type="button"
             onClick={() => {
-              toast.info("Session refreshed. Active token validated.");
+              localStorage.removeItem("creatorai_auth_user");
+              localStorage.removeItem("creatorai_auth_token");
+              toast.success("Signed out of CallForge Workspace");
               onClose();
+              window.location.href = "/login";
             }}
-            className="text-xs text-zinc-400 hover:text-zinc-200 transition"
+            className="px-3 py-1.5 rounded-lg border border-rose-900/60 bg-rose-950/40 text-rose-300 hover:bg-rose-900/50 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
           >
-            Refresh Session
+            <LogOut size={13} />
+            <span>Sign Out</span>
           </button>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-200 transition"
-          >
-            Done
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                toast.info("Session refreshed. Active token validated.");
+                onClose();
+              }}
+              className="text-xs text-zinc-400 hover:text-zinc-200 transition px-2 py-1"
+            >
+              Refresh Token
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-200 transition cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
         </div>
       </div>
     </div>

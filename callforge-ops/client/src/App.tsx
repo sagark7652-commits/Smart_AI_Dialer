@@ -5,10 +5,14 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import { LoginPage } from "./pages/LoginPage";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/login">
+        {() => <LoginPage onLoginSuccess={() => { window.location.href = "/"; }} />}
+      </Route>
       <Route path="/" component={Home} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
