@@ -85,6 +85,72 @@ export interface StoredABSplit {
   updatedAt: string;
 }
 
+export interface ClinicAppointment {
+  id: string;
+  tokenNumber: number;
+  patientName: string;
+  patientPhone: string;
+  patientAge: number;
+  gender: "Male" | "Female" | "Other";
+  doctorName: string;
+  slot: string;
+  status: "Waiting" | "Consulting" | "Completed" | "Cancelled";
+  chiefComplaint: string;
+  fee: number;
+  paid: boolean;
+  createdAt: string;
+}
+
+export interface PatientVitals {
+  bp: string;
+  pulse: number;
+  spo2: number;
+  weight: number;
+  temperature: number;
+}
+
+export interface ClinicPatient {
+  id: string;
+  name: string;
+  phone: string;
+  age: number;
+  gender: "Male" | "Female" | "Other";
+  bloodGroup: string;
+  allergies?: string[];
+  vitals: PatientVitals;
+  history: Array<{
+    date: string;
+    diagnosis: string;
+    medicines: Array<{ name: string; dosage: string; duration: string }>;
+    notes: string;
+  }>;
+}
+
+export interface ClinicMedicine {
+  id: string;
+  name: string;
+  category: "Tablet" | "Syrup" | "Capsule" | "Injection" | "Ointment";
+  batchNo: string;
+  stockQty: number;
+  unitPrice: number;
+  expiryDate: string;
+  reorderLevel: number;
+}
+
+export interface ClinicInvoice {
+  id: string;
+  invoiceNo: string;
+  patientName: string;
+  patientPhone: string;
+  consultationFee: number;
+  pharmacyAmount: number;
+  labAmount: number;
+  discount: number;
+  totalAmount: number;
+  paymentMode: "Cash" | "UPI" | "Card";
+  createdAt: string;
+}
+
 interface DatabaseStructure {
   leads: StoredLead[];
   cdrLogs: StoredCDR[];
@@ -94,6 +160,10 @@ interface DatabaseStructure {
   ivrNodes: StoredIVRNode[];
   rolesMatrix: StoredRoleMatrix;
   abSplitConfig: StoredABSplit;
+  clinicAppointments: ClinicAppointment[];
+  clinicPatients: ClinicPatient[];
+  clinicMedicines: ClinicMedicine[];
+  clinicInvoices: ClinicInvoice[];
 }
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -317,9 +387,209 @@ const DEFAULT_AB_SPLIT: StoredABSplit = {
     "Namaste {lead_name} ji. We are offering an exclusive 20% discount on festive calling agent packs. Would you like to schedule a 10-minute demo with our team?",
   scriptB:
     "Namaste {lead_name} ji! Most retail businesses in {city} are saving 4 hours daily using CallForge AI calling. Can we demonstrate how it handles your festive inbound rush?",
-  winnerVariant: "B",
   updatedAt: new Date().toISOString(),
 };
+
+const DEFAULT_CLINIC_APPOINTMENTS: ClinicAppointment[] = [
+  {
+    id: "apt-01",
+    tokenNumber: 1,
+    patientName: "Amit Patel",
+    patientPhone: "+91 98201 44520",
+    patientAge: 38,
+    gender: "Male",
+    doctorName: "Dr. Arjun Mehta (MD Medicine)",
+    slot: "10:00 AM",
+    status: "Consulting",
+    chiefComplaint: "Persistent dry cough, mild fever since 3 days",
+    fee: 500,
+    paid: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "apt-02",
+    tokenNumber: 2,
+    patientName: "Sunita Deshmukh",
+    patientPhone: "+91 98450 11982",
+    patientAge: 52,
+    gender: "Female",
+    doctorName: "Dr. Arjun Mehta (MD Medicine)",
+    slot: "10:20 AM",
+    status: "Waiting",
+    chiefComplaint: "Routine hypertension & diabetes follow-up",
+    fee: 500,
+    paid: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "apt-03",
+    tokenNumber: 3,
+    patientName: "Rahul Joshi",
+    patientPhone: "+91 97110 88231",
+    patientAge: 29,
+    gender: "Male",
+    doctorName: "Dr. Arjun Mehta (MD Medicine)",
+    slot: "10:40 AM",
+    status: "Waiting",
+    chiefComplaint: "Severe migraine and neck stiffness",
+    fee: 500,
+    paid: false,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "apt-04",
+    tokenNumber: 4,
+    patientName: "Pooja Sharma",
+    patientPhone: "+91 98990 33412",
+    patientAge: 34,
+    gender: "Female",
+    doctorName: "Dr. Arjun Mehta (MD Medicine)",
+    slot: "11:00 AM",
+    status: "Waiting",
+    chiefComplaint: "Seasonal allergy and throat irritation",
+    fee: 500,
+    paid: true,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+const DEFAULT_CLINIC_PATIENTS: ClinicPatient[] = [
+  {
+    id: "pat-01",
+    name: "Amit Patel",
+    phone: "+91 98201 44520",
+    age: 38,
+    gender: "Male",
+    bloodGroup: "B+",
+    allergies: ["Sulfa drugs"],
+    vitals: {
+      bp: "124/82",
+      pulse: 78,
+      spo2: 98,
+      weight: 72,
+      temperature: 99.1,
+    },
+    history: [
+      {
+        date: "12 Aug 2026",
+        diagnosis: "Upper Respiratory Tract Infection",
+        medicines: [
+          { name: "Amoxicillin 500mg", dosage: "1-0-1", duration: "5 days" },
+          { name: "Paracetamol 650mg", dosage: "1-0-1", duration: "3 days" },
+        ],
+        notes: "Advised warm saline gargles and steam inhalation.",
+      },
+    ],
+  },
+  {
+    id: "pat-02",
+    name: "Sunita Deshmukh",
+    phone: "+91 98450 11982",
+    age: 52,
+    gender: "Female",
+    bloodGroup: "O+",
+    allergies: [],
+    vitals: {
+      bp: "138/88",
+      pulse: 74,
+      spo2: 99,
+      weight: 65,
+      temperature: 98.4,
+    },
+    history: [
+      {
+        date: "01 Sep 2026",
+        diagnosis: "Essential Hypertension Stage 1",
+        medicines: [
+          { name: "Telmisartan 40mg", dosage: "1-0-0", duration: "30 days" },
+        ],
+        notes: "BP under control. Advised low sodium diet.",
+      },
+    ],
+  },
+];
+
+const DEFAULT_CLINIC_MEDICINES: ClinicMedicine[] = [
+  {
+    id: "med-01",
+    name: "Paracetamol 650mg (Dolo)",
+    category: "Tablet",
+    batchNo: "DL-8841",
+    stockQty: 480,
+    unitPrice: 32,
+    expiryDate: "12/2027",
+    reorderLevel: 50,
+  },
+  {
+    id: "med-02",
+    name: "Amoxicillin 500mg (Mox)",
+    category: "Capsule",
+    batchNo: "MX-2091",
+    stockQty: 240,
+    unitPrice: 85,
+    expiryDate: "08/2027",
+    reorderLevel: 30,
+  },
+  {
+    id: "med-03",
+    name: "Pantoprazole 40mg (Pan-40)",
+    category: "Tablet",
+    batchNo: "PN-4019",
+    stockQty: 320,
+    unitPrice: 95,
+    expiryDate: "05/2028",
+    reorderLevel: 40,
+  },
+  {
+    id: "med-04",
+    name: "Cough Syrup (Ascoril-D 100ml)",
+    category: "Syrup",
+    batchNo: "AS-1102",
+    stockQty: 18,
+    unitPrice: 125,
+    expiryDate: "03/2027",
+    reorderLevel: 25,
+  },
+  {
+    id: "med-05",
+    name: "Cetirizine 10mg (Cetzine)",
+    category: "Tablet",
+    batchNo: "CZ-9081",
+    stockQty: 500,
+    unitPrice: 28,
+    expiryDate: "11/2027",
+    reorderLevel: 50,
+  },
+];
+
+const DEFAULT_CLINIC_INVOICES: ClinicInvoice[] = [
+  {
+    id: "inv-101",
+    invoiceNo: "INV-2026-0891",
+    patientName: "Amit Patel",
+    patientPhone: "+91 98201 44520",
+    consultationFee: 500,
+    pharmacyAmount: 117,
+    labAmount: 0,
+    discount: 0,
+    totalAmount: 617,
+    paymentMode: "UPI",
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: "inv-102",
+    invoiceNo: "INV-2026-0892",
+    patientName: "Sunita Deshmukh",
+    patientPhone: "+91 98450 11982",
+    consultationFee: 500,
+    pharmacyAmount: 95,
+    labAmount: 250,
+    discount: 45,
+    totalAmount: 800,
+    paymentMode: "Cash",
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+  },
+];
 
 class PersistentStorage {
   private data: DatabaseStructure;
@@ -345,6 +615,10 @@ class PersistentStorage {
         if (!parsed.ivrNodes || !Array.isArray(parsed.ivrNodes)) parsed.ivrNodes = DEFAULT_IVR_NODES;
         if (!parsed.rolesMatrix || !parsed.rolesMatrix.roles) parsed.rolesMatrix = DEFAULT_ROLES_MATRIX;
         if (!parsed.abSplitConfig) parsed.abSplitConfig = DEFAULT_AB_SPLIT;
+        if (!parsed.clinicAppointments || !Array.isArray(parsed.clinicAppointments)) parsed.clinicAppointments = DEFAULT_CLINIC_APPOINTMENTS;
+        if (!parsed.clinicPatients || !Array.isArray(parsed.clinicPatients)) parsed.clinicPatients = DEFAULT_CLINIC_PATIENTS;
+        if (!parsed.clinicMedicines || !Array.isArray(parsed.clinicMedicines)) parsed.clinicMedicines = DEFAULT_CLINIC_MEDICINES;
+        if (!parsed.clinicInvoices || !Array.isArray(parsed.clinicInvoices)) parsed.clinicInvoices = DEFAULT_CLINIC_INVOICES;
         this.save(parsed);
         return parsed;
       }
@@ -377,6 +651,10 @@ class PersistentStorage {
       ivrNodes: DEFAULT_IVR_NODES,
       rolesMatrix: DEFAULT_ROLES_MATRIX,
       abSplitConfig: DEFAULT_AB_SPLIT,
+      clinicAppointments: DEFAULT_CLINIC_APPOINTMENTS,
+      clinicPatients: DEFAULT_CLINIC_PATIENTS,
+      clinicMedicines: DEFAULT_CLINIC_MEDICINES,
+      clinicInvoices: DEFAULT_CLINIC_INVOICES,
     };
 
     this.save(defaultData);
@@ -530,6 +808,197 @@ class PersistentStorage {
     };
     this.save(this.data);
     return this.data.abSplitConfig;
+  }
+
+  // --- Clinic Management System 2026 Operations ---
+
+  getClinicAppointments(): ClinicAppointment[] {
+    return this.data.clinicAppointments || DEFAULT_CLINIC_APPOINTMENTS;
+  }
+
+  addClinicAppointment(data: Omit<ClinicAppointment, "id" | "tokenNumber" | "createdAt">): ClinicAppointment {
+    const list = this.data.clinicAppointments || [];
+    const maxToken = list.reduce((max, a) => Math.max(max, a.tokenNumber || 0), 0);
+    const newAppointment: ClinicAppointment = {
+      id: `apt-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenNumber: maxToken + 1,
+      ...data,
+      createdAt: new Date().toISOString(),
+    };
+    this.data.clinicAppointments = [newAppointment, ...list];
+    this.save(this.data);
+
+    // Auto add or update patient profile if not exists
+    const existingPatient = (this.data.clinicPatients || []).find(
+      (p) => p.phone === data.patientPhone || p.name.toLowerCase() === data.patientName.toLowerCase()
+    );
+    if (!existingPatient) {
+      this.addOrUpdateClinicPatient({
+        name: data.patientName,
+        phone: data.patientPhone,
+        age: data.patientAge,
+        gender: data.gender,
+        bloodGroup: "Unknown",
+        vitals: { bp: "120/80", pulse: 72, spo2: 98, weight: 65, temperature: 98.6 },
+        history: [],
+      });
+    }
+
+    return newAppointment;
+  }
+
+  updateAppointmentStatus(id: string, status: ClinicAppointment["status"]): ClinicAppointment | null {
+    const list = this.data.clinicAppointments || [];
+    const idx = list.findIndex((a) => a.id === id);
+    if (idx === -1) return null;
+    list[idx].status = status;
+    this.save(this.data);
+    return list[idx];
+  }
+
+  deleteClinicAppointment(id: string): boolean {
+    const initialLen = (this.data.clinicAppointments || []).length;
+    this.data.clinicAppointments = (this.data.clinicAppointments || []).filter((a) => a.id !== id);
+    if (this.data.clinicAppointments.length !== initialLen) {
+      this.save(this.data);
+      return true;
+    }
+    return false;
+  }
+
+  getClinicPatients(): ClinicPatient[] {
+    return this.data.clinicPatients || DEFAULT_CLINIC_PATIENTS;
+  }
+
+  getClinicPatientById(id: string): ClinicPatient | undefined {
+    return (this.data.clinicPatients || []).find((p) => p.id === id);
+  }
+
+  addOrUpdateClinicPatient(patientData: Partial<ClinicPatient> & { name: string; phone: string }): ClinicPatient {
+    const list = this.data.clinicPatients || [];
+    const idx = list.findIndex((p) => p.phone === patientData.phone);
+    if (idx !== -1) {
+      list[idx] = {
+        ...list[idx],
+        ...patientData,
+      };
+      this.save(this.data);
+      return list[idx];
+    } else {
+      const newPatient: ClinicPatient = {
+        id: `pat-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        name: patientData.name,
+        phone: patientData.phone,
+        age: patientData.age || 30,
+        gender: patientData.gender || "Other",
+        bloodGroup: patientData.bloodGroup || "B+",
+        allergies: patientData.allergies || [],
+        vitals: patientData.vitals || { bp: "120/80", pulse: 72, spo2: 98, weight: 65, temperature: 98.6 },
+        history: patientData.history || [],
+      };
+      this.data.clinicPatients = [newPatient, ...list];
+      this.save(this.data);
+      return newPatient;
+    }
+  }
+
+  updatePatientVitals(patientId: string, vitals: PatientVitals): ClinicPatient | null {
+    const list = this.data.clinicPatients || [];
+    const patient = list.find((p) => p.id === patientId);
+    if (!patient) return null;
+    patient.vitals = vitals;
+    this.save(this.data);
+    return patient;
+  }
+
+  addConsultationRecord(
+    patientId: string,
+    record: { date: string; diagnosis: string; medicines: Array<{ name: string; dosage: string; duration: string }>; notes: string }
+  ): ClinicPatient | null {
+    const list = this.data.clinicPatients || [];
+    const patient = list.find((p) => p.id === patientId);
+    if (!patient) return null;
+    if (!patient.history) patient.history = [];
+    patient.history.unshift(record);
+    this.save(this.data);
+    return patient;
+  }
+
+  getClinicMedicines(): ClinicMedicine[] {
+    return this.data.clinicMedicines || DEFAULT_CLINIC_MEDICINES;
+  }
+
+  addClinicMedicine(med: Omit<ClinicMedicine, "id">): ClinicMedicine {
+    const list = this.data.clinicMedicines || [];
+    const newMed: ClinicMedicine = {
+      id: `med-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      ...med,
+    };
+    this.data.clinicMedicines = [...list, newMed];
+    this.save(this.data);
+    return newMed;
+  }
+
+  updateClinicMedicine(id: string, updates: Partial<ClinicMedicine>): ClinicMedicine | null {
+    const list = this.data.clinicMedicines || [];
+    const idx = list.findIndex((m) => m.id === id);
+    if (idx === -1) return null;
+    list[idx] = { ...list[idx], ...updates };
+    this.save(this.data);
+    return list[idx];
+  }
+
+  dispenseMedicine(id: string, qty: number): { success: boolean; medicine?: ClinicMedicine; error?: string } {
+    const list = this.data.clinicMedicines || [];
+    const med = list.find((m) => m.id === id);
+    if (!med) return { success: false, error: "Medicine not found in inventory" };
+    if (med.stockQty < qty) {
+      return { success: false, error: `Insufficient stock. Only ${med.stockQty} units available` };
+    }
+    med.stockQty -= qty;
+    this.save(this.data);
+    return { success: true, medicine: med };
+  }
+
+  getClinicInvoices(): ClinicInvoice[] {
+    return this.data.clinicInvoices || DEFAULT_CLINIC_INVOICES;
+  }
+
+  createClinicInvoice(invoiceData: Omit<ClinicInvoice, "id" | "invoiceNo" | "createdAt">): ClinicInvoice {
+    const list = this.data.clinicInvoices || [];
+    const invNum = `INV-2026-${(list.length + 893).toString().padStart(4, "0")}`;
+    const newInvoice: ClinicInvoice = {
+      id: `inv-${Date.now()}`,
+      invoiceNo: invNum,
+      ...invoiceData,
+      createdAt: new Date().toISOString(),
+    };
+    this.data.clinicInvoices = [newInvoice, ...list];
+    this.save(this.data);
+    return newInvoice;
+  }
+
+  getClinicStats() {
+    const appointments = this.getClinicAppointments();
+    const medicines = this.getClinicMedicines();
+    const invoices = this.getClinicInvoices();
+
+    const waitingCount = appointments.filter((a) => a.status === "Waiting").length;
+    const consultingCount = appointments.filter((a) => a.status === "Consulting").length;
+    const completedCount = appointments.filter((a) => a.status === "Completed").length;
+    const totalTokensToday = appointments.length;
+
+    const todayRevenue = invoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0);
+    const lowStockCount = medicines.filter((m) => m.stockQty <= m.reorderLevel).length;
+
+    return {
+      totalTokensToday,
+      waitingCount,
+      consultingCount,
+      completedCount,
+      todayRevenue,
+      lowStockCount,
+    };
   }
 }
 
