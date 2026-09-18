@@ -641,8 +641,37 @@ callingRouter.get("/system/diagnostics", (_req: Request, res: Response) => {
 });
 
 // =============================================================================
-// 9. AUTO-RECHARGE & SPEND SAFEGUARDS ENDPOINTS
+// 9. AUTO-RECHARGE, WALLET & TELEPHONY BILLING ENDPOINTS
 // =============================================================================
+
+// GET /api/calling/billing/wallet
+callingRouter.get("/billing/wallet", (_req: Request, res: Response) => {
+  res.json(persistentStore.getWalletData());
+});
+
+// POST /api/calling/billing/topup
+callingRouter.post("/billing/topup", (req: Request, res: Response) => {
+  const { amount, paymentMethod, notes } = req.body;
+  const numAmount = Number(amount);
+  if (!numAmount || numAmount <= 0) {
+    return res.status(400).json({ error: "Invalid top-up amount: positive number required." });
+  }
+  const result = persistentStore.topupWallet(
+    numAmount,
+    paymentMethod || "UPI AutoPay",
+    notes
+  );
+  res.json({
+    success: true,
+    message: `₹${numAmount.toLocaleString("en-IN")} credited to your telephony prepaid balance.`,
+    ...result,
+  });
+});
+
+// GET /api/calling/billing/invoices
+callingRouter.get("/billing/invoices", (_req: Request, res: Response) => {
+  res.json({ invoices: persistentStore.getInvoices() });
+});
 
 // GET /api/calling/billing/autorecharge
 callingRouter.get("/billing/autorecharge", (_req: Request, res: Response) => {
@@ -683,7 +712,7 @@ callingRouter.post("/ivr", (req: Request, res: Response) => {
 });
 
 // =============================================================================
-// 11. RBAC ROLES & PERMISSIONS MATRIX ENDPOINTS
+// 11. RBAC ROLES, TEAM MEMBERS & PLATFORM AUDIT ENDPOINTS
 // =============================================================================
 
 // GET /api/calling/admin/roles
@@ -698,11 +727,63 @@ callingRouter.post("/admin/roles", (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid roles payload." });
   }
   const saved = persistentStore.saveRoleMatrix(roles);
+  persistentStore.addAuditLog(
+    "Updated RBAC Matrix",
+    "Arjun Mehta (Admin)",
+    "Saved updated role permission matrix across operator sessions.",
+    "security"
+  );
   res.json({
     success: true,
     message: "Role & RBAC Access Matrix saved and enforced across platform sessions.",
     roles: saved,
   });
+});
+
+// GET /api/calling/admin/team
+callingRouter.get("/admin/team", (_req: Request, res: Response) => {
+  res.json({ team: persistentStore.getTeamMembers() });
+});
+
+// POST /api/calling/admin/team
+callingRouter.post("/admin/team", (req: Request, res: Response) => {
+  const { name, email, role, extension } = req.body;
+  if (!name || !email || !role) {
+    return res.status(400).json({ error: "Missing required fields: name, email, role." });
+  }
+  const newMember = persistentStore.addTeamMember({ name, email, role, extension });
+  res.json({
+    success: true,
+    message: `Team member ${name} added successfully as ${role.toUpperCase()}.`,
+    member: newMember,
+  });
+});
+
+// PATCH /api/calling/admin/team/:id
+callingRouter.patch("/admin/team/:id", (req: Request, res: Response) => {
+  const updated = persistentStore.updateTeamMember(req.params.id, req.body);
+  if (!updated) {
+    return res.status(404).json({ error: "Team member not found." });
+  }
+  res.json({
+    success: true,
+    message: "Team member updated.",
+    member: updated,
+  });
+});
+
+// DELETE /api/calling/admin/team/:id
+callingRouter.delete("/admin/team/:id", (req: Request, res: Response) => {
+  const success = persistentStore.deleteTeamMember(req.params.id);
+  if (!success) {
+    return res.status(404).json({ error: "Team member not found." });
+  }
+  res.json({ success: true, message: "Team member removed from workspace." });
+});
+
+// GET /api/calling/admin/audit-logs
+callingRouter.get("/admin/audit-logs", (_req: Request, res: Response) => {
+  res.json({ logs: persistentStore.getAuditLogs() });
 });
 
 // =============================================================================

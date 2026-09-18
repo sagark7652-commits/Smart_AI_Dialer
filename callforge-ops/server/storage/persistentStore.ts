@@ -85,6 +85,50 @@ export interface StoredABSplit {
   updatedAt: string;
 }
 
+export interface StoredTransaction {
+  id: string;
+  type: "recharge" | "deduction" | "subscription_payment";
+  amount: number;
+  description: string;
+  paymentMethod: string;
+  status: "success" | "pending" | "failed";
+  timestamp: string;
+  referenceId: string;
+}
+
+export interface StoredInvoice {
+  id: string;
+  invoiceNumber: string;
+  date: string;
+  description: string;
+  subtotal: number;
+  gstAmount: number;
+  totalAmount: number;
+  status: "paid" | "pending";
+  paymentMethod: string;
+}
+
+export interface StoredTeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "supervisor" | "agent";
+  status: "active" | "invited" | "suspended";
+  extension: string;
+  joinedAt: string;
+  avatarInitials: string;
+}
+
+export interface StoredAuditLog {
+  id: string;
+  action: string;
+  user: string;
+  ip: string;
+  timestamp: string;
+  details: string;
+  category: "billing" | "security" | "carrier" | "campaign" | "system";
+}
+
 interface DatabaseStructure {
   leads: StoredLead[];
   cdrLogs: StoredCDR[];
@@ -94,6 +138,11 @@ interface DatabaseStructure {
   ivrNodes: StoredIVRNode[];
   rolesMatrix: StoredRoleMatrix;
   abSplitConfig: StoredABSplit;
+  walletBalance: number;
+  transactions: StoredTransaction[];
+  invoices: StoredInvoice[];
+  teamMembers: StoredTeamMember[];
+  auditLogs: StoredAuditLog[];
 }
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -321,6 +370,157 @@ const DEFAULT_AB_SPLIT: StoredABSplit = {
   updatedAt: new Date().toISOString(),
 };
 
+const DEFAULT_TEAM_MEMBERS: StoredTeamMember[] = [
+  {
+    id: "team_01",
+    name: "Arjun Mehta",
+    email: "arjun.mehta@callforge.io",
+    role: "admin",
+    status: "active",
+    extension: "1001",
+    joinedAt: "2026-08-01T09:00:00.000Z",
+    avatarInitials: "AM",
+  },
+  {
+    id: "team_02",
+    name: "Priya Sharma",
+    email: "priya.sharma@callforge.io",
+    role: "supervisor",
+    status: "active",
+    extension: "1002",
+    joinedAt: "2026-08-15T10:30:00.000Z",
+    avatarInitials: "PS",
+  },
+  {
+    id: "team_03",
+    name: "Rohan Verma",
+    email: "rohan.verma@callforge.io",
+    role: "agent",
+    status: "active",
+    extension: "1003",
+    joinedAt: "2026-09-01T11:00:00.000Z",
+    avatarInitials: "RV",
+  },
+  {
+    id: "team_04",
+    name: "Sneha Patil",
+    email: "sneha.patil@callforge.io",
+    role: "agent",
+    status: "active",
+    extension: "1004",
+    joinedAt: "2026-09-10T14:15:00.000Z",
+    avatarInitials: "SP",
+  },
+];
+
+const DEFAULT_INVOICES: StoredInvoice[] = [
+  {
+    id: "inv_01",
+    invoiceNumber: "CF-INV-2026-0941",
+    date: "2026-09-15T12:00:00.000Z",
+    description: "Telephony Trunks Auto-Recharge (UPI e-Mandate)",
+    subtotal: 21186.44,
+    gstAmount: 3813.56,
+    totalAmount: 25000.0,
+    status: "paid",
+    paymentMethod: "UPI AutoPay (NPCI)",
+  },
+  {
+    id: "inv_02",
+    invoiceNumber: "CF-INV-2026-0889",
+    date: "2026-09-01T09:30:00.000Z",
+    description: "Growth Pro Monthly Enterprise Subscription",
+    subtotal: 16948.31,
+    gstAmount: 3050.69,
+    totalAmount: 19999.0,
+    status: "paid",
+    paymentMethod: "Corporate Credit Card",
+  },
+  {
+    id: "inv_03",
+    invoiceNumber: "CF-INV-2026-0812",
+    date: "2026-08-18T16:45:00.000Z",
+    description: "Prepaid Trunk Balance Top-Up",
+    subtotal: 8474.58,
+    gstAmount: 1525.42,
+    totalAmount: 10000.0,
+    status: "paid",
+    paymentMethod: "NetBanking HDFC",
+  },
+];
+
+const DEFAULT_TRANSACTIONS: StoredTransaction[] = [
+  {
+    id: "txn_01",
+    type: "recharge",
+    amount: 25000,
+    description: "Auto-recharge trigger (Threshold < ₹7,500)",
+    paymentMethod: "UPI AutoPay",
+    status: "success",
+    timestamp: "2026-09-15T12:00:00.000Z",
+    referenceId: "UPI-4289100234",
+  },
+  {
+    id: "txn_02",
+    type: "deduction",
+    amount: 842.5,
+    description: "Campaign festive follow-up (593 minutes)",
+    paymentMethod: "Wallet Balance",
+    status: "success",
+    timestamp: "2026-09-16T18:30:00.000Z",
+    referenceId: "DIAL-883921",
+  },
+  {
+    id: "txn_03",
+    type: "subscription_payment",
+    amount: 19999,
+    description: "Growth Pro Subscription Renewal",
+    paymentMethod: "Corporate Card",
+    status: "success",
+    timestamp: "2026-09-01T09:30:00.000Z",
+    referenceId: "PAY-99238120",
+  },
+];
+
+const DEFAULT_AUDIT_LOGS: StoredAuditLog[] = [
+  {
+    id: "log_01",
+    action: "Updated RBAC Matrix",
+    user: "Arjun Mehta (Admin)",
+    ip: "10.107.157.9",
+    timestamp: "2026-09-18T14:30:00.000Z",
+    details: "Granted Start Campaigns permission to Floor Supervisor role.",
+    category: "security",
+  },
+  {
+    id: "log_02",
+    action: "Saved Auto-Recharge Policy",
+    user: "Arjun Mehta (Admin)",
+    ip: "10.107.157.9",
+    timestamp: "2026-09-17T11:00:00.000Z",
+    details: "Threshold updated to ₹7,500, auto top-up ₹35,000 via UPI.",
+    category: "billing",
+  },
+  {
+    id: "log_03",
+    action: "Carrier Trunk Test",
+    user: "System Diagnostics",
+    ip: "127.0.0.1",
+    timestamp: "2026-09-17T10:25:00.000Z",
+    details: "Tata Smartflo & Twilio PRI trunks verified successfully.",
+    category: "carrier",
+  },
+  {
+    id: "log_04",
+    action: "Campaign Started",
+    user: "Priya Sharma (Supervisor)",
+    ip: "10.107.157.14",
+    timestamp: "2026-09-16T09:15:00.000Z",
+    details: "Festive Season follow-up launched with 2,480 leads.",
+    category: "campaign",
+  },
+];
+
 class PersistentStorage {
   private data: DatabaseStructure;
 
@@ -345,6 +545,11 @@ class PersistentStorage {
         if (!parsed.ivrNodes || !Array.isArray(parsed.ivrNodes)) parsed.ivrNodes = DEFAULT_IVR_NODES;
         if (!parsed.rolesMatrix || !parsed.rolesMatrix.roles) parsed.rolesMatrix = DEFAULT_ROLES_MATRIX;
         if (!parsed.abSplitConfig) parsed.abSplitConfig = DEFAULT_AB_SPLIT;
+        if (typeof parsed.walletBalance !== "number") parsed.walletBalance = 28450.0;
+        if (!parsed.transactions || !Array.isArray(parsed.transactions)) parsed.transactions = DEFAULT_TRANSACTIONS;
+        if (!parsed.invoices || !Array.isArray(parsed.invoices)) parsed.invoices = DEFAULT_INVOICES;
+        if (!parsed.teamMembers || !Array.isArray(parsed.teamMembers)) parsed.teamMembers = DEFAULT_TEAM_MEMBERS;
+        if (!parsed.auditLogs || !Array.isArray(parsed.auditLogs)) parsed.auditLogs = DEFAULT_AUDIT_LOGS;
         this.save(parsed);
         return parsed;
       }
@@ -377,6 +582,11 @@ class PersistentStorage {
       ivrNodes: DEFAULT_IVR_NODES,
       rolesMatrix: DEFAULT_ROLES_MATRIX,
       abSplitConfig: DEFAULT_AB_SPLIT,
+      walletBalance: 28450.0,
+      transactions: DEFAULT_TRANSACTIONS,
+      invoices: DEFAULT_INVOICES,
+      teamMembers: DEFAULT_TEAM_MEMBERS,
+      auditLogs: DEFAULT_AUDIT_LOGS,
     };
 
     this.save(defaultData);
@@ -530,6 +740,192 @@ class PersistentStorage {
     };
     this.save(this.data);
     return this.data.abSplitConfig;
+  }
+
+  // --- Wallet & Telephony Billing Operations ---
+  getWalletData() {
+    return {
+      balance: typeof this.data.walletBalance === "number" ? this.data.walletBalance : 28450.0,
+      burnRatePerMin: 14.2,
+      minutesUsed: 3682,
+      minutesRemaining: this.data.subscription?.callingMinutesRemaining || 4850,
+      subscription: this.data.subscription,
+      autoRecharge: this.data.autoRecharge,
+      transactions: this.data.transactions || DEFAULT_TRANSACTIONS,
+      invoices: this.data.invoices || DEFAULT_INVOICES,
+    };
+  }
+
+  topupWallet(amount: number, paymentMethod: string, notes?: string) {
+    const current = typeof this.data.walletBalance === "number" ? this.data.walletBalance : 28450.0;
+    this.data.walletBalance = +(current + amount).toFixed(2);
+
+    const txnId = `txn_${nanoid(8)}`;
+    const refId = `UPI-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+    const newTxn: StoredTransaction = {
+      id: txnId,
+      type: "recharge",
+      amount,
+      description: notes || `Prepaid Telephony Wallet Top-Up (${paymentMethod})`,
+      paymentMethod,
+      status: "success",
+      timestamp: new Date().toISOString(),
+      referenceId: refId,
+    };
+    if (!this.data.transactions) this.data.transactions = [...DEFAULT_TRANSACTIONS];
+    this.data.transactions.unshift(newTxn);
+
+    // GST Invoice
+    const gstRate = 0.18;
+    const subtotal = +(amount / (1 + gstRate)).toFixed(2);
+    const gstAmount = +(amount - subtotal).toFixed(2);
+    const invNum = `CF-INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newInvoice: StoredInvoice = {
+      id: `inv_${nanoid(8)}`,
+      invoiceNumber: invNum,
+      date: new Date().toISOString(),
+      description: `Telephony Trunk Wallet Top-Up - ${paymentMethod}`,
+      subtotal,
+      gstAmount,
+      totalAmount: amount,
+      status: "paid",
+      paymentMethod,
+    };
+    if (!this.data.invoices) this.data.invoices = [...DEFAULT_INVOICES];
+    this.data.invoices.unshift(newInvoice);
+
+    this.addAuditLog(
+      "Wallet Recharged",
+      "Arjun Mehta (Admin)",
+      `Added ₹${amount.toLocaleString()} via ${paymentMethod}. New balance: ₹${this.data.walletBalance.toLocaleString()}.`,
+      "billing"
+    );
+
+    this.save(this.data);
+    return {
+      balance: this.data.walletBalance,
+      transaction: newTxn,
+      invoice: newInvoice,
+    };
+  }
+
+  deductWallet(amount: number, description: string) {
+    const current = typeof this.data.walletBalance === "number" ? this.data.walletBalance : 28450.0;
+    this.data.walletBalance = Math.max(0, +(current - amount).toFixed(2));
+    this.save(this.data);
+    return this.data.walletBalance;
+  }
+
+  getInvoices(): StoredInvoice[] {
+    return this.data.invoices || DEFAULT_INVOICES;
+  }
+
+  // --- Team & User Operations ---
+  getTeamMembers(): StoredTeamMember[] {
+    return this.data.teamMembers && this.data.teamMembers.length > 0
+      ? this.data.teamMembers
+      : DEFAULT_TEAM_MEMBERS;
+  }
+
+  addTeamMember(member: {
+    name: string;
+    email: string;
+    role: "admin" | "supervisor" | "agent";
+    extension?: string;
+  }): StoredTeamMember {
+    const initials = member.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+    const ext = member.extension || `${Math.floor(1000 + Math.random() * 9000)}`;
+    const newMember: StoredTeamMember = {
+      id: `team_${nanoid(8)}`,
+      name: member.name,
+      email: member.email,
+      role: member.role,
+      status: "active",
+      extension: ext,
+      joinedAt: new Date().toISOString(),
+      avatarInitials: initials || "OP",
+    };
+    if (!this.data.teamMembers) this.data.teamMembers = [...DEFAULT_TEAM_MEMBERS];
+    this.data.teamMembers.push(newMember);
+
+    this.addAuditLog(
+      "Added Team Member",
+      "Arjun Mehta (Admin)",
+      `Added ${member.name} (${member.role.toUpperCase()}) with extension ${ext}.`,
+      "security"
+    );
+
+    this.save(this.data);
+    return newMember;
+  }
+
+  updateTeamMember(id: string, updates: Partial<StoredTeamMember>): StoredTeamMember | null {
+    if (!this.data.teamMembers) this.data.teamMembers = [...DEFAULT_TEAM_MEMBERS];
+    const idx = this.data.teamMembers.findIndex((m) => m.id === id);
+    if (idx === -1) return null;
+    this.data.teamMembers[idx] = { ...this.data.teamMembers[idx], ...updates };
+
+    this.addAuditLog(
+      "Updated Team Member",
+      "Arjun Mehta (Admin)",
+      `Updated profile for ${this.data.teamMembers[idx].name}.`,
+      "security"
+    );
+
+    this.save(this.data);
+    return this.data.teamMembers[idx];
+  }
+
+  deleteTeamMember(id: string): boolean {
+    if (!this.data.teamMembers) this.data.teamMembers = [...DEFAULT_TEAM_MEMBERS];
+    const member = this.data.teamMembers.find((m) => m.id === id);
+    this.data.teamMembers = this.data.teamMembers.filter((m) => m.id !== id);
+    if (member) {
+      this.addAuditLog(
+        "Removed Team Member",
+        "Arjun Mehta (Admin)",
+        `Removed ${member.name} from workspace.`,
+        "security"
+      );
+    }
+    this.save(this.data);
+    return true;
+  }
+
+  // --- Platform Audit Logs ---
+  getAuditLogs(): StoredAuditLog[] {
+    return this.data.auditLogs && this.data.auditLogs.length > 0
+      ? this.data.auditLogs
+      : DEFAULT_AUDIT_LOGS;
+  }
+
+  addAuditLog(
+    action: string,
+    user: string,
+    details: string,
+    category: StoredAuditLog["category"] = "system"
+  ): StoredAuditLog {
+    const log: StoredAuditLog = {
+      id: `log_${nanoid(8)}`,
+      action,
+      user,
+      ip: "10.107.157.9",
+      timestamp: new Date().toISOString(),
+      details,
+      category,
+    };
+    if (!this.data.auditLogs) this.data.auditLogs = [...DEFAULT_AUDIT_LOGS];
+    this.data.auditLogs.unshift(log);
+    if (this.data.auditLogs.length > 100) {
+      this.data.auditLogs = this.data.auditLogs.slice(0, 100);
+    }
+    this.save(this.data);
+    return log;
   }
 }
 

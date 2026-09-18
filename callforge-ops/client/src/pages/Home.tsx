@@ -68,6 +68,8 @@ import { ConsentAuditLedger } from "../components/calling/crm/ConsentAuditLedger
 import { RoleManagementUI } from "../components/calling/admin/RoleManagementUI";
 import { SystemStatusPage } from "../components/calling/admin/SystemStatusPage";
 import { CarrierConfigCard } from "../components/calling/admin/CarrierConfigCard";
+import { BillingHub } from "../components/calling/billing/BillingHub";
+import { AdminHub } from "../components/calling/admin/AdminHub";
 
 // New Rich Functional Components
 import { CommandPaletteModal } from "../components/calling/global/CommandPaletteModal";
@@ -142,7 +144,7 @@ function Overview({
   onNewCampaign,
   onExportReport,
 }: {
-  onNavigate: (label: string) => void;
+  onNavigate: (label: string, subTab?: "billing" | "admin") => void;
   onNewCampaign: () => void;
   onExportReport: () => void;
 }) {
@@ -168,7 +170,7 @@ function Overview({
       </div>
 
       {/* Real-time Spend Counter */}
-      <LiveSpendCounter onTopUpClick={() => onNavigate("Admin & Billing")} />
+      <LiveSpendCounter onTopUpClick={() => onNavigate("Admin & Billing", "billing")} />
 
       {/* KPI Cards */}
       <div className="stats-grid">
@@ -214,7 +216,7 @@ function Overview({
               <p className="eyebrow">CARRIER TRUNKS</p>
               <h3 className="panel-title">Trunk health & latency</h3>
             </div>
-            <button className="soft-button" onClick={() => onNavigate("Admin & Billing")}>
+            <button className="soft-button" onClick={() => onNavigate("Admin & Billing", "admin")}>
               Diagnostics
             </button>
           </div>
@@ -865,6 +867,7 @@ function LeadsScreen({
 // Main App Home Component
 export default function Home() {
   const [active, setActive] = useState("Overview");
+  const [adminBillingSubTab, setAdminBillingSubTab] = useState<"billing" | "admin">("billing");
 
   // Dynamic Live Leads State
   const [leadsList, setLeadsList] = useState<LeadRecord[]>(INITIAL_LEADS);
@@ -1087,33 +1090,62 @@ export default function Home() {
     case "Admin & Billing":
       content = (
         <div className="page-enter space-y-5">
-          <DisabledStateGuard>
-            <div className="hero-row">
-              <div>
-                <p className="eyebrow cyan-text">PLATFORM ADMINISTRATION</p>
-                <h1 className="page-title">Admin, Roles & Telephony Billing</h1>
-                <p className="page-subtitle">Role permissions matrix, carrier GSM trunks, auto-recharge settings, and WebRTC network diagnostics.</p>
-              </div>
+          {/* Sub-tab Switcher: Billing vs Admin */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-950/80 p-2.5 rounded-2xl border border-zinc-800 shadow-sm">
+            <div className="flex items-center gap-2 p-1 bg-zinc-900/90 border border-zinc-800 rounded-xl">
               <button
-                className="primary-button"
-                onClick={() => setShowProUpgrade(true)}
+                type="button"
+                onClick={() => setAdminBillingSubTab("billing")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  adminBillingSubTab === "billing"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+                }`}
               >
-                <Sparkles size={15} /> Upgrade Calling Plan
+                <CreditCard size={15} />
+                <span>Telephony Billing & Wallet</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdminBillingSubTab("admin")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  adminBillingSubTab === "admin"
+                    ? "bg-violet-600 text-white shadow-md shadow-violet-600/30"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+                }`}
+              >
+                <ShieldCheck size={15} />
+                <span>Platform Administration & Team</span>
               </button>
             </div>
-            <LiveSpendCounter onTopUpClick={() => setShowProUpgrade(true)} />
-            <CarrierConfigCard />
-            <AutoRechargeConfig />
-            <RoleManagementUI />
-            <SystemStatusPage />
-          </DisabledStateGuard>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowSettings(true)}
+                className="soft-button hover:bg-zinc-800 transition text-xs flex items-center gap-1.5"
+                title="System Settings"
+              >
+                <Settings2 size={14} /> Telephony Settings
+              </button>
+            </div>
+          </div>
+
+          {adminBillingSubTab === "billing" ? (
+            <BillingHub onUpgradePlanClick={() => setShowProUpgrade(true)} />
+          ) : (
+            <AdminHub />
+          )}
         </div>
       );
       break;
     default:
       content = (
         <Overview
-          onNavigate={setActive}
+          onNavigate={(label, subTab) => {
+            setActive(label);
+            if (subTab) setAdminBillingSubTab(subTab);
+          }}
           onNewCampaign={() => setShowCampaignBuilder(true)}
           onExportReport={handleDownloadExecutiveReport}
         />

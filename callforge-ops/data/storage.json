@@ -93,6 +93,19 @@
   ],
   "cdrLogs": [
     {
+      "id": "call_X39yXAGE",
+      "customerName": "Anjali Sharma",
+      "customerPhone": "+91 98765 14482",
+      "agentName": "Asha (AI Voice)",
+      "campaign": "Festive season follow-up",
+      "duration": "00:01",
+      "durationSeconds": 1,
+      "status": "Completed",
+      "sentiment": "Positive",
+      "qaScore": 94,
+      "createdAt": "2026-09-18T15:03:22.515Z"
+    },
+    {
       "id": "call_HYuw2G0C",
       "customerName": "Aarav Mehta",
       "customerPhone": "+91 99887 11002",
@@ -233,5 +246,183 @@
     "scriptB": "Variant B Winning Pitch",
     "winnerVariant": "B",
     "updatedAt": "2026-09-17T11:00:16.952Z"
-  }
+  },
+  "walletBalance": 33450,
+  "transactions": [
+    {
+      "id": "txn_tEq9_vrX",
+      "type": "recharge",
+      "amount": 5000,
+      "description": "Prepaid Telephony Wallet Top-Up (Instant UPI)",
+      "paymentMethod": "Instant UPI",
+      "status": "success",
+      "timestamp": "2026-09-18T15:44:38.593Z",
+      "referenceId": "UPI-8459843820"
+    },
+    {
+      "id": "txn_01",
+      "type": "recharge",
+      "amount": 25000,
+      "description": "Auto-recharge trigger (Threshold < ₹7,500)",
+      "paymentMethod": "UPI AutoPay",
+      "status": "success",
+      "timestamp": "2026-09-15T12:00:00.000Z",
+      "referenceId": "UPI-4289100234"
+    },
+    {
+      "id": "txn_02",
+      "type": "deduction",
+      "amount": 842.5,
+      "description": "Campaign festive follow-up (593 minutes)",
+      "paymentMethod": "Wallet Balance",
+      "status": "success",
+      "timestamp": "2026-09-16T18:30:00.000Z",
+      "referenceId": "DIAL-883921"
+    },
+    {
+      "id": "txn_03",
+      "type": "subscription_payment",
+      "amount": 19999,
+      "description": "Growth Pro Subscription Renewal",
+      "paymentMethod": "Corporate Card",
+      "status": "success",
+      "timestamp": "2026-09-01T09:30:00.000Z",
+      "referenceId": "PAY-99238120"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv_hqdsxbds",
+      "invoiceNumber": "CF-INV-2026-2403",
+      "date": "2026-09-18T15:44:38.594Z",
+      "description": "Telephony Trunk Wallet Top-Up - Instant UPI",
+      "subtotal": 4237.29,
+      "gstAmount": 762.71,
+      "totalAmount": 5000,
+      "status": "paid",
+      "paymentMethod": "Instant UPI"
+    },
+    {
+      "id": "inv_01",
+      "invoiceNumber": "CF-INV-2026-0941",
+      "date": "2026-09-15T12:00:00.000Z",
+      "description": "Telephony Trunks Auto-Recharge (UPI e-Mandate)",
+      "subtotal": 21186.44,
+      "gstAmount": 3813.56,
+      "totalAmount": 25000,
+      "status": "paid",
+      "paymentMethod": "UPI AutoPay (NPCI)"
+    },
+    {
+      "id": "inv_02",
+      "invoiceNumber": "CF-INV-2026-0889",
+      "date": "2026-09-01T09:30:00.000Z",
+      "description": "Growth Pro Monthly Enterprise Subscription",
+      "subtotal": 16948.31,
+      "gstAmount": 3050.69,
+      "totalAmount": 19999,
+      "status": "paid",
+      "paymentMethod": "Corporate Credit Card"
+    },
+    {
+      "id": "inv_03",
+      "invoiceNumber": "CF-INV-2026-0812",
+      "date": "2026-08-18T16:45:00.000Z",
+      "description": "Prepaid Trunk Balance Top-Up",
+      "subtotal": 8474.58,
+      "gstAmount": 1525.42,
+      "totalAmount": 10000,
+      "status": "paid",
+      "paymentMethod": "NetBanking HDFC"
+    }
+  ],
+  "teamMembers": [
+    {
+      "id": "team_01",
+      "name": "Arjun Mehta",
+      "email": "arjun.mehta@callforge.io",
+      "role": "admin",
+      "status": "active",
+      "extension": "1001",
+      "joinedAt": "2026-08-01T09:00:00.000Z",
+      "avatarInitials": "AM"
+    },
+    {
+      "id": "team_02",
+      "name": "Priya Sharma",
+      "email": "priya.sharma@callforge.io",
+      "role": "supervisor",
+      "status": "active",
+      "extension": "1002",
+      "joinedAt": "2026-08-15T10:30:00.000Z",
+      "avatarInitials": "PS"
+    },
+    {
+      "id": "team_03",
+      "name": "Rohan Verma",
+      "email": "rohan.verma@callforge.io",
+      "role": "agent",
+      "status": "active",
+      "extension": "1003",
+      "joinedAt": "2026-09-01T11:00:00.000Z",
+      "avatarInitials": "RV"
+    },
+    {
+      "id": "team_04",
+      "name": "Sneha Patil",
+      "email": "sneha.patil@callforge.io",
+      "role": "agent",
+      "status": "active",
+      "extension": "1004",
+      "joinedAt": "2026-09-10T14:15:00.000Z",
+      "avatarInitials": "SP"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "log_Pjp8uHhI",
+      "action": "Wallet Recharged",
+      "user": "Arjun Mehta (Admin)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-09-18T15:44:38.624Z",
+      "details": "Added ₹5,000 via Instant UPI. New balance: ₹33,450.",
+      "category": "billing"
+    },
+    {
+      "id": "log_01",
+      "action": "Updated RBAC Matrix",
+      "user": "Arjun Mehta (Admin)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-09-18T14:30:00.000Z",
+      "details": "Granted Start Campaigns permission to Floor Supervisor role.",
+      "category": "security"
+    },
+    {
+      "id": "log_02",
+      "action": "Saved Auto-Recharge Policy",
+      "user": "Arjun Mehta (Admin)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-09-17T11:00:00.000Z",
+      "details": "Threshold updated to ₹7,500, auto top-up ₹35,000 via UPI.",
+      "category": "billing"
+    },
+    {
+      "id": "log_03",
+      "action": "Carrier Trunk Test",
+      "user": "System Diagnostics",
+      "ip": "127.0.0.1",
+      "timestamp": "2026-09-17T10:25:00.000Z",
+      "details": "Tata Smartflo & Twilio PRI trunks verified successfully.",
+      "category": "carrier"
+    },
+    {
+      "id": "log_04",
+      "action": "Campaign Started",
+      "user": "Priya Sharma (Supervisor)",
+      "ip": "10.107.157.14",
+      "timestamp": "2026-09-16T09:15:00.000Z",
+      "details": "Festive Season follow-up launched with 2,480 leads.",
+      "category": "campaign"
+    }
+  ]
 }
