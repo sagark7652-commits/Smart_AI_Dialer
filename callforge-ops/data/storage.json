@@ -227,13 +227,13 @@
     "updatedAt": "2026-09-17T10:25:33.922Z"
   },
   "subscription": {
-    "planId": "plan_enterprise",
-    "planName": "HyperScale Dedicated",
-    "price": 49999,
+    "planId": "plan_growth",
+    "planName": "Growth Pro",
+    "price": 19999,
     "status": "active",
-    "callingMinutesRemaining": 6850,
-    "renewalDate": "2026-10-17T10:25:33.916Z",
-    "lastPaymentId": "pay_rzp_verif_99812"
+    "callingMinutesRemaining": 8850,
+    "renewalDate": "2026-10-19T14:56:40.225Z",
+    "lastPaymentId": "pay_rzp_v322mfwz"
   },
   "autoRecharge": {
     "enabled": true,
@@ -292,8 +292,18 @@
     "winnerVariant": "B",
     "updatedAt": "2026-09-18T15:53:34.509Z"
   },
-  "walletBalance": 33450,
+  "walletBalance": 43450,
   "transactions": [
+    {
+      "id": "txn_5eh2Z8nA",
+      "type": "recharge",
+      "amount": 10000,
+      "description": "Telephony prepaid top-up (Total credited: ₹10,000)",
+      "paymentMethod": "NetBanking HDFC/ICICI",
+      "status": "success",
+      "timestamp": "2026-09-19T14:56:30.026Z",
+      "referenceId": "UPI-7760231687"
+    },
     {
       "id": "txn_tEq9_vrX",
       "type": "recharge",
@@ -336,6 +346,17 @@
     }
   ],
   "invoices": [
+    {
+      "id": "inv_hUPpSPOO",
+      "invoiceNumber": "CF-INV-2026-6459",
+      "date": "2026-09-19T14:56:30.027Z",
+      "description": "Telephony Trunk Wallet Top-Up - NetBanking HDFC/ICICI",
+      "subtotal": 8474.58,
+      "gstAmount": 1525.42,
+      "totalAmount": 10000,
+      "status": "paid",
+      "paymentMethod": "NetBanking HDFC/ICICI"
+    },
     {
       "id": "inv_hqdsxbds",
       "invoiceNumber": "CF-INV-2026-2403",
@@ -424,6 +445,15 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_khf_cTuF",
+      "action": "Wallet Recharged",
+      "user": "Arjun Mehta (Admin)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-09-19T14:56:30.061Z",
+      "details": "Added ₹10,000 via NetBanking HDFC/ICICI. New balance: ₹43,450.",
+      "category": "billing"
+    },
     {
       "id": "log_fPQLYd1b",
       "action": "Inbound Lead Webhook",
