@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ShieldCheck, Download, Search, CheckCircle2, ShieldBan, FileText } from "lucide-react";
 import { toast } from "sonner";
 
@@ -73,9 +73,9 @@ export const ConsentAuditLedger: React.FC = () => {
 
   const filtered = data.filter(
     (d) =>
-      d.name.toLowerCase().includes(search.toLowerCase()) ||
-      d.phone.includes(search) ||
-      d.id.toLowerCase().includes(search.toLowerCase())
+      String(d?.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      String(d?.phone || "").includes(search) ||
+      String(d?.id || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const handleExportCSV = () => {
@@ -165,32 +165,40 @@ export const ConsentAuditLedger: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/60 text-zinc-300">
-            {filtered.map((row) => (
-              <tr key={row.id} className="hover:bg-zinc-900/40">
-                <td className="p-3 font-mono text-zinc-400 text-[11px]">{row.id}</td>
-                <td className="p-3 font-mono font-semibold text-zinc-100">{row.phone}</td>
-                <td className="p-3 font-medium">{row.name}</td>
-                <td className="p-3 text-zinc-400 text-[11px]">{row.source}</td>
-                <td className="p-3 text-zinc-400 font-mono text-[11px]">{row.timestamp}</td>
-                <td className="p-3 font-mono text-[10px] text-zinc-500">{row.dltReference}</td>
-                <td className="p-3 text-right">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold inline-flex items-center gap-1 font-mono ${
-                      row.status === "Verified Opt-in"
-                        ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
-                        : "bg-rose-950 text-rose-300 border border-rose-800"
-                    }`}
-                  >
-                    {row.status === "Verified Opt-in" ? (
-                      <CheckCircle2 size={11} />
-                    ) : (
-                      <ShieldBan size={11} />
-                    )}
-                    {row.status}
-                  </span>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-zinc-500 text-xs">
+                  No consent or DLT records found matching filter criteria.
                 </td>
               </tr>
-            ))}
+            ) : (
+              filtered.map((row) => (
+                <tr key={row.id} className="hover:bg-zinc-900/40">
+                  <td className="p-3 font-mono text-zinc-400 text-[11px]">{row.id}</td>
+                  <td className="p-3 font-mono font-semibold text-zinc-100">{row.phone}</td>
+                  <td className="p-3 font-medium">{row.name}</td>
+                  <td className="p-3 text-zinc-400 text-[11px]">{row.source}</td>
+                  <td className="p-3 text-zinc-400 font-mono text-[11px]">{row.timestamp}</td>
+                  <td className="p-3 font-mono text-[10px] text-zinc-500">{row.dltReference}</td>
+                  <td className="p-3 text-right">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold inline-flex items-center gap-1 font-mono ${
+                        row.status === "Verified Opt-in"
+                          ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
+                          : "bg-rose-950 text-rose-300 border border-rose-800"
+                      }`}
+                    >
+                      {row.status === "Verified Opt-in" ? (
+                        <CheckCircle2 size={11} />
+                      ) : (
+                        <ShieldBan size={11} />
+                      )}
+                      {row.status}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

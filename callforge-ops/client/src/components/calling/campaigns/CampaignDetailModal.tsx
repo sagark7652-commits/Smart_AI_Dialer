@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Megaphone,
@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 
 export interface CampaignRecord {
+  id?: string;
   name: string;
   mode: string;
   status: string;
@@ -75,8 +76,8 @@ export const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     }
   };
 
-  const leadsCount = parseInt(campaign.leads.replace(/,/g, "")) || 2480;
-  const connectedCount = parseInt(campaign.connected.replace(/,/g, "")) || 842;
+  const leadsCount = parseInt(String(campaign.leads || "0").replace(/,/g, ""), 10) || 2480;
+  const connectedCount = parseInt(String(campaign.connected || "0").replace(/,/g, ""), 10) || 842;
   const connectRate = ((connectedCount / leadsCount) * 100).toFixed(1);
 
   return (

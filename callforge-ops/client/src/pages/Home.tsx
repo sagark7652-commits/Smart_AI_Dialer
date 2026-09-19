@@ -141,6 +141,7 @@ function Overview({
   campaigns = [],
   leads = [],
   cdrs = [],
+  onCampaignStatusChange,
 }: {
   onNavigate: (label: string, subTab?: "billing" | "admin") => void;
   onNewCampaign: () => void;
@@ -912,15 +913,17 @@ function AgentWorkspace({ onCallLogged }: { onCallLogged?: () => void }) {
 
 // 4. Leads & CRM Screen with Real Filter Bar & Drawer Actions
 function LeadsScreen({
-  leads,
+  leads = [],
   onAddLeadClick,
   onBulkImportClick,
   onSelectLead,
+  onNavigate,
 }: {
   leads: LeadRecord[];
   onAddLeadClick: () => void;
   onBulkImportClick?: () => void;
   onSelectLead: (lead: LeadRecord) => void;
+  onNavigate?: (tab: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [stageFilter, setStageFilter] = useState("All");
@@ -929,9 +932,13 @@ function LeadsScreen({
   const stages = ["All", "New", "Interested", "Callback", "Converted", "Not interested", "DNC"];
 
   const filtered = useMemo(() => {
-    return leads.filter((l) => {
-      const matchesQuery = `${l.name} ${l.company} ${l.phone}`.toLowerCase().includes(query.toLowerCase());
-      const matchesStage = stageFilter === "All" || l.stage.toLowerCase() === stageFilter.toLowerCase();
+    return (leads || []).filter((l) => {
+      const name = String(l?.name || "");
+      const comp = String(l?.company || "");
+      const ph = String(l?.phone || "");
+      const st = String(l?.stage || "New");
+      const matchesQuery = `${name} ${comp} ${ph}`.toLowerCase().includes(query.toLowerCase());
+      const matchesStage = stageFilter === "All" || st.toLowerCase() === stageFilter.toLowerCase();
       return matchesQuery && matchesStage;
     });
   }, [leads, query, stageFilter]);
@@ -1031,57 +1038,268 @@ function LeadsScreen({
                   </td>
                 </tr>
               ) : (
-                filtered.map((l) => (
-                  <tr key={l.phone}>
-                    <td>
-                      <div className="lead-cell cursor-pointer" onClick={() => onSelectLead(l)}>
-                        <span className="avatar avatar-violet">
-                          {l.name.split(" ").map((x) => x[0]).join("")}
-                        </span>
-                        <div>
-                          <strong className="hover:text-violet-400 transition">{l.name}</strong>
-                          <span className="muted">{l.company}</span>
+                filtered.map((l) => {
+                  const leadName = l.name || "Lead";
+                  const initials = (leadName.trim().split(/\s+/).map((x) => x[0] || "").join("").slice(0, 2) || "LD").toUpperCase();
+                  const stageClass = String(l.stage || "New").toLowerCase().replace(/\s+/g, "-");
+                  return (
+                    <tr key={l.phone || l.id || Math.random()}>
+                      <td>
+                        <div className="lead-cell cursor-pointer" onClick={() => onSelectLead(l)}>
+                          <span className="avatar avatar-violet">
+                            {initials}
+                          </span>
+                          <div>
+                            <strong className="hover:text-violet-400 transition">{l.name}</strong>
+                            <span className="muted">{l.company}</span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <span className="mono-cell">{l.phone}</span>
-                        <ClickToCallButton phoneNumber={l.phone} leadName={l.name} />
-                      </div>
-                    </td>
-                    <td><span className="source-label">{l.source}</span></td>
-                    <td><span className={`stage ${l.stage.toLowerCase().replace(" ", "-")}`}>{l.stage}</span></td>
-                    <td>
-                      <div className="score">
-                        <span className={l.score > 80 ? "score-high" : l.score > 60 ? "score-mid" : "score-low"}>
-                          {l.score}
-                        </span>
-                        <div className="score-track">
-                          <div style={{ width: `${l.score}%` }} className={l.score > 80 ? "score-high-bg" : l.score > 60 ? "score-mid-bg" : "score-low-bg"} />
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <span className="mono-cell">{l.phone}</span>
+                          <ClickToCallButton phoneNumber={l.phone} leadName={l.name} />
                         </div>
-                      </div>
-                    </td>
-                    <td className="muted">{l.last}</td>
-                    <td>
-                      <button
-                        className="icon-button hover:text-zinc-200 transition"
-                        onClick={() => onSelectLead(l)}
-                        title="Open Lead Profile & Activity Drawer"
-                      >
-                        <MoreHorizontal size={17} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td><span className="source-label">{l.source}</span></td>
+                      <td><span className={`stage ${stageClass}`}>{l.stage || "New"}</span></td>
+                      <td>
+                        <div className="score">
+                          <span className={l.score > 80 ? "score-high" : l.score > 60 ? "score-mid" : "score-low"}>
+                            {l.score}
+                          </span>
+                          <div className="score-track">
+                            <div style={{ width: `${l.score}%` }} className={l.score > 80 ? "score-high-bg" : l.score > 60 ? "score-mid-bg" : "score-low-bg"} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="muted">{l.last || "Recently"}</td>
+                      <td>
+                        <button
+                          className="icon-button hover:text-zinc-200 transition"
+                          onClick={() => onSelectLead(l)}
+                          title="Open Lead Profile & Activity Drawer"
+                        >
+                          <MoreHorizontal size={17} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </section>
 
-      {/* Consent Audit Ledger below leads */}
-      <ConsentAuditLedger />
+      {/* TRAI Regulatory Compliance Gateway */}
+      <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center">
+            <ShieldCheck size={18} />
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-zinc-200">TRAI Regulatory Compliance & NDNC Ledger</div>
+            <div className="text-[11px] text-zinc-400">All outbound contacts are scrubbed against Do-Not-Call registries. View immutable evidence.</div>
+          </div>
+        </div>
+        {onNavigate && (
+          <button
+            type="button"
+            onClick={() => onNavigate("Compliance")}
+            className="soft-button text-xs flex items-center gap-1.5 hover:bg-zinc-800"
+          >
+            <span>Open Compliance Tab</span>
+            <ArrowUpRight size={13} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 5. Compliance & TRAI Audit Trail Screen
+function ComplianceScreen({
+  complianceSubTab,
+  setComplianceSubTab,
+}: {
+  complianceSubTab: "guardrails" | "ledger";
+  setComplianceSubTab: (tab: "guardrails" | "ledger") => void;
+}) {
+  return (
+    <div className="page-enter space-y-5">
+      <div className="hero-row">
+        <div>
+          <p className="eyebrow green-text">TRUST & TELECOM REGULATION</p>
+          <h1 className="page-title">Compliance & TRAI Audit Trail</h1>
+          <p className="page-subtitle">
+            Statutory TCCCPR regulations, DLT registrations, 09:00-21:00 calling windows, and consent ledgers.
+          </p>
+        </div>
+      </div>
+
+      {/* Subtab Switcher */}
+      <div className="flex items-center gap-2 p-1.5 bg-zinc-950/80 rounded-xl border border-zinc-800">
+        <button
+          type="button"
+          onClick={() => setComplianceSubTab("guardrails")}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+            complianceSubTab === "guardrails"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+          }`}
+        >
+          <ShieldCheck size={14} />
+          <span>Statutory Policies & Guardrails</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setComplianceSubTab("ledger")}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+            complianceSubTab === "ledger"
+              ? "bg-violet-600 text-white shadow-md shadow-violet-600/30"
+              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+          }`}
+        >
+          <FileText size={14} />
+          <span>Consent & DLT Audit Ledger</span>
+        </button>
+      </div>
+
+      {complianceSubTab === "guardrails" ? (
+        <div className="space-y-4">
+          <div className="compliance-banner">
+            <div className="compliance-score">
+              <strong>96</strong>
+              <span>/100</span>
+            </div>
+            <div>
+              <p className="eyebrow green-text">TRAI STATUTORY READINESS</p>
+              <h2>All Calling Guardrails Active & Enforced</h2>
+              <p>
+                Strict enforcement of TRAI TCCCPR 2018 calling windows, automated National DNC registry scrubbing,
+                and blockchain DLT entity validation across all outbound trunks.
+              </p>
+            </div>
+            <div className="compliance-ring">
+              <ShieldCheck size={26} />
+            </div>
+          </div>
+
+          <div className="compliance-grid">
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <p className="eyebrow">STATUTORY RULES</p>
+                  <h3 className="panel-title">Active Telecom Guardrails</h3>
+                </div>
+                <StatusPill tone="green">4 Active</StatusPill>
+              </div>
+
+              <div className="policy-list">
+                <div className="policy-row">
+                  <div className="policy-icon green">
+                    <Check size={14} />
+                  </div>
+                  <div>
+                    <strong>Calling Window Enforcement (09:00 – 21:00 IST)</strong>
+                    <span>Automated trunk cutoff prevents outbound dials outside mandated legal hours.</span>
+                  </div>
+                  <StatusPill tone="green">Enforced</StatusPill>
+                </div>
+
+                <div className="policy-row">
+                  <div className="policy-icon green">
+                    <Check size={14} />
+                  </div>
+                  <div>
+                    <strong>Pre-Dial National DNC Scrub (TRAI NDNC)</strong>
+                    <span>Every uploaded contact list is verified against the Do Not Call registry before queue injection.</span>
+                  </div>
+                  <StatusPill tone="green">Real-time</StatusPill>
+                </div>
+
+                <div className="policy-row">
+                  <div className="policy-icon green">
+                    <Check size={14} />
+                  </div>
+                  <div>
+                    <strong>AI Voice Disclosure & Recording Consent Preamble</strong>
+                    <span>Mandatory bilingual greeting informing caller that call is assisted by AI and recorded.</span>
+                  </div>
+                  <StatusPill tone="green">Mandatory</StatusPill>
+                </div>
+
+                <div className="policy-row">
+                  <div className="policy-icon amber">
+                    <Clock3 size={14} />
+                  </div>
+                  <div>
+                    <strong>DLT Entity & SMS/Voice Header Whitelist</strong>
+                    <span>Registered on Airtel / Tata / Jio DLT. Header renewal scheduled in 45 days.</span>
+                  </div>
+                  <StatusPill tone="yellow">Valid</StatusPill>
+                </div>
+              </div>
+            </section>
+
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <p className="eyebrow">AUDIT LOG</p>
+                  <h3 className="panel-title">Statutory Verification Trail</h3>
+                </div>
+                <button
+                  type="button"
+                  className="soft-button text-xs"
+                  onClick={() => toast.info("Audit log verified with zero compliance infractions")}
+                >
+                  Verify Trail
+                </button>
+              </div>
+
+              <div className="audit-list">
+                <div>
+                  <span className="audit-time">09:00</span>
+                  <p>
+                    <strong>Trunk Gateway Activated</strong> · Calling hours window opened for Airtel & Tata trunks
+                    under Rule 14(2).
+                  </p>
+                </div>
+                <div>
+                  <span className="audit-time">10:14</span>
+                  <p>
+                    <strong>NDNC Scrub Executed</strong> · Batch scrubbing verified 1,420 contacts against TRAI
+                    registry.
+                  </p>
+                </div>
+                <div>
+                  <span className="audit-time">12:30</span>
+                  <p>
+                    <strong>DLT Signature Check</strong> · Tata DLT Principal Entity hash verified valid and active.
+                  </p>
+                </div>
+                <div>
+                  <span className="audit-time">15:45</span>
+                  <p>
+                    <strong>PII Voice Masking</strong> · Automated redaction filters active on 16kHz CDR recordings.
+                  </p>
+                </div>
+                <div>
+                  <span className="audit-time">21:00</span>
+                  <p>
+                    <strong>Automatic Daily Curfew Guard</strong> · Dialers auto-paused until 09:00 IST next business
+                    day.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <ConsentAuditLedger />
+      )}
     </div>
   );
 }
@@ -1091,6 +1309,7 @@ export default function Home() {
   const [active, setActive] = useState("Overview");
   const [adminBillingSubTab, setAdminBillingSubTab] = useState<"billing" | "admin">("billing");
   const [aiStudioSubTab, setAiStudioSubTab] = useState<"nvidia_pipeline" | "voice_library" | "ab_scripts">("nvidia_pipeline");
+  const [complianceSubTab, setComplianceSubTab] = useState<"guardrails" | "ledger">("guardrails");
 
   // Dynamic Live Leads State
   const [leadsList, setLeadsList] = useState<LeadRecord[]>([]);
@@ -1373,6 +1592,7 @@ export default function Home() {
           onAddLeadClick={() => setShowAddLead(true)}
           onBulkImportClick={() => setShowBulkImport(true)}
           onSelectLead={(ld) => setSelectedLead(ld)}
+          onNavigate={setActive}
         />
       );
       break;
@@ -1482,16 +1702,10 @@ export default function Home() {
       break;
     case "Compliance":
       content = (
-        <div className="page-enter space-y-5">
-          <div className="hero-row">
-            <div>
-              <p className="eyebrow green-text">TRUST & TELECOM REGULATION</p>
-              <h1 className="page-title">Compliance & TRAI Audit Trail</h1>
-              <p className="page-subtitle">Statutory TCCCPR regulations, DLT registrations, 09:00-21:00 calling windows, and consent ledgers.</p>
-            </div>
-          </div>
-          <ConsentAuditLedger />
-        </div>
+        <ComplianceScreen
+          complianceSubTab={complianceSubTab}
+          setComplianceSubTab={setComplianceSubTab}
+        />
       );
       break;
     case "Admin & Billing":

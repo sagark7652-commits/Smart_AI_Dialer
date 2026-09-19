@@ -19,6 +19,7 @@ import { ClickToCallButton } from "./ClickToCallButton";
 import { WhatsAppFollowUpModal } from "./WhatsAppFollowUpModal";
 
 export interface LeadRecord {
+  id?: string;
   name: string;
   phone: string;
   company: string;
