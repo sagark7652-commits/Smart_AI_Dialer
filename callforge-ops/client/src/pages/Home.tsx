@@ -1318,14 +1318,6 @@ export default function Home() {
             <CircleHelp size={17} />
             <span>Help center</span>
           </button>
-          <a
-            href="/login"
-            className="nav-item text-zinc-400 hover:text-zinc-200"
-            title="Open CreatorAI Enterprise Login Portal"
-          >
-            <Lock size={17} className="text-violet-400" />
-            <span>Login Portal</span>
-          </a>
 
           <div
             className="user-row cursor-pointer hover:bg-zinc-900/60 p-2 rounded-lg transition"
