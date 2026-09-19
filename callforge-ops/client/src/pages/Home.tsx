@@ -60,6 +60,7 @@ import { AudioPlayerDrawer } from "../components/calling/global/AudioPlayerDrawe
 import { QAScorecardModal } from "../components/calling/supervisor/QAScorecardModal";
 import { VoiceSelectionPicker } from "../components/calling/ai/VoiceSelectionPicker";
 import { ABTestingSplitUI } from "../components/calling/ai/ABTestingSplitUI";
+import { NvidiaVoicePipelineStudio } from "../components/calling/ai/NvidiaVoicePipelineStudio";
 import { VisualIVRBuilder } from "../components/calling/global/VisualIVRBuilder";
 import { DisabledStateGuard } from "../components/calling/global/DisabledStateGuard";
 import { AutoRechargeConfig } from "../components/calling/billing/AutoRechargeConfig";
@@ -886,6 +887,7 @@ function LeadsScreen({
 export default function Home() {
   const [active, setActive] = useState("Overview");
   const [adminBillingSubTab, setAdminBillingSubTab] = useState<"billing" | "admin">("billing");
+  const [aiStudioSubTab, setAiStudioSubTab] = useState<"nvidia_pipeline" | "voice_library" | "ab_scripts">("nvidia_pipeline");
 
   // Dynamic Live Leads State
   const [leadsList, setLeadsList] = useState<LeadRecord[]>(INITIAL_LEADS);
@@ -1068,14 +1070,62 @@ export default function Home() {
             <div>
               <p className="eyebrow violet-text">AUTONOMOUS VOICE ENGINE</p>
               <h1 className="page-title">AI Voice Studio</h1>
-              <p className="page-subtitle">Configure neural Indian voices, A/B conversation scripts, and compliance disclosures.</p>
+              <p className="page-subtitle">Configure NVIDIA speech stack for Tata Dialer, neural Indian voices, and A/B conversation scripts.</p>
             </div>
             <button className="primary-button" onClick={() => setShowSandboxTest(true)}>
               <PhoneCall size={15} /> Sandbox test call
             </button>
           </div>
-          <VoiceSelectionPicker />
-          <ABTestingSplitUI />
+
+          {/* Subtab Navigation for AI Voice Studio */}
+          <div className="flex flex-wrap items-center gap-2 p-1.5 bg-zinc-950/80 rounded-xl border border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setAiStudioSubTab("nvidia_pipeline")}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                aiStudioSubTab === "nvidia_pipeline"
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+              }`}
+            >
+              <Sparkles size={14} className={aiStudioSubTab === "nvidia_pipeline" ? "text-white" : "text-emerald-400"} />
+              <span>NVIDIA Voice Stack (Tata Dialer)</span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
+                Active
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAiStudioSubTab("voice_library")}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                aiStudioSubTab === "voice_library"
+                  ? "bg-violet-600 text-white shadow-md shadow-violet-600/30"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+              }`}
+            >
+              <Bot size={14} />
+              <span>Voice Library (Riva Magpie & Neural)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAiStudioSubTab("ab_scripts")}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                aiStudioSubTab === "ab_scripts"
+                  ? "bg-cyan-600 text-white shadow-md shadow-cyan-600/30"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+              }`}
+            >
+              <Workflow size={14} />
+              <span>A/B Conversation Scripts</span>
+            </button>
+          </div>
+
+          {/* Subtab Content */}
+          {aiStudioSubTab === "nvidia_pipeline" && <NvidiaVoicePipelineStudio />}
+          {aiStudioSubTab === "voice_library" && <VoiceSelectionPicker />}
+          {aiStudioSubTab === "ab_scripts" && <ABTestingSplitUI />}
         </div>
       );
       break;

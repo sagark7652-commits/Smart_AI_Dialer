@@ -23,7 +23,7 @@ interface CarrierConfigModalProps {
 }
 
 export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigModalProps) {
-  const [provider, setProvider] = useState<"mock" | "twilio" | "exotel">("mock");
+  const [provider, setProvider] = useState<"mock" | "twilio" | "exotel" | "tata_smartflo">("mock");
   
   // Twilio Fields
   const [twilioAccountSid, setTwilioAccountSid] = useState("");
@@ -36,6 +36,14 @@ export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigMo
   const [exotelApiToken, setExotelApiToken] = useState("");
   const [exotelSid, setExotelSid] = useState("");
   const [showExotelToken, setShowExotelToken] = useState(false);
+
+  // Tata Dialer & NVIDIA Riva Fields
+  const [tataApiKey, setTataApiKey] = useState("");
+  const [tataToken, setTataToken] = useState("");
+  const [tataCallerId, setTataCallerId] = useState("+91 22 6600 1234");
+  const [tataSipTrunk, setTataSipTrunk] = useState("sip.tatasmartflo.com:5060");
+  const [rivaServerUrl, setRivaServerUrl] = useState("grpc://riva-speech.internal.callforge:50051");
+  const [showTataToken, setShowTataToken] = useState(false);
 
   // Testing status
   const [isTesting, setIsTesting] = useState(false);
@@ -53,11 +61,15 @@ export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigMo
       fetch("/api/calling/carrier-config")
         .then((res) => res.json())
         .then((data) => {
-          if (data.provider) setProvider(data.provider);
+          if (data.provider) setProvider(data.provider === "tata" ? "tata_smartflo" : data.provider);
           if (data.twilioAccountSid) setTwilioAccountSid(data.twilioAccountSid);
           if (data.twilioCallerId) setTwilioCallerId(data.twilioCallerId);
           if (data.exotelApiKey) setExotelApiKey(data.exotelApiKey);
           if (data.exotelSid) setExotelSid(data.exotelSid);
+          if (data.tataApiKey) setTataApiKey(data.tataApiKey);
+          if (data.tataCallerId) setTataCallerId(data.tataCallerId);
+          if (data.tataSipTrunk) setTataSipTrunk(data.tataSipTrunk);
+          if (data.rivaServerUrl) setRivaServerUrl(data.rivaServerUrl);
         })
         .catch(() => {});
     }
@@ -80,6 +92,10 @@ export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigMo
           exotelApiKey,
           exotelApiToken,
           exotelSid,
+          tataApiKey,
+          tataToken,
+          tataSipTrunk,
+          rivaServerUrl,
         }),
       });
 
@@ -88,7 +104,11 @@ export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigMo
         setTestResult({
           success: true,
           message: data.message || "Trunk connection verified successfully!",
-          detail: data.accountName ? `Account: ${data.accountName} (${data.status})` : undefined,
+          detail: data.accountName
+            ? `Account: ${data.accountName} (${data.status})`
+            : data.voicePipeline
+            ? `Voice Pipeline: ${data.voicePipeline.stt} | ${data.voicePipeline.tts}`
+            : undefined,
         });
         toast.success("Carrier test successful!", { description: data.message });
       } else {
@@ -127,6 +147,11 @@ export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigMo
           exotelApiKey,
           ...(exotelApiToken && { exotelApiToken }),
           exotelSid,
+          tataApiKey,
+          ...(tataToken && { tataToken }),
+          tataCallerId,
+          tataSipTrunk,
+          rivaServerUrl,
         }),
       });
 
@@ -180,7 +205,7 @@ export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigMo
             <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block">
               Choose Telephony Provider
             </label>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <button
                 type="button"
                 onClick={() => setProvider("mock")}
@@ -195,6 +220,22 @@ export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigMo
                   {provider === "mock" && <CheckCircle2 size={14} className="text-emerald-400" />}
                 </div>
                 <span className="text-[10px] text-zinc-400">WebRTC HD Audio (Free Browser Voice)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProvider("tata_smartflo")}
+                className={`p-3 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
+                  provider === "tata_smartflo"
+                    ? "bg-emerald-950/30 border-emerald-500 text-white shadow-md shadow-emerald-950/40"
+                    : "bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-xs">Tata Dialer</span>
+                  {provider === "tata_smartflo" && <CheckCircle2 size={14} className="text-emerald-400" />}
+                </div>
+                <span className="text-[10px] text-zinc-400">Smartflo SIP + NVIDIA Riva Stack</span>
               </button>
 
               <button
@@ -366,6 +407,103 @@ export function CarrierConfigModal({ isOpen, onClose, onSaved }: CarrierConfigMo
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tata Smartflo & NVIDIA Riva Configuration Fields */}
+          {provider === "tata_smartflo" && (
+            <div className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800 space-y-3 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                  <Lock size={13} className="text-emerald-400" /> Tata Smartflo & NVIDIA Riva Config
+                </span>
+                <span className="text-[11px] text-emerald-400 font-mono">
+                  Tata Tele Business Services Trunks
+                </span>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-zinc-300 block mb-1">
+                  Tata Smartflo SIP Trunk Host
+                </label>
+                <input
+                  type="text"
+                  value={tataSipTrunk}
+                  onChange={(e) => setTataSipTrunk(e.target.value)}
+                  placeholder="sip.tatasmartflo.com:5060"
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-300 block mb-1">
+                    Tata Smartflo API Key
+                  </label>
+                  <input
+                    type="text"
+                    value={tataApiKey}
+                    onChange={(e) => setTataApiKey(e.target.value)}
+                    placeholder="Key"
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-300 block mb-1">
+                    API Token / Secret
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showTataToken ? "text" : "password"}
+                      value={tataToken}
+                      onChange={(e) => setTataToken(e.target.value)}
+                      placeholder="Token"
+                      className="w-full px-3 py-2 pr-8 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTataToken(!showTataToken)}
+                      className="absolute right-2 top-2.5 text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                    >
+                      {showTataToken ? <EyeOff size={13} /> : <Eye size={13} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-300 block mb-1">
+                    Outbound Caller ID (CLI)
+                  </label>
+                  <input
+                    type="text"
+                    value={tataCallerId}
+                    onChange={(e) => setTataCallerId(e.target.value)}
+                    placeholder="+91 22 6600 1234"
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-300 block mb-1">
+                    NVIDIA Riva Audio Server Endpoint
+                  </label>
+                  <input
+                    type="text"
+                    value={rivaServerUrl}
+                    onChange={(e) => setRivaServerUrl(e.target.value)}
+                    placeholder="grpc://riva-speech.internal.callforge:50051"
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-[11px] text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                <span>NVIDIA Nemotron ASR + Riva Magpie TTS enabled for this trunk</span>
               </div>
             </div>
           )}

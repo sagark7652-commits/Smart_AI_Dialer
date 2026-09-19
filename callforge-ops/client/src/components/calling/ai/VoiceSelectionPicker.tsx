@@ -6,7 +6,7 @@ export interface VoiceOption {
   id: string;
   name: string;
   gender: "Female" | "Male";
-  provider: "Sarvam AI" | "ElevenLabs" | "OpenAI Neural";
+  provider: "NVIDIA Riva Magpie" | "Sarvam AI" | "ElevenLabs" | "OpenAI Neural";
   languages: string;
   tone: string;
   samplePhrase: string;
@@ -15,6 +15,36 @@ export interface VoiceOption {
 }
 
 export const VOICES: VoiceOption[] = [
+  {
+    id: "v-magpie-aditi",
+    name: "Aditi (Magpie)",
+    gender: "Female",
+    provider: "NVIDIA Riva Magpie",
+    languages: "Hindi + English (Bilingual)",
+    tone: "Warm, natural conversational agentic voice with human-like prosody",
+    samplePhrase: "नमस्ते! मैं टाटा डायलर और एनवीडिया रीवा वॉइस असिस्टेंट से बोल रही हूँ। आपका वर्तमान लोन बैलेंस ₹50,000 है।",
+    badge: "Riva Magpie TTS",
+  },
+  {
+    id: "v-magpie-arjun",
+    name: "Arjun (Magpie)",
+    gender: "Male",
+    provider: "NVIDIA Riva Magpie",
+    languages: "Indian English + Hindi",
+    tone: "Executive, consultative banking & finance specialist",
+    samplePhrase: "Hello! This is Arjun from Tata Dialer Voice Services. Your current loan balance is ₹50,000.",
+    badge: "Riva Magpie Agentic",
+  },
+  {
+    id: "v-magpie-meera",
+    name: "Meera (Magpie)",
+    gender: "Female",
+    provider: "NVIDIA Riva Magpie",
+    languages: "Multilingual Indic (Hindi, Marathi, English)",
+    tone: "Clear enunciation, ultra-low 76ms latency, agentic dialogue",
+    samplePhrase: "Hello! I am your Tata Dialer AI assistant powered by NVIDIA Nemotron and Riva Magpie.",
+    badge: "Sub-100ms Latency",
+  },
   {
     id: "v-asha",
     name: "Asha",
@@ -190,7 +220,7 @@ export const VoiceSelectionPicker: React.FC<VoiceSelectionPickerProps> = ({
         
         {/* Provider Tabs */}
         <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 text-[11px]">
-          {["All", "Sarvam AI", "ElevenLabs"].map((p) => (
+          {["All", "NVIDIA Riva Magpie", "Sarvam AI", "ElevenLabs"].map((p) => (
             <button
               key={p}
               type="button"

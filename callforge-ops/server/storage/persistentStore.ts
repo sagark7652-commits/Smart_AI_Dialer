@@ -33,13 +33,18 @@ export interface StoredCDR {
 }
 
 export interface StoredCarrierConfig {
-  provider: "mock" | "twilio" | "exotel" | "bolna";
+  provider: "mock" | "twilio" | "exotel" | "bolna" | "tata" | "tata_smartflo";
   twilioAccountSid?: string;
   twilioAuthToken?: string;
   twilioCallerId?: string;
   exotelApiKey?: string;
   exotelApiToken?: string;
   exotelSid?: string;
+  tataApiKey?: string;
+  tataToken?: string;
+  tataCallerId?: string;
+  tataSipTrunk?: string;
+  rivaServerUrl?: string;
   updatedAt: string;
 }
 

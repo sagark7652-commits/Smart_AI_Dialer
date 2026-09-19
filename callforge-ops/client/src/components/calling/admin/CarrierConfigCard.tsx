@@ -8,9 +8,11 @@ export const CarrierConfigCard: React.FC = () => {
     twilioAccountSid?: string;
     twilioCallerId?: string;
     exotelSid?: string;
+    tataCallerId?: string;
     updatedAt?: string;
   }>({
-    provider: "mock",
+    provider: "tata_smartflo",
+    tataCallerId: "+91 22 6600 1234",
     twilioCallerId: "+18005550199",
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,13 +34,13 @@ export const CarrierConfigCard: React.FC = () => {
     <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950/70 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-violet-600/20 text-violet-400 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center">
             <PhoneCall size={17} />
           </div>
           <div>
             <h3 className="text-xs font-bold text-zinc-100">Telephony Carrier & GSM Trunk Gateway</h3>
             <p className="text-[11px] text-zinc-400">
-              Direct physical cellular dialing via Twilio or Exotel India PRI trunks
+              Direct physical cellular dialing via Tata Smartflo, Exotel, or Twilio with NVIDIA Riva Voice Pipeline
             </p>
           </div>
         </div>
@@ -60,7 +62,9 @@ export const CarrierConfigCard: React.FC = () => {
           </span>
           <div className="flex items-center gap-2">
             <span className="font-bold text-zinc-100 capitalize">
-              {config.provider === "twilio"
+              {config.provider === "tata" || config.provider === "tata_smartflo"
+                ? "Tata Dialer (NVIDIA Riva + Nemotron)"
+                : config.provider === "twilio"
                 ? "Twilio Voice GSM"
                 : config.provider === "exotel"
                 ? "Exotel India Gateway"
@@ -77,7 +81,9 @@ export const CarrierConfigCard: React.FC = () => {
           <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">
             Outbound Caller ID
           </span>
-          <p className="font-mono font-bold text-zinc-200">{config.twilioCallerId || "+18005550199"}</p>
+          <p className="font-mono font-bold text-zinc-200">
+            {config.tataCallerId || config.twilioCallerId || "+91 22 6600 1234"}
+          </p>
           <span className="text-[10px] text-zinc-500">TRAI CLI & E.164 compliant</span>
         </div>
 

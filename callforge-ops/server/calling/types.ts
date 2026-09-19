@@ -53,7 +53,7 @@ export interface ActiveCall {
   customerName: string;
   agentId?: string;
   agentName?: string;
-  provider: "exotel" | "bolna" | "twilio" | "mock";
+  provider: "exotel" | "bolna" | "twilio" | "mock" | "tata" | "tata_smartflo";
   status: CallStatus;
   startedAt: string;
   endedAt?: string;
@@ -116,4 +116,47 @@ export interface WebhookEventPayload {
   recordingUrl?: string;
   transcript?: string;
   raw?: Record<string, unknown>;
+}
+
+// NVIDIA Voice Pipeline Stack Types (Tata Dialer Speech Layer)
+export interface NvidiaVoicePipelineConfig {
+  rivaServerUrl: string; // e.g. "grpc://riva-speech.internal:50051" or NIM microservice
+  rivaAsrModel: string; // "nemotron-asr-streaming"
+  nemotronLlmModel: string; // "nemotron-4-340b-instruct" | "nemotron-mini-4b" | "llama-3.1-nemotron-70b"
+  magpieTtsVoice: string; // "riva-magpie-multilingual-v1" | "magpie-aditi" | "magpie-arjun"
+  sampleRateHz: number; // 16000
+  channels: number; // 1 (mono)
+  vadThreshold: number; // 0.65
+  maxTokens: number; // 150
+  temperature: number; // 0.2
+  enabled: boolean;
+}
+
+export interface NvidiaPipelineStep {
+  step: "riva_audio" | "nemotron_asr" | "nemotron_llm" | "business_logic" | "riva_magpie_tts";
+  title: string;
+  technology: string;
+  durationMs: number;
+  status: "success" | "streaming" | "pending" | "error";
+  input: string;
+  output: string;
+  details?: Record<string, unknown>;
+}
+
+export interface NvidiaPipelineSimulationResult {
+  id: string;
+  query: string;
+  finalSpeechText: string;
+  totalDurationMs: number;
+  steps: NvidiaPipelineStep[];
+  telemetry: {
+    sttLatencyMs: number;
+    llmFirstTokenMs: number;
+    ttsLatencyMs: number;
+    networkRttMs: number;
+    audioQualityScore: number;
+    vadSpeechDurationMs: number;
+  };
+  audioWaveform?: number[];
+  timestamp: string;
 }
