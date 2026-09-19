@@ -60,9 +60,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Common verifying state
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // Google SSO & One-Tap State
+  // Google SSO State
   const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [showGoogleOneTap, setShowGoogleOneTap] = useState(true);
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [signingInAccountName, setSigningInAccountName] = useState("");
   const [customGoogleEmail, setCustomGoogleEmail] = useState("");
@@ -71,7 +70,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   // Modals & Dialogs
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showContactAdmin, setShowContactAdmin] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
 
   const emailOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -241,7 +239,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setTimeout(() => {
       setIsGoogleSigningIn(false);
       setShowGoogleModal(false);
-      setShowGoogleOneTap(false);
       finalizeLogin({
         name: account.name,
         emailOrPhone: account.email,
@@ -263,7 +260,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setTimeout(() => {
       setIsGoogleSigningIn(false);
       setShowGoogleModal(false);
-      setShowGoogleOneTap(false);
       finalizeLogin({
         name,
         emailOrPhone: customGoogleEmail.toLowerCase().trim(),
@@ -392,436 +388,381 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       <div className="absolute top-1/2 -right-40 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 left-1/3 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Centered Authentication Card */}
-      <div className="w-full max-w-md bg-zinc-950/85 border border-zinc-800/90 backdrop-blur-xl rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 relative z-10 space-y-6">
+      {/* Centered Authentication Card - Normal Compact Size */}
+      <div className="w-full max-w-[380px] bg-zinc-950/90 border border-zinc-800 backdrop-blur-xl rounded-2xl p-6 shadow-2xl shadow-black/80 relative z-10 space-y-4">
         {/* Brand Header */}
-        <div className="flex flex-col items-center justify-center text-center space-y-2 mb-1">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-500 p-0.5 shadow-lg shadow-violet-600/30 flex items-center justify-center">
-            <div className="w-full h-full bg-[#0d0e15] rounded-[14px] flex items-center justify-center">
-              <Bot size={26} className="text-violet-400" />
-            </div>
+        <div className="flex flex-col items-center text-center space-y-1.5 mb-1">
+          <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+            <Bot size={22} />
           </div>
-          <div>
-            <div className="flex items-center justify-center gap-2">
-              <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                CreatorAI <span className="text-violet-400">Studio</span>
-              </h2>
-              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                v2.4
-              </span>
-            </div>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Autonomous AI Calling Agent & Cloud Dialer
-            </p>
-          </div>
-        </div>
-
-        {/* Welcome Heading */}
-        <div className="text-center pb-1">
-          <h3 className="text-base font-semibold tracking-tight text-zinc-200">
-            Sign in to your Workspace
-          </h3>
-          <p className="text-xs text-zinc-400 mt-0.5">
-            Select your sign-in method to access enterprise dialers and AI agents
+          <h2 className="text-lg font-bold tracking-tight text-white">
+            CreatorAI <span className="text-violet-400">Studio</span>
+          </h2>
+          <p className="text-xs text-zinc-400">
+            Sign in to your account
           </p>
         </div>
 
-        {/* Auth Method Tabs (Email vs Phone OTP) */}
-        <div className="grid grid-cols-2 p-1 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod("email");
-                setEmailOtpSent(false);
-              }}
-              className={`py-2 rounded-lg flex items-center justify-center gap-2 transition cursor-pointer ${
-                authMethod === "email"
-                  ? "bg-violet-600 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
-              }`}
-            >
-              <Mail size={14} />
-              <span>Email + Security OTP</span>
-            </button>
+        {/* Auth Method Tabs */}
+        <div className="grid grid-cols-2 p-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium">
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMethod("email");
+              setEmailOtpSent(false);
+            }}
+            className={`py-1.5 rounded-md flex items-center justify-center gap-1.5 transition cursor-pointer ${
+              authMethod === "email"
+                ? "bg-violet-600 text-white font-semibold shadow-sm"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            <Mail size={13} />
+            <span>Email</span>
+          </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod("phone");
-                setPhoneOtpSent(false);
-              }}
-              className={`py-2 rounded-lg flex items-center justify-center gap-2 transition cursor-pointer ${
-                authMethod === "phone"
-                  ? "bg-violet-600 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
-              }`}
-            >
-              <Phone size={14} />
-              <span>Phone Number (OTP)</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMethod("phone");
+              setPhoneOtpSent(false);
+            }}
+            className={`py-1.5 rounded-md flex items-center justify-center gap-1.5 transition cursor-pointer ${
+              authMethod === "phone"
+                ? "bg-violet-600 text-white font-semibold shadow-sm"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            <Phone size={13} />
+            <span>Phone</span>
+          </button>
+        </div>
 
-          {/* ------------------------------------------------------------- */}
-          {/* METHOD 1: EMAIL & PASSWORD + EMAIL OTP VERIFICATION            */}
-          {/* ------------------------------------------------------------- */}
-          {authMethod === "email" && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              {!emailOtpSent ? (
-                // Step 1: Email & Password Input
-                <form onSubmit={handleRequestEmailOtp} className="space-y-4">
-                  {/* Corporate Email */}
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                      Corporate Email Address
+        {/* ------------------------------------------------------------- */}
+        {/* METHOD 1: EMAIL & PASSWORD + EMAIL OTP VERIFICATION            */}
+        {/* ------------------------------------------------------------- */}
+        {authMethod === "email" && (
+          <div className="space-y-3.5 animate-in fade-in duration-150">
+            {!emailOtpSent ? (
+              // Step 1: Email & Password Input
+              <form onSubmit={handleRequestEmailOtp} className="space-y-3">
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                    />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="name@company.com"
+                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-zinc-300">
+                      Password
                     </label>
-                    <div className="relative">
-                      <Mail
-                        size={16}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
-                      />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="yourname@company.com"
-                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-medium text-zinc-300">
-                        Password
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotPassword(true)}
-                        className="text-[11px] text-violet-400 hover:text-violet-300 transition cursor-pointer"
-                      >
-                        Forgot Password?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Lock
-                        size={16}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
-                      />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your security password"
-                        className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1 cursor-pointer"
-                      >
-                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Notice about 2-factor OTP */}
-                  <div className="p-3 rounded-xl bg-violet-950/20 border border-violet-900/40 text-[11px] text-violet-300 flex items-start gap-2">
-                    <ShieldCheck size={15} className="text-violet-400 shrink-0 mt-0.5" />
-                    <span>
-                      2-Factor Authentication: When you click continue, a 6-digit security OTP will be dispatched to your email address.
-                    </span>
-                  </div>
-
-                  {/* Button: Send Email OTP */}
-                  <button
-                    type="submit"
-                    disabled={isSendingEmailOtp}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                  >
-                    {isSendingEmailOtp ? (
-                      <>
-                        <RefreshCw size={15} className="animate-spin" />
-                        <span>Sending Security OTP to Email...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Continue & Send Email OTP</span>
-                        <ArrowRight size={15} />
-                      </>
-                    )}
-                  </button>
-                </form>
-              ) : (
-                // Step 2: Email 6-Digit OTP Verification Form
-                <form onSubmit={handleVerifyEmailOtp} className="space-y-4 animate-in fade-in duration-200">
-                  <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-800/50 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <CheckCircle2 size={17} className="text-emerald-400 shrink-0" />
-                      <div>
-                        <span className="text-xs font-bold text-emerald-300 block">
-                          OTP Dispatched to Email
-                        </span>
-                        <span className="text-[11px] text-zinc-300 font-mono">
-                          {email}
-                        </span>
-                      </div>
-                    </div>
                     <button
                       type="button"
-                      onClick={() => setEmailOtpSent(false)}
-                      className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-[11px] text-violet-400 hover:text-violet-300 transition cursor-pointer"
                     >
-                      Change
+                      Forgot?
                     </button>
                   </div>
-
-                  {/* 6 OTP Boxes */}
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-300 mb-2 text-center">
-                      Enter 6-Digit Verification Code
-                    </label>
-                    <div className="flex justify-center gap-2 sm:gap-2.5">
-                      {emailOtpDigits.map((digit, index) => (
-                        <input
-                          key={index}
-                          ref={(el) => {
-                            emailOtpInputRefs.current[index] = el;
-                          }}
-                          type="text"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleEmailOtpChange(index, e.target.value)}
-                          onKeyDown={(e) => handleEmailOtpKeyDown(index, e)}
-                          className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-mono font-bold bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30 shadow-inner"
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Timer & Dispatched Code Copy Pill */}
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <span className="text-zinc-400 text-[11px]">
-                      {emailTimer > 0 ? (
-                        <>Resend code in <strong className="text-violet-400 font-mono">{emailTimer}s</strong></>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={(e) => handleRequestEmailOtp(e)}
-                          className="text-violet-400 hover:text-violet-300 font-medium underline cursor-pointer"
-                        >
-                          Resend Code to Email
-                        </button>
-                      )}
-                    </span>
-
-                    {dispatchedEmailOtp && (
-                      <button
-                        type="button"
-                        onClick={() => setEmailOtpDigits(dispatchedEmailOtp.split(""))}
-                        className="text-[10px] text-zinc-400 hover:text-emerald-400 font-mono bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded cursor-pointer transition"
-                      >
-                        Paste OTP ({dispatchedEmailOtp})
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Verify & Enter Button */}
-                  <button
-                    type="submit"
-                    disabled={isVerifying}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-emerald-600/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                  >
-                    {isVerifying ? (
-                      <>
-                        <RefreshCw size={15} className="animate-spin" />
-                        <span>Verifying Email Security Token...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check size={16} />
-                        <span>Verify Email OTP & Enter Workspace</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* ------------------------------------------------------------- */}
-          {/* METHOD 2: PHONE NUMBER + OTP VERIFICATION                      */}
-          {/* ------------------------------------------------------------- */}
-          {authMethod === "phone" && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              {!phoneOtpSent ? (
-                // Step 1: Phone input
-                <form onSubmit={handleSendPhoneOtp} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                      Mobile Number (with Country Dialing Code)
-                    </label>
-                    <div className="flex gap-2">
-                      <select
-                        value={countryCode}
-                        onChange={(e) => setCountryCode(e.target.value)}
-                        className="py-2.5 px-3 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer font-mono"
-                      >
-                        <option value="+91">🇮🇳 +91 (India)</option>
-                        <option value="+1">🇺🇸 +1 (US/Canada)</option>
-                        <option value="+44">🇬🇧 +44 (UK)</option>
-                        <option value="+971">🇦🇪 +971 (UAE)</option>
-                        <option value="+65">🇸🇬 +65 (Singapore)</option>
-                      </select>
-
-                      <div className="relative flex-1">
-                        <Phone
-                          size={15}
-                          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
-                        />
-                        <input
-                          type="tel"
-                          required
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          placeholder="98200 11223"
-                          className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 font-mono transition"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-zinc-400">
-                    We will dispatch a secure 6-digit one-time password (OTP) via SMS and WhatsApp Business Gateway.
-                  </p>
-
-                  <button
-                    type="submit"
-                    disabled={isSendingPhoneOtp}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                  >
-                    {isSendingPhoneOtp ? (
-                      <>
-                        <RefreshCw size={15} className="animate-spin" />
-                        <span>Sending Phone Security OTP...</span>
-                      </>
-                    ) : (
-                      <>
-                        <PhoneCall size={15} />
-                        <span>Send 6-Digit OTP</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-              ) : (
-                // Step 2: 6-Digit Phone OTP Verification Box
-                <form onSubmit={handleVerifyPhoneOtp} className="space-y-4">
-                  <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/50 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-emerald-400" />
-                      <div>
-                        <span className="text-xs font-semibold text-emerald-300 block">
-                          OTP Sent to {countryCode} {phoneNumber}
-                        </span>
-                        <span className="text-[10px] text-emerald-400/80">
-                          Expires in 10 minutes • 256-bit Telecom Verification
-                        </span>
-                      </div>
-                    </div>
+                  <div className="relative">
+                    <Lock
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                    />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter password"
+                      className="w-full pl-9 pr-9 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                    />
                     <button
                       type="button"
-                      onClick={() => setPhoneOtpSent(false)}
-                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 p-1 cursor-pointer"
                     >
-                      Change
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
+                </div>
 
-                  {/* 6 OTP Boxes */}
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-300 mb-2 text-center">
-                      Enter 6-Digit Verification Code
-                    </label>
-                    <div className="flex justify-center gap-2 sm:gap-2.5">
-                      {phoneOtpDigits.map((digit, index) => (
-                        <input
-                          key={index}
-                          ref={(el) => {
-                            phoneOtpInputRefs.current[index] = el;
-                          }}
-                          type="text"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handlePhoneOtpChange(index, e.target.value)}
-                          onKeyDown={(e) => handlePhoneOtpKeyDown(index, e)}
-                          className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-mono font-bold bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30 shadow-inner"
-                        />
-                      ))}
+                {/* Button: Continue */}
+                <button
+                  type="submit"
+                  disabled={isSendingEmailOtp}
+                  className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs shadow-md shadow-violet-600/20 active:scale-[0.99] transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 mt-1"
+                >
+                  {isSendingEmailOtp ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      <span>Sending Code...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue</span>
+                      <ArrowRight size={14} />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              // Step 2: Email 6-Digit OTP Verification Form
+              <form onSubmit={handleVerifyEmailOtp} className="space-y-3 animate-in fade-in duration-150">
+                <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+                    <span className="text-emerald-300 truncate text-[11px] font-mono">
+                      Code sent to {email}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEmailOtpSent(false)}
+                    className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                {/* 6 OTP Boxes */}
+                <div className="py-1">
+                  <div className="flex justify-center gap-2">
+                    {emailOtpDigits.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => {
+                          emailOtpInputRefs.current[index] = el;
+                        }}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleEmailOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleEmailOtpKeyDown(index, e)}
+                        className="w-9 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 shadow-inner"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Resend link & Copy OTP */}
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-zinc-400">
+                    {emailTimer > 0 ? (
+                      <>Resend in <strong className="text-violet-400 font-mono">{emailTimer}s</strong></>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => handleRequestEmailOtp(e)}
+                        className="text-violet-400 hover:underline cursor-pointer"
+                      >
+                        Resend Code
+                      </button>
+                    )}
+                  </span>
+
+                  {dispatchedEmailOtp && (
+                    <button
+                      type="button"
+                      onClick={() => setEmailOtpDigits(dispatchedEmailOtp.split(""))}
+                      className="text-[10px] text-zinc-400 hover:text-emerald-400 font-mono bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded cursor-pointer"
+                    >
+                      Paste OTP ({dispatchedEmailOtp})
+                    </button>
+                  )}
+                </div>
+
+                {/* Verify & Enter Button */}
+                <button
+                  type="submit"
+                  disabled={isVerifying}
+                  className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 active:scale-[0.99] transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                >
+                  {isVerifying ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      <span>Verify & Continue</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* METHOD 2: PHONE NUMBER + OTP VERIFICATION                      */}
+        {/* ------------------------------------------------------------- */}
+        {authMethod === "phone" && (
+          <div className="space-y-3.5 animate-in fade-in duration-150">
+            {!phoneOtpSent ? (
+              // Step 1: Phone input
+              <form onSubmit={handleSendPhoneOtp} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1">
+                    Phone Number
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="py-2 px-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer font-mono"
+                    >
+                      <option value="+91">🇮🇳 +91</option>
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      <option value="+971">🇦🇪 +971</option>
+                      <option value="+65">🇸🇬 +65</option>
+                    </select>
+
+                    <div className="relative flex-1">
+                      <Phone
+                        size={14}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                      />
+                      <input
+                        type="tel"
+                        required
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="98200 11223"
+                        className="w-full pl-8 pr-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 font-mono transition"
+                      />
                     </div>
                   </div>
+                </div>
 
-                  {/* Sandbox helper chip */}
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <span className="text-zinc-400 text-[11px]">
-                      {phoneTimer > 0 ? (
-                        <>Resend code in <strong className="text-violet-400 font-mono">{phoneTimer}s</strong></>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleSendPhoneOtp()}
-                          className="text-violet-400 hover:text-violet-300 font-medium underline cursor-pointer"
-                        >
-                          Resend OTP Code
-                        </button>
-                      )}
-                    </span>
-
-                    <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Carrier SMS Dispatched
+                <button
+                  type="submit"
+                  disabled={isSendingPhoneOtp}
+                  className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs shadow-md shadow-violet-600/20 active:scale-[0.99] transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 mt-1"
+                >
+                  {isSendingPhoneOtp ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      <span>Sending Code...</span>
+                    </>
+                  ) : (
+                    <>
+                      <PhoneCall size={14} />
+                      <span>Send OTP</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              // Step 2: 6-Digit Phone OTP Verification Box
+              <form onSubmit={handleVerifyPhoneOtp} className="space-y-3">
+                <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+                    <span className="text-emerald-300 truncate text-[11px] font-mono">
+                      Code sent to {countryCode} {phoneNumber}
                     </span>
                   </div>
-
-                  {/* Verify & Enter Button */}
                   <button
-                    type="submit"
-                    disabled={isVerifying}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-emerald-600/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    type="button"
+                    onClick={() => setPhoneOtpSent(false)}
+                    className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer shrink-0 ml-2"
                   >
-                    {isVerifying ? (
-                      <>
-                        <RefreshCw size={15} className="animate-spin" />
-                        <span>Verifying Security Token...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check size={16} />
-                        <span>Verify Phone OTP & Enter Workspace</span>
-                      </>
-                    )}
+                    Edit
                   </button>
-                </form>
-              )}
-            </div>
-          )}
+                </div>
 
-        {/* Divider with "OR" */}
-        <div className="relative flex items-center justify-center pt-2">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-zinc-800" />
+                {/* 6 OTP Boxes */}
+                <div className="py-1">
+                  <div className="flex justify-center gap-2">
+                    {phoneOtpDigits.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => {
+                          phoneOtpInputRefs.current[index] = el;
+                        }}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handlePhoneOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handlePhoneOtpKeyDown(index, e)}
+                        className="w-9 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 shadow-inner"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-zinc-400">
+                    {phoneTimer > 0 ? (
+                      <>Resend in <strong className="text-violet-400 font-mono">{phoneTimer}s</strong></>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleSendPhoneOtp()}
+                        className="text-violet-400 hover:underline cursor-pointer"
+                      >
+                        Resend Code
+                      </button>
+                    )}
+                  </span>
+                </div>
+
+                {/* Verify & Enter Button */}
+                <button
+                  type="submit"
+                  disabled={isVerifying}
+                  className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 active:scale-[0.99] transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                >
+                  {isVerifying ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      <span>Verify & Continue</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
           </div>
-          <span className="relative px-3 bg-[#090a0f] text-[10px] uppercase font-mono tracking-widest text-zinc-500">
-            OR CONTINUE WITH
+        )}
+
+        {/* Divider */}
+        <div className="relative flex items-center justify-center py-1">
+          <div className="w-full border-t border-zinc-800" />
+          <span className="absolute px-2.5 bg-zinc-950 text-[10px] uppercase font-mono tracking-wider text-zinc-500">
+            or
           </span>
         </div>
 
-        {/* Google OAuth (Full Width & Clean - Placed underneath forms per user request) */}
+        {/* Google OAuth (Full Width & Clean) */}
         <button
           type="button"
           onClick={() => setShowGoogleModal(true)}
-          className="w-full py-3 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800/90 hover:border-zinc-700 text-zinc-100 text-xs font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer shadow-sm group hover:ring-1 hover:ring-zinc-600"
+          className="w-full py-2.5 px-4 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-medium flex items-center justify-center gap-2.5 transition cursor-pointer"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -841,114 +782,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
-          <span className="text-xs font-semibold">Continue with Google</span>
+          <span>Continue with Google</span>
         </button>
-
-          {/* ========================================================================= */}
-          {/* 3. FOOTER & COMPLIANCE ELEMENTS                                           */}
-          {/* ========================================================================= */}
-          <div className="space-y-4 pt-4 border-t border-zinc-800/80 text-center">
-            {/* Sign-up prompt */}
-            <p className="text-xs text-zinc-400">
-              Don't have an enterprise account?{" "}
-              <button
-                type="button"
-                onClick={() => setShowContactAdmin(true)}
-                className="text-violet-400 hover:text-violet-300 font-semibold transition cursor-pointer"
-              >
-                Contact your Workspace Admin
-              </button>
-            </p>
-
-            {/* Legal compliance links */}
-            <div className="flex items-center justify-center gap-4 text-[11px] text-zinc-500">
-              <a
-                href="#terms"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toast.info("CreatorAI Terms of Service (Telecom Services Agreement v2026.1)");
-                }}
-                className="hover:text-zinc-400 transition"
-              >
-                Terms of Service
-              </a>
-              <span>•</span>
-              <a
-                href="#privacy"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toast.info("Privacy Policy: End-to-end encrypted audio & DNC scrubbing compliant");
-                }}
-                className="hover:text-zinc-400 transition"
-              >
-                Privacy Policy
-              </a>
-              <span>•</span>
-              <a
-                href="#compliance"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toast.info("TRAI National Do Not Call (NDNC) Scrubbing Policy & SAC 9984 Compliance");
-                }}
-                className="hover:text-zinc-400 transition"
-              >
-                TRAI Compliance
-              </a>
-            </div>
-          </div>
-        </div>
-
-      {/* ========================================================================= */}
-      {/* GOOGLE ONE-TAP PROMPT (Authentic Modern Web Component)                     */}
-      {/* ========================================================================= */}
-      {showGoogleOneTap && !showGoogleModal && (
-        <div className="fixed top-5 right-5 z-40 w-[340px] sm:w-[360px] bg-white text-zinc-800 rounded-2xl shadow-2xl border border-zinc-200/90 p-4 animate-in slide-in-from-top-4 duration-300 font-sans">
-          <div className="flex items-start justify-between pb-3 border-b border-zinc-100">
-            <div className="flex items-center gap-2.5">
-              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-              </svg>
-              <div className="leading-tight">
-                <h4 className="text-xs font-semibold text-zinc-900">Sign in with Google</h4>
-                <p className="text-[11px] text-zinc-500">to continue to CreatorAI Studio</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowGoogleOneTap(false)}
-              className="text-zinc-400 hover:text-zinc-700 p-1 rounded-full hover:bg-zinc-100 transition cursor-pointer"
-              title="Close Google One Tap"
-            >
-              <X size={15} />
-            </button>
-          </div>
-
-          <div className="py-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#1a73e8] text-white font-bold flex items-center justify-center text-sm shadow-xs shrink-0">
-              SK
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-zinc-900 truncate">Sumit Khomne</p>
-              <p className="text-[11px] text-zinc-500 truncate">sumitkhomne123@gmail.com</p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => handleGoogleAccountSelect({ name: "Sumit Khomne", email: "sumitkhomne123@gmail.com" })}
-            className="w-full py-2.5 px-3 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] active:scale-[0.99] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
-          >
-            Continue as Sumit
-          </button>
-
-          <p className="text-[10px] text-zinc-400 text-center mt-2.5 leading-tight">
-            Google will share your name, email and profile picture with CreatorAI Studio.
-          </p>
-        </div>
-      )}
+      </div>
 
       {/* ========================================================================= */}
       {/* MODAL 1: AUTHENTIC GOOGLE OAUTH 2.0 POPUP WINDOW                          */}
@@ -1206,40 +1042,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL 3: Contact Workspace Admin                                          */}
-      {/* ========================================================================= */}
-      {showContactAdmin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center">
-                <Building2 size={18} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Enterprise Invitation Protocol</h3>
-                <p className="text-[11px] text-zinc-400">
-                  Role-based telephony accounts are managed by workspace administrators
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
-              Because CreatorAI Ops provides direct SIP trunking, dialer queues, and carrier balance allocations, accounts cannot be registered publicly. Please contact your organization’s Telecom Admin at <strong className="text-violet-400">telecom-admin@callforge.io</strong> or request an invite link.
-            </p>
-
-            <div className="flex justify-end pt-1">
-              <button
-                type="button"
-                onClick={() => setShowContactAdmin(false)}
-                className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs transition"
-              >
-                Understood
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
