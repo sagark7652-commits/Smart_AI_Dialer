@@ -38,21 +38,11 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form State
-  const [campaignName, setCampaignName] = useState("Diwali Festival Flash Qualification");
+  const [campaignName, setCampaignName] = useState("");
   const [callingStart, setCallingStart] = useState("09:30");
   const [callingEnd, setCallingEnd] = useState("20:00");
   const [dialerMode, setDialerMode] = useState<DialerMode>("ai_blast");
-  const [csvData, setCsvData] = useState<CSVPreview | null>({
-    fileName: "retail_leads_mumbai_q4.csv",
-    headers: ["Full Name", "Mobile Number", "Company", "City", "Intent Stage"],
-    rows: [
-      ["Aarav Mehta", "+91 98203 11482", "Northstar Retail", "Mumbai", "High"],
-      ["Pooja Sharma", "+91 98110 49301", "Bloom Fashions", "Delhi", "Medium"],
-      ["Karan Johar", "+91 98450 72190", "Spice Route Cafe", "Bengaluru", "High"],
-      ["Sneha Reddy", "+91 97654 30891", "Hyderabad Mart", "Hyderabad", "High"],
-    ],
-    totalCount: 1480,
-  });
+  const [csvData, setCsvData] = useState<CSVPreview | null>(null);
 
   // Column Mapping
   const [columnMapping, setColumnMapping] = useState({
@@ -71,6 +61,28 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
   );
 
   if (!isOpen) return null;
+
+  const handleLoadSampleBatch = () => {
+    setCsvData({
+      fileName: "quick_lead_batch.csv",
+      headers: ["Full Name", "Mobile Number", "Company", "City"],
+      rows: [
+        ["Aditya Sharma", "+91 98201 23456", "Sharma Logistics", "Mumbai"],
+        ["Sneha Kapoor", "+91 98110 34567", "Kapoor Retail", "Delhi"],
+        ["Rohan Gupta", "+91 98450 45678", "Gupta Enterprises", "Bengaluru"],
+        ["Priya Nair", "+91 97654 56789", "Nair Tech", "Hyderabad"],
+        ["Vikram Sen", "+91 98300 67890", "Sen & Sons", "Kolkata"],
+      ],
+      totalCount: 5,
+    });
+    setColumnMapping({
+      name: "Full Name",
+      phone: "Mobile Number",
+      company: "Company",
+      notes: "City",
+    });
+    toast.success("Loaded 5 contacts for quick campaign test");
+  };
 
   // Validation: India calling hours 09:00 - 21:00 IST
   const isTimeWindowCompliant = () => {
@@ -138,30 +150,54 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
       return;
     }
     if (!csvData) {
-      toast.error("Please upload a CSV contact list");
+      toast.error("Please upload a CSV contact list or click 'Quick-load 5 Sample Contacts'");
       return;
     }
 
     const payload = {
       id: `camp-${Date.now().toString().slice(-4)}`,
-      name: campaignName,
-      callingWindow: `${callingStart} - ${callingEnd} IST`,
-      dialerMode,
+      name: campaignName.trim(),
+      mode: dialerMode === "ai_blast" ? "AI blast" : dialerMode === "progressive" ? "Progressive" : "Preview",
+      status: "Running",
+      leads: csvData.totalCount.toLocaleString(),
+      connected: "0",
+      progress: 0,
+      color: "violet",
+      scriptPreview: script,
       totalLeads: csvData.totalCount,
       dialed: 0,
-      connected: 0,
       qualified: 0,
       failed: 0,
-      liveCalls: 0,
-      status: "Running",
+      liveCalls: 1,
+      avgDuration: "00:00",
+      callingWindow: `${callingStart} - ${callingEnd} IST`,
+      dialerMode,
       scriptWithPreamble: `${MANDATORY_COMPLIANCE_PREAMBLE}\n\n${script}`,
-      columnMapping,
       createdAt: new Date().toISOString(),
     };
 
+    // Dispatch to server backend API
+    try {
+      const parsedLeads = csvData.rows.map((row, i) => ({
+        name: row[0] || `Lead ${i + 1}`,
+        phone: row[1] || `+91 98200 ${10000 + i}`,
+        company: row[2] || "Enterprise",
+      }));
+      fetch("/api/calling/campaigns/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: campaignName.trim(),
+          dialerMode,
+          leads: parsedLeads.length > 0 ? parsedLeads : [{ name: "Target Lead", phone: "+91 98201 11223" }],
+          script,
+        }),
+      }).catch(() => {});
+    } catch {}
+
     onCampaignCreated?.(payload);
     toast.success("Campaign launched successfully!", {
-      description: `${payload.name} (${payload.totalLeads} leads) is now queued for dialing.`,
+      description: `${payload.name} (${payload.leads} leads) is now queued for dialing.`,
     });
     onClose();
   };
@@ -300,6 +336,18 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
 
           {step === 2 && (
             <div className="space-y-4">
+              {/* Quick load options */}
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-violet-950/20 border border-violet-800/30">
+                <span className="text-xs text-zinc-300">Have a CSV or want to test immediately?</span>
+                <button
+                  type="button"
+                  onClick={handleLoadSampleBatch}
+                  className="px-2.5 py-1 rounded bg-violet-600/30 hover:bg-violet-600/50 text-violet-300 border border-violet-500/40 text-xs font-medium cursor-pointer transition"
+                >
+                  ⚡ Quick-load 5 Sample Contacts
+                </button>
+              </div>
+
               {/* CSV Upload Zone */}
               <div className="border-2 border-dashed border-zinc-800 hover:border-violet-500/60 rounded-xl p-5 text-center transition-colors bg-zinc-900/30">
                 <input

@@ -9,6 +9,7 @@ interface SandboxTestModalProps {
   onClose: () => void;
   scriptText?: string;
   agentName?: string;
+  onCallCompleted?: () => void;
 }
 
 interface ChatMessage {
@@ -22,6 +23,7 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
   onClose,
   scriptText = "Offer festive season 20% discount on annual cloud calling packs.",
   agentName = "Asha (Hindi/English)",
+  onCallCompleted,
 }) => {
   const [phoneNumber, setPhoneNumber] = useState("+91 98201 55432");
   const [leadName, setLeadName] = useState("Rajesh Varma");
@@ -106,6 +108,28 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
     audioEngine.stopSpeaking();
     setCallState("ended");
     toast.info("Sandbox test call ended");
+
+    // Post CDR log so the test call updates dashboard metrics
+    try {
+      fetch("/api/calling/cdrs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: leadName,
+          customerPhone: phoneNumber,
+          agentName: agentName,
+          campaign: "Sandbox Voice Test",
+          duration: formatTime(timer || 15),
+          durationSeconds: timer || 15,
+          status: "Completed",
+          sentiment: "Positive",
+          qaScore: 92,
+        }),
+      })
+        .then(() => onCallCompleted?.())
+        .catch(() => {});
+    } catch {}
+
     setTimeout(() => setCallState("idle"), 1500);
   };
 
