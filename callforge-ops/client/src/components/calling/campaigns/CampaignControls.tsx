@@ -42,6 +42,24 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   const [isPolling, setIsPolling] = useState(true);
   const [lastPollTime, setLastPollTime] = useState<string>("just now");
 
+  useEffect(() => {
+    if (initialCampaign) {
+      setStats((prev) => ({
+        ...prev,
+        id: initialCampaign.id || prev.id,
+        name: initialCampaign.name || prev.name,
+        totalLeads: initialCampaign.totalLeads ?? prev.totalLeads,
+        dialed: initialCampaign.dialed ?? prev.dialed,
+        connected: initialCampaign.connected ?? prev.connected,
+        qualified: initialCampaign.qualified ?? prev.qualified,
+        failed: initialCampaign.failed ?? prev.failed,
+        liveCalls: initialCampaign.liveCalls ?? prev.liveCalls,
+        status: (initialCampaign.status as any) || prev.status,
+        avgDuration: initialCampaign.avgDuration || prev.avgDuration,
+      }));
+    }
+  }, [initialCampaign?.id, initialCampaign?.status, initialCampaign?.name, initialCampaign?.totalLeads, initialCampaign?.connected]);
+
   // Live polling effect (fetch from backend every 5 seconds if running)
   useEffect(() => {
     if (!isPolling || stats.status !== "Running") return;
@@ -74,10 +92,20 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
     return () => clearInterval(interval);
   }, [isPolling, stats.status, stats.id]);
 
-  const toggleRunPause = () => {
+  const toggleRunPause = async () => {
     const nextStatus = stats.status === "Running" ? "Paused" : "Running";
     setStats((prev) => ({ ...prev, status: nextStatus }));
     onStatusChange?.(nextStatus);
+
+    try {
+      const endpoint = nextStatus === "Running" ? "resume" : "pause";
+      await fetch(`/api/calling/campaigns/${stats.id}/${endpoint}`, {
+        method: "POST",
+      });
+    } catch (err) {
+      console.error("Error toggling campaign status on backend:", err);
+    }
+
     toast(nextStatus === "Running" ? "Campaign resumed" : "Campaign paused", {
       description:
         nextStatus === "Running"
@@ -86,9 +114,16 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
     });
   };
 
-  const handleStop = () => {
+  const handleStop = async () => {
     setStats((prev) => ({ ...prev, status: "Completed", liveCalls: 0 }));
     onStatusChange?.("Completed");
+    try {
+      await fetch(`/api/calling/campaigns/${stats.id}/stop`, {
+        method: "POST",
+      });
+    } catch (err) {
+      console.error("Error stopping campaign on backend:", err);
+    }
     toast.error("Campaign halted", {
       description: "Dialer stopped. Campaign marked as Completed.",
     });

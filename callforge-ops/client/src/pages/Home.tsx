@@ -149,6 +149,7 @@ function Overview({
   campaigns?: CampaignRecord[];
   leads?: LeadRecord[];
   cdrs?: any[];
+  onCampaignStatusChange?: (status: string, campaignId?: string) => void;
 }) {
   const [timeframe, setTimeframe] = useState("Today");
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -309,6 +310,7 @@ function Overview({
               }
             : undefined
         }
+        onStatusChange={(newStatus) => onCampaignStatusChange?.(newStatus, activeCampaign?.id)}
       />
 
       {/* Main Grid */}
@@ -399,10 +401,12 @@ function Campaigns({
   campaigns = [],
   onNewCampaign,
   onTestCall,
+  onCampaignStatusChange,
 }: {
   campaigns?: CampaignRecord[];
   onNewCampaign: () => void;
   onTestCall: () => void;
+  onCampaignStatusChange?: (status: string, campaignId?: string) => void;
 }) {
   const [subView, setSubView] = useState<"runs" | "editor">("runs");
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignRecord | null>(null);
@@ -535,6 +539,12 @@ function Campaigns({
         onOpenEditor={() => {
           setShowCampaignDetail(false);
           setSubView("editor");
+        }}
+        onStatusChange={(campId, newStat) => {
+          onCampaignStatusChange?.(newStat, campId);
+          if (selectedCampaign && (selectedCampaign.id === campId || selectedCampaign.name === campId)) {
+            setSelectedCampaign({ ...selectedCampaign, status: newStat as any });
+          }
         }}
       />
     </div>
@@ -1307,6 +1317,17 @@ export default function Home() {
     }
   };
 
+  const handleCampaignStatusChange = (status: string, campaignId?: string) => {
+    setCampaignsList((prev) =>
+      prev.map((c, idx) => {
+        if (campaignId ? (c.id === campaignId || c.name === campaignId) : idx === 0) {
+          return { ...c, status: status as any };
+        }
+        return c;
+      })
+    );
+  };
+
   const activeIndex = navigation.findIndex((item) => item.label === active);
 
   let content: React.ReactNode = null;
@@ -1321,6 +1342,7 @@ export default function Home() {
           campaigns={campaignsList}
           leads={leadsList}
           cdrs={cdrList}
+          onCampaignStatusChange={handleCampaignStatusChange}
         />
       );
       break;
@@ -1330,6 +1352,7 @@ export default function Home() {
           campaigns={campaignsList}
           onNewCampaign={() => setShowCampaignBuilder(true)}
           onTestCall={() => setShowSandboxTest(true)}
+          onCampaignStatusChange={handleCampaignStatusChange}
         />
       );
       break;
@@ -1756,6 +1779,13 @@ export default function Home() {
               }
             : undefined
         }
+        onSaveEvaluation={(evaluation) => {
+          setCdrList((prev) =>
+            prev.map((c) =>
+              c.id === evaluation.callId ? { ...c, qaScore: evaluation.overallScore } : c
+            )
+          );
+        }}
       />
     </div>
   );

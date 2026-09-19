@@ -110,7 +110,7 @@ export const QAScorecardModal: React.FC<QAScorecardModalProps> = ({
       100
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const payload = {
       callId: callData.callId,
       overallScore: calculatedScore,
@@ -119,6 +119,17 @@ export const QAScorecardModal: React.FC<QAScorecardModalProps> = ({
       criteria,
       evaluatedAt: new Date().toISOString(),
     };
+
+    try {
+      await fetch(`/api/calling/cdrs/${callData.callId}/qa`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error("Failed to persist QA evaluation:", err);
+    }
+
     onSaveEvaluation?.(payload);
     toast.success("QA Scorecard Saved", {
       description: `Evaluation score of ${calculatedScore}% logged for Call ${callData.callId}.`,

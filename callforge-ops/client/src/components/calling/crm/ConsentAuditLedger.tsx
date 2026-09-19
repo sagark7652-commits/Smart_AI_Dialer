@@ -60,6 +60,17 @@ export const ConsentAuditLedger: React.FC = () => {
   const [data, setData] = useState<ConsentRecord[]>(CONSENT_DATA);
   const [search, setSearch] = useState("");
 
+  useEffect(() => {
+    fetch("/api/calling/consent-records")
+      .then((r) => r.json())
+      .then((res) => {
+        if (res && Array.isArray(res.records) && res.records.length > 0) {
+          setData(res.records);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const filtered = data.filter(
     (d) =>
       d.name.toLowerCase().includes(search.toLowerCase()) ||

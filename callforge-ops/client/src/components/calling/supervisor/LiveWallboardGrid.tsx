@@ -37,8 +37,82 @@ export const LiveWallboardGrid: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Live timer tick & random updates to simulate SSE stream
+  // Connect to live backend wallboard and stream
   useEffect(() => {
+    const fetchWallboard = async () => {
+      try {
+        const res = await fetch("/api/calling/wallboard");
+        const data = await res.json();
+        if (data && Array.isArray(data.agents)) {
+          const mapped: WallboardAgent[] = data.agents.map((a: any) => {
+            const activeCall = (data.activeCalls || []).find((c: any) => c.agentId === a.id);
+            return {
+              id: a.id,
+              name: a.name,
+              type: a.type || (a.name.toLowerCase().includes("ai") ? "ai" : "human"),
+              status: (a.state === "on_call"
+                ? "on_call"
+                : a.state === "ready"
+                ? "ready"
+                : a.state === "wrap_up"
+                ? "wrap_up"
+                : "break") as any,
+              currentCall: activeCall
+                ? {
+                    callId: activeCall.id,
+                    customerName: activeCall.customerName || "Enterprise Contact",
+                    customerPhone: activeCall.customerPhone,
+                    campaign: activeCall.campaign || "Outbound Active Queue",
+                    duration: activeCall.durationSeconds || 1,
+                    sentiment:
+                      activeCall.sentiment === "positive"
+                        ? "Positive"
+                        : activeCall.sentiment === "negative"
+                        ? "Negative"
+                        : "Neutral",
+                    aiScore: 92,
+                  }
+                : undefined,
+            };
+          });
+          setAgents(mapped);
+        }
+      } catch {}
+    };
+
+    fetchWallboard();
+
+    let sse: EventSource | null = null;
+    try {
+      sse = new EventSource("/api/calling/live");
+      sse.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === "agent_status" && payload.agentId) {
+            setAgents((prev) =>
+              prev.map((ag) =>
+                ag.id === payload.agentId
+                  ? {
+                      ...ag,
+                      status:
+                        payload.state === "on_call"
+                          ? "on_call"
+                          : payload.state === "ready"
+                          ? "ready"
+                          : payload.state === "wrap_up"
+                          ? "wrap_up"
+                          : "break",
+                    }
+                  : ag
+              )
+            );
+          } else if (payload.activeCalls || payload.agents) {
+            fetchWallboard();
+          }
+        } catch {}
+      };
+    } catch {}
+
     const interval = setInterval(() => {
       setAgents((prev) =>
         prev.map((agent) => {
@@ -56,7 +130,10 @@ export const LiveWallboardGrid: React.FC = () => {
       );
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (sse) sse.close();
+    };
   }, []);
 
   const formatDuration = (secs: number) => {

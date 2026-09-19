@@ -32,6 +32,7 @@ interface CampaignDetailModalProps {
   campaign: CampaignRecord | null;
   onTestCall: () => void;
   onOpenEditor: () => void;
+  onStatusChange?: (campaignId: string, newStatus: string) => void;
 }
 
 export const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
@@ -40,24 +41,34 @@ export const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
   campaign,
   onTestCall,
   onOpenEditor,
+  onStatusChange,
 }) => {
   const [currentStatus, setCurrentStatus] = useState<string>(campaign?.status || "Running");
   const [isToggling, setIsToggling] = useState(false);
+
+  useEffect(() => {
+    if (campaign?.status) {
+      setCurrentStatus(campaign.status);
+    }
+  }, [campaign?.id, campaign?.status]);
 
   if (!isOpen || !campaign) return null;
 
   const handleToggleStatus = async () => {
     setIsToggling(true);
     const newStatus = currentStatus === "Running" ? "Paused" : "Running";
+    const campaignId = campaign.id || "camp-101";
     try {
       const endpoint = newStatus === "Paused" ? "pause" : "resume";
-      await fetch(`/api/calling/campaigns/camp-101/${endpoint}`, { method: "POST" });
+      await fetch(`/api/calling/campaigns/${campaignId}/${endpoint}`, { method: "POST" });
       setCurrentStatus(newStatus);
+      onStatusChange?.(campaignId, newStatus);
       toast.success(`Campaign ${newStatus === "Paused" ? "Paused" : "Resumed"}`, {
         description: `Dialer queue for '${campaign.name}' is now ${newStatus.toLowerCase()}.`,
       });
     } catch {
       setCurrentStatus(newStatus);
+      onStatusChange?.(campaignId, newStatus);
       toast.info(`Campaign status updated to ${newStatus}`);
     } finally {
       setIsToggling(false);

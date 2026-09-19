@@ -32,9 +32,47 @@ export const ActionButtonsGroup: React.FC<ActionButtonsGroupProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
 
-  const handleAction = (action: "listen" | "whisper" | "barge" | "takeover") => {
+  const playSupervisorTone = (freq1 = 440, freq2 = 480, durationMs = 180) => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.frequency.value = freq1;
+      osc2.frequency.value = freq2;
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start();
+      osc2.start();
+      osc1.stop(ctx.currentTime + durationMs / 1000);
+      osc2.stop(ctx.currentTime + durationMs / 1000);
+    } catch {}
+  };
+
+  const handleAction = async (action: "listen" | "whisper" | "barge" | "takeover") => {
     setDropdownOpen(false);
     onActionTriggered?.(action);
+
+    // Audio feedback for supervisor operations
+    if (action === "listen") playSupervisorTone(440, 480, 160);
+    if (action === "whisper") playSupervisorTone(580, 620, 200);
+    if (action === "barge") playSupervisorTone(700, 800, 250);
+    if (action === "takeover") playSupervisorTone(350, 400, 300);
+
+    try {
+      await fetch("/api/calling/call-action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callId, action, supervisorId: "sup-01" }),
+      });
+    } catch (err) {
+      console.error("Failed to notify backend call-action:", err);
+    }
 
     switch (action) {
       case "listen":

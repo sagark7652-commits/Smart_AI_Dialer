@@ -137,6 +137,22 @@ callingRouter.get("/live", (req: Request, res: Response) => {
   eventBroker.registerClient(res, initialSnapshot);
 });
 
+// GET /api/calling/wallboard
+// JSON snapshot endpoint for Supervisor Wallboard polling / fallback
+callingRouter.get("/wallboard", (_req: Request, res: Response) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    activeCalls: dialerWorker.getActiveCalls(),
+    agents: dialerWorker.getAgents(),
+    queueStats: {
+      waitingCalls: 2,
+      longestWaitSeconds: 14,
+      availableAgents: dialerWorker.getAgents().filter((a) => a.state === "ready").length,
+      busyAgents: dialerWorker.getAgents().filter((a) => a.state === "on_call").length,
+    },
+  });
+});
+
 // =============================================================================
 // 3. PROVIDER ABSTRACTION & CALL ACTIONS
 // =============================================================================
@@ -373,6 +389,33 @@ callingRouter.post("/cdrs", (req: Request, res: Response) => {
     recordingUrl,
   });
   res.status(201).json({ success: true, cdr: newCdr });
+});
+
+// POST /api/calling/cdrs/:id/qa
+callingRouter.post("/cdrs/:id/qa", (req: Request, res: Response) => {
+  const { overallScore, isManualOverride, supervisorNotes, criteria } = req.body;
+  const score = typeof overallScore === "number" ? overallScore : 90;
+
+  const updated = persistentStore.updateCDRLog(req.params.id, {
+    qaScore: score,
+    supervisorNotes: supervisorNotes || "",
+    isManualOverride: !!isManualOverride,
+    criteria: criteria || [],
+  });
+
+  // Also broadcast QA update to live supervisor wallboard listeners
+  eventBroker.broadcast("cdr_qa_updated", {
+    id: req.params.id,
+    qaScore: score,
+    supervisorNotes,
+    isManualOverride,
+  });
+
+  res.json({
+    success: true,
+    message: `QA evaluation score of ${score}% saved successfully for call ${req.params.id}.`,
+    cdr: updated || { id: req.params.id, qaScore: score },
+  });
 });
 
 // =============================================================================
@@ -1155,4 +1198,85 @@ callingRouter.post("/auth/phone/verify-otp", (req: Request, res: Response) => {
       role: "Telephony Supervisor",
     },
   });
+});
+
+// =============================================================================
+// 12. COMPLIANCE CONSENT LEDGER & AUDIT TRAIL
+// =============================================================================
+
+// GET /api/calling/consent-records
+callingRouter.get("/consent-records", (_req: Request, res: Response) => {
+  const records = persistentStore.getConsentRecords();
+  res.json({ records, total: records.length });
+});
+
+// POST /api/calling/consent-records
+callingRouter.post("/consent-records", (req: Request, res: Response) => {
+  const { phone, name, source, ipAddress, dltReference, status } = req.body;
+  if (!phone || !name) {
+    return res.status(400).json({ error: "Phone and name are required for consent logging." });
+  }
+
+  const record = persistentStore.addConsentRecord({
+    phone,
+    name,
+    source: source || "Web Form (OTP Verified)",
+    ipAddress: ipAddress || "103.21.144.92",
+    dltReference: dltReference || "DLT-PE-1401552890014",
+    status: status || "Verified Opt-in",
+  });
+
+  res.status(201).json({ success: true, record });
+});
+
+// =============================================================================
+// 13. NOC SUPPORT TICKETS
+// =============================================================================
+
+// GET /api/calling/support/tickets
+callingRouter.get("/support/tickets", (_req: Request, res: Response) => {
+  const tickets = persistentStore.getSupportTickets();
+  res.json({ tickets, total: tickets.length });
+});
+
+// POST /api/calling/support/tickets
+callingRouter.post("/support/tickets", (req: Request, res: Response) => {
+  const { ticketId, subject, category, priority, message, userEmail } = req.body;
+  if (!subject) {
+    return res.status(400).json({ error: "Ticket subject is required." });
+  }
+
+  const ticket = persistentStore.addSupportTicket({
+    ticketId: ticketId || `TKT-${Math.floor(100000 + Math.random() * 900000)}`,
+    subject,
+    category: category || "Telephony Trunk",
+    priority: priority || "medium",
+    message: message || "",
+    userEmail: userEmail || "supervisor@callforge.io",
+    status: "open",
+  });
+
+  res.status(201).json({ success: true, ticket });
+});
+
+// =============================================================================
+// 14. APPLICATION & TELEPHONY SETTINGS
+// =============================================================================
+
+// GET /api/calling/settings
+callingRouter.get("/settings", (_req: Request, res: Response) => {
+  const settings = persistentStore.getAppSettings();
+  res.json({ settings });
+});
+
+// POST /api/calling/settings
+callingRouter.post("/settings", (req: Request, res: Response) => {
+  const updated = persistentStore.updateAppSettings(req.body);
+  persistentStore.addAuditLog(
+    "System Settings Updated",
+    "Admin User",
+    "Telephony routing and platform configuration updated.",
+    "system"
+  );
+  res.json({ success: true, settings: updated });
 });

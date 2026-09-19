@@ -43,6 +43,7 @@ export interface CampaignJob {
   };
   createdAt: string;
   updatedAt: string;
+  manualOverride?: boolean;
 }
 
 export interface ActiveCall {

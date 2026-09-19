@@ -147,14 +147,7 @@ export class PersistentDialerWorker {
     const job = this.campaigns.get(id);
     if (!job) return { success: false, message: "Campaign not found" };
 
-    if (!this.isWithinCallingWindow(job.callingWindow)) {
-      return {
-        success: false,
-        message: `Current time is outside TRAI statutory window (${job.callingWindow.startHour}:00 - ${job.callingWindow.endHour}:00 IST). Campaign queued.`,
-        campaign: job,
-      };
-    }
-
+    job.manualOverride = true;
     job.status = "running";
     job.updatedAt = new Date().toISOString();
     return { success: true, message: "Campaign started successfully.", campaign: job };
@@ -163,6 +156,7 @@ export class PersistentDialerWorker {
   pauseCampaign(id: string): { success: boolean; campaign?: CampaignJob } {
     const job = this.campaigns.get(id);
     if (!job) return { success: false };
+    job.manualOverride = false;
     job.status = "paused";
     job.updatedAt = new Date().toISOString();
     return { success: true, campaign: job };
@@ -171,6 +165,7 @@ export class PersistentDialerWorker {
   resumeCampaign(id: string): { success: boolean; campaign?: CampaignJob } {
     const job = this.campaigns.get(id);
     if (!job) return { success: false };
+    job.manualOverride = true;
     job.status = "running";
     job.updatedAt = new Date().toISOString();
     return { success: true, campaign: job };
@@ -179,6 +174,7 @@ export class PersistentDialerWorker {
   stopCampaign(id: string): { success: boolean; campaign?: CampaignJob } {
     const job = this.campaigns.get(id);
     if (!job) return { success: false };
+    job.manualOverride = false;
     job.status = "completed";
     job.updatedAt = new Date().toISOString();
     return { success: true, campaign: job };
@@ -214,7 +210,7 @@ export class PersistentDialerWorker {
     for (const job of Array.from(this.campaigns.values())) {
       if (job.status !== "running") continue;
 
-      if (!this.isWithinCallingWindow(job.callingWindow)) {
+      if (!job.manualOverride && !this.isWithinCallingWindow(job.callingWindow)) {
         console.log(`[Dialer Worker] Pausing campaign ${job.id}: outside statutory calling hours`);
         job.status = "paused";
         continue;

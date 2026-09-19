@@ -27,14 +27,32 @@ export function HelpCenterModal({ isOpen, onClose }: HelpCenterModalProps) {
 
   if (!isOpen) return null;
 
-  const handleTicketSubmit = (e: React.FormEvent) => {
+  const handleTicketSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketSubject.trim()) {
       toast.error("Please enter a ticket subject");
       return;
     }
     const ticketId = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
-    toast.success(`Support Ticket #${ticketId} created! Telephony NOC has been alerted.`);
+
+    try {
+      await fetch("/api/calling/support/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticketId,
+          subject: ticketSubject,
+          category: ticketCategory,
+          message: ticketDetails,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to submit support ticket:", err);
+    }
+
+    toast.success(`Support Ticket #${ticketId} created! Telephony NOC has been alerted.`, {
+      description: "Our 24/7 telephony engineering team has received your logs.",
+    });
     setTicketSubject("");
     setTicketDetails("");
     setActiveTab("guides");

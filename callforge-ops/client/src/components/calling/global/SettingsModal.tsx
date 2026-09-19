@@ -58,6 +58,27 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [audioChime, setAudioChime] = useState(true);
   const [autoWrapUp, setAutoWrapUp] = useState(true);
 
+  React.useEffect(() => {
+    fetch("/api/calling/settings")
+      .then((r) => r.json())
+      .then((res) => {
+        if (res && res.settings) {
+          const s = res.settings;
+          if (s.workspaceName) setWorkspaceName(s.workspaceName);
+          if (s.callerId) setCallerId(s.callerId);
+          if (s.defaultLanguage) setDefaultLanguage(s.defaultLanguage);
+          if (s.provider) setProvider(s.provider);
+          if (s.codec) setCodec(s.codec);
+          if (typeof s.maxRetries === "number") setMaxRetries(s.maxRetries);
+          if (s.pacingMode) setPacingMode(s.pacingMode);
+          if (typeof s.audioChime === "boolean") setAudioChime(s.audioChime);
+          if (typeof s.autoWrapUp === "boolean") setAutoWrapUp(s.autoWrapUp);
+          if (s.webhookUrl) setWebhookUrl(s.webhookUrl);
+        }
+      })
+      .catch(() => {});
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleCopyKey = () => {
@@ -67,8 +88,33 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setTimeout(() => setCopiedKey(false), 2000);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const settingsPayload = {
+      workspaceName,
+      callerId,
+      defaultLanguage,
+      provider,
+      codec,
+      maxRetries,
+      pacingMode,
+      audioChime,
+      autoWrapUp,
+      webhookUrl,
+    };
+
+    localStorage.setItem("callforge_settings", JSON.stringify(settingsPayload));
+
+    try {
+      await fetch("/api/calling/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settingsPayload),
+      });
+    } catch (err) {
+      console.error("Failed to save settings to backend:", err);
+    }
+
     toast.success("Settings saved successfully! Telephony parameters updated across clusters.");
     onClose();
   };
