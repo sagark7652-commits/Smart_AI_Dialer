@@ -30,74 +30,7 @@ export interface WallboardAgent {
   };
 }
 
-export const INITIAL_AGENTS: WallboardAgent[] = [
-  {
-    id: "ag-1",
-    name: "Asha (AI Voice Agent)",
-    type: "ai",
-    status: "on_call",
-    currentCall: {
-      callId: "call-901",
-      customerName: "Anjali Sharma",
-      customerPhone: "+91 98765 14482",
-      campaign: "Festive season follow-up",
-      duration: 272,
-      sentiment: "Positive",
-      aiScore: 92,
-      hasTalkOverAlert: false,
-    },
-  },
-  {
-    id: "ag-2",
-    name: "Kabir (Renewal Specialist)",
-    type: "human",
-    status: "on_call",
-    currentCall: {
-      callId: "call-902",
-      customerName: "Rakesh Kumar",
-      customerPhone: "+91 98110 29310",
-      campaign: "Enterprise renewal desk",
-      duration: 138,
-      sentiment: "Neutral",
-      aiScore: 71,
-      hasTalkOverAlert: true,
-    },
-  },
-  {
-    id: "ag-3",
-    name: "Meera (Demo Concierge)",
-    type: "ai",
-    status: "on_call",
-    currentCall: {
-      callId: "call-903",
-      customerName: "Priya Menon",
-      customerPhone: "+91 98470 82216",
-      campaign: "Festive season follow-up",
-      duration: 64,
-      sentiment: "Positive",
-      aiScore: 86,
-      hasTalkOverAlert: false,
-    },
-  },
-  {
-    id: "ag-4",
-    name: "Vikram Nambiar",
-    type: "human",
-    status: "ready",
-  },
-  {
-    id: "ag-5",
-    name: "Sneha Patel",
-    type: "human",
-    status: "wrap_up",
-  },
-  {
-    id: "ag-6",
-    name: "Karan Johar",
-    type: "human",
-    status: "break",
-  },
-];
+export const INITIAL_AGENTS: WallboardAgent[] = [];
 
 export const LiveWallboardGrid: React.FC = () => {
   const [agents, setAgents] = useState<WallboardAgent[]>(INITIAL_AGENTS);
@@ -212,6 +145,17 @@ export const LiveWallboardGrid: React.FC = () => {
           </select>
         </div>
       </div>
+
+      {/* Empty State when no active agents */}
+      {filtered.length === 0 && (
+        <div className="p-12 text-center border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20 my-2">
+          <Radio size={32} className="mx-auto text-zinc-600 mb-2.5 animate-pulse" />
+          <h4 className="text-sm font-semibold text-zinc-300">No active calls on the floor</h4>
+          <p className="text-xs text-zinc-500 mt-1 max-w-md mx-auto">
+            When your agents or autonomous AI bots connect to live phone calls, real-time audio channels and supervisor controls (Whisper, Barge-in) will appear here.
+          </p>
+        </div>
+      )}
 
       {/* Grid of Agent Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">

@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
+  BarChart3,
   Bot,
   CalendarClock,
   Check,
@@ -99,21 +100,11 @@ const navigation = [
   { label: "Admin & Billing", icon: Settings2 },
 ];
 
-const campaigns = [
-  { name: "Festive season follow-up", mode: "AI blast", status: "Running", leads: "2,480", connected: "842", progress: 68, color: "violet" },
-  { name: "Enterprise renewal desk", mode: "Progressive", status: "Running", leads: "860", connected: "318", progress: 41, color: "cyan" },
-  { name: "Inbound demo callbacks", mode: "Preview", status: "Paused", leads: "320", connected: "127", progress: 26, color: "amber" },
-];
+const campaigns: CampaignRecord[] = [];
 
-const INITIAL_LEADS: LeadRecord[] = [
-  { name: "Aarav Mehta", company: "Northstar Foods", phone: "+91 99887 11002", source: "Website", stage: "Interested", score: 88, last: "2 min ago" },
-  { name: "Neha Iyer", company: "Bloom Retail", phone: "+91 97654 30781", source: "Meta Ads", stage: "Callback", score: 74, last: "8 min ago" },
-  { name: "Kabir Singh", company: "Suncore Energy", phone: "+91 98990 48210", source: "Referral", stage: "New", score: 66, last: "16 min ago" },
-  { name: "Ishita Rao", company: "Mango Tree Labs", phone: "+91 98731 22912", source: "Landing page", stage: "Converted", score: 94, last: "24 min ago" },
-  { name: "Vikram Shah", company: "Bharat Machines", phone: "+91 98203 55180", source: "Import", stage: "Not interested", score: 38, last: "31 min ago" },
-];
+const INITIAL_LEADS: LeadRecord[] = [];
 
-const bars = [42, 58, 48, 64, 72, 68, 82, 76, 88, 78, 91, 84, 96, 89, 100, 91, 97, 88, 94, 82, 90, 80, 86, 73, 76, 69, 78, 62, 71, 56, 66, 48, 58, 42, 53, 38];
+const bars = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 function StatCard({ label, value, delta, detail, icon: Icon, accent = "violet", down = false }: { label: string; value: string; delta: string; detail: string; icon: typeof Activity; accent?: string; down?: boolean }) {
   return (
@@ -154,14 +145,34 @@ function Overview({
   userName?: string;
 }) {
   const [timeframe, setTimeframe] = useState("Today");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Live ticking date and time clock (updates every second)
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const hour = currentTime.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const formattedDate = currentTime
+    .toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+    .toUpperCase();
+  const formattedTime = currentTime.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+
   return (
     <div className="page-enter space-y-4">
       <div className="hero-row">
         <div>
           <p className="eyebrow violet-text">
-            TUESDAY, 15 SEPTEMBER 2026 <span className="live-dot" /> LIVE OPERATIONS
+            {formattedDate} • {formattedTime} <span className="live-dot" /> LIVE OPERATIONS
           </p>
-          <h1 className="page-title">Good evening, <span>{userName || "Workspace Admin"}</span>.</h1>
+          <h1 className="page-title">{greeting}, <span>{userName || "Workspace Admin"}</span>.</h1>
           <p className="page-subtitle">Here’s how your AI calling floor & carrier trunks are performing today.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -179,10 +190,10 @@ function Overview({
 
       {/* KPI Cards */}
       <div className="stats-grid">
-        <StatCard label="Calls placed" value="3,682" delta="18.4%" detail="vs. yesterday" icon={Phone} accent="violet" />
-        <StatCard label="Connect rate" value="42.8%" delta="6.2%" detail="vs. last 7 days" icon={Radio} accent="cyan" />
-        <StatCard label="Qualified leads" value="286" delta="12.6%" detail="vs. yesterday" icon={Target} accent="amber" />
-        <StatCard label="Avg. talk time" value="03:48" delta="0.8%" detail="vs. last 7 days" icon={Clock3} accent="rose" down />
+        <StatCard label="Calls placed" value="0" delta="0%" detail="vs. yesterday" icon={Phone} accent="violet" />
+        <StatCard label="Connect rate" value="0.0%" delta="0%" detail="vs. last 7 days" icon={Radio} accent="cyan" />
+        <StatCard label="Qualified leads" value="0" delta="0%" detail="vs. yesterday" icon={Target} accent="amber" />
+        <StatCard label="Avg. talk time" value="00:00" delta="0%" detail="vs. last 7 days" icon={Clock3} accent="rose" />
       </div>
 
       {/* Active Campaign Controls with Live Polling */}
@@ -205,13 +216,20 @@ function Overview({
             </div>
           </div>
           <div className="bar-chart-wrap">
-            <div className="bar-chart">
-              {bars.map((height, i) => (
-                <div key={i} className="bar-col">
-                  <div style={{ height: `${height}%` }} className={`bar ${i === bars.length - 1 ? "latest" : ""}`} />
-                </div>
-              ))}
-            </div>
+            {bars.every((b) => b === 0) ? (
+              <div className="h-40 flex flex-col items-center justify-center text-xs text-zinc-500 gap-1.5">
+                <BarChart3 size={24} className="text-zinc-600 opacity-60" />
+                <span>No call throughput data yet. Outbound dialer telemetry will appear as calls connect.</span>
+              </div>
+            ) : (
+              <div className="bar-chart">
+                {bars.map((height, i) => (
+                  <div key={i} className="bar-col">
+                    <div style={{ height: `${height}%` }} className={`bar ${i === bars.length - 1 ? "latest" : ""}`} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -227,9 +245,9 @@ function Overview({
           </div>
           <div className="space-y-3">
             {[
-              { name: "Airtel PRI-01", latency: "22ms", quality: "Optimal", channels: "48/60 active" },
-              { name: "Tata SIP-02", latency: "28ms", quality: "Optimal", channels: "32/60 active" },
-              { name: "Jio Cloud Trunk", latency: "45ms", quality: "Good", channels: "18/30 active" },
+              { name: "Airtel PRI-01", latency: "22ms", quality: "Optimal", channels: "0/60 active" },
+              { name: "Tata SIP-02", latency: "28ms", quality: "Optimal", channels: "0/60 active" },
+              { name: "Jio Cloud Trunk", latency: "45ms", quality: "Good", channels: "0/30 active" },
             ].map((trunk) => (
               <div key={trunk.name} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/40 border border-zinc-800/80">
                 <div>
@@ -305,50 +323,63 @@ function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; o
       </div>
 
       {subView === "runs" ? (
-        <div className="grid gap-3">
-          {campaigns.map((c) => (
-            <div
-              key={c.name}
-              onClick={() => {
-                setSelectedCampaign(c);
-                setShowCampaignDetail(true);
-              }}
-              title="Click to inspect campaign pacing, dialer queue, and live controls"
-              className="p-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 flex items-center justify-between cursor-pointer hover:border-violet-500/70 hover:bg-zinc-900/60 transition group"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`p-2.5 rounded-lg bg-${c.color}-500/20 text-${c.color}-400 border border-${c.color}-500/30 group-hover:scale-105 transition-transform`}>
-                  <Megaphone size={18} />
+        campaigns.length === 0 ? (
+          <div className="p-12 rounded-xl border border-zinc-800 bg-zinc-900/20 text-center space-y-3">
+            <Megaphone size={32} className="mx-auto text-zinc-600 opacity-60" />
+            <h3 className="text-sm font-semibold text-zinc-300">No active dialing campaigns</h3>
+            <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+              You haven't launched any campaigns yet. Create a new campaign to start placing AI blast, progressive, or preview calls.
+            </p>
+            <button className="primary-button mx-auto mt-2" onClick={onNewCampaign}>
+              <Plus size={15} /> Create First Campaign
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {campaigns.map((c) => (
+              <div
+                key={c.name}
+                onClick={() => {
+                  setSelectedCampaign(c);
+                  setShowCampaignDetail(true);
+                }}
+                title="Click to inspect campaign pacing, dialer queue, and live controls"
+                className="p-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 flex items-center justify-between cursor-pointer hover:border-violet-500/70 hover:bg-zinc-900/60 transition group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`p-2.5 rounded-lg bg-${c.color}-500/20 text-${c.color}-400 border border-${c.color}-500/30 group-hover:scale-105 transition-transform`}>
+                    <Megaphone size={18} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-violet-300 transition-colors">{c.name}</h3>
+                      <span className="text-[10px] text-zinc-400 border border-zinc-700/60 px-1.5 py-0.2 rounded font-mono">Click to Inspect</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
+                      <span className="font-mono text-zinc-300">Pacing: {c.mode}</span>
+                      <span>•</span>
+                      <span>{c.connected} / {c.leads} contacts dialed</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-violet-300 transition-colors">{c.name}</h3>
-                    <span className="text-[10px] text-zinc-400 border border-zinc-700/60 px-1.5 py-0.2 rounded font-mono">Click to Inspect</span>
+                <div className="flex items-center gap-6">
+                  <div className="w-32 hidden sm:block">
+                    <div className="flex justify-between text-[11px] text-zinc-400 mb-1">
+                      <span>Progress</span>
+                      <span className="font-mono">{c.progress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                      <div style={{ width: `${c.progress}%` }} className="h-full bg-violet-500 rounded-full" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
-                    <span className="font-mono text-zinc-300">Pacing: {c.mode}</span>
-                    <span>•</span>
-                    <span>{c.connected} / {c.leads} contacts dialed</span>
-                  </div>
+                  <StatusPill tone={c.status === "Running" ? "green" : "yellow"}>
+                    {c.status}
+                  </StatusPill>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <div className="w-32 hidden sm:block">
-                  <div className="flex justify-between text-[11px] text-zinc-400 mb-1">
-                    <span>Progress</span>
-                    <span className="font-mono">{c.progress}%</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                    <div style={{ width: `${c.progress}%` }} className="h-full bg-violet-500 rounded-full" />
-                  </div>
-                </div>
-                <StatusPill tone={c.status === "Running" ? "green" : "yellow"}>
-                  {c.status}
-                </StatusPill>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
       ) : (
         <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950">
           <ClaudeScriptEditor
@@ -377,44 +408,46 @@ function Campaigns({ onNewCampaign, onTestCall }: { onNewCampaign: () => void; o
 
 // 3. Agent Workspace Screen (Full Operational Telephony Desk)
 function AgentWorkspace() {
-  const [activeCaller, setActiveCaller] = useState({
-    id: "call-live-102",
-    name: "Anjali Sharma",
-    phone: "+91 98765 14482",
-    company: "Sharma Retail Mart Pvt Ltd",
-    city: "Mumbai, Maharashtra",
-    intentScore: 92,
-    intentSummary: "Requested annual pricing for 12 storefronts during Meta Ads lead campaign.",
-    source: "Inbound Callback Queue",
-    lastCall: "Yesterday, 16:30",
-    lastOutcome: "Call back today at 11am",
-    assignedCampaign: "Festive season follow-up",
-    dncStatus: "Verified Clean",
-  });
+  const [activeCaller, setActiveCaller] = useState<{
+    id: string;
+    name: string;
+    phone: string;
+    company: string;
+    city: string;
+    intentScore: number;
+    intentSummary: string;
+    source: string;
+    lastCall: string;
+    lastOutcome: string;
+    assignedCampaign: string;
+    dncStatus: string;
+  } | null>(null);
 
-  const [callDuration, setCallDuration] = useState(84); // 01:24
+  const [callDuration, setCallDuration] = useState(0);
   const [outcome, setOutcome] = useState("interested");
-  const [callbackTime, setCallbackTime] = useState("Tomorrow at 11:30 AM");
-  const [notes, setNotes] = useState("Customer confirmed 12 retail locations. Demo scheduled.");
+  const [callbackTime, setCallbackTime] = useState("");
+  const [notes, setNotes] = useState("");
   const [autoDNC, setAutoDNC] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [wrapUpSeconds, setWrapUpSeconds] = useState(45);
+  const [wrapUpSeconds, setWrapUpSeconds] = useState(0);
 
-  // Active call duration timer
+  // Active call duration timer (runs only when call is active)
   useEffect(() => {
+    if (!activeCaller) return;
     const t = setInterval(() => {
       setCallDuration((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [activeCaller]);
 
   // ACW timer
   useEffect(() => {
+    if (wrapUpSeconds <= 0) return;
     const t = setInterval(() => {
       setWrapUpSeconds((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [wrapUpSeconds]);
 
   const formatTimer = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, "0");
@@ -424,6 +457,10 @@ function AgentWorkspace() {
 
   const handleSubmitDisposition = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeCaller) {
+      toast.info("No active call to dispose.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/calling/agent/disposition", {
@@ -437,29 +474,15 @@ function AgentWorkspace() {
           durationSeconds: callDuration,
         }),
       });
-      const data = await res.json();
       toast.success("Call Outcome Submitted & Saved to Database", {
         description: `Lead '${activeCaller.name}' marked as ${outcome.toUpperCase()} and CDR entry generated.`,
       });
 
-      // Rotate to next lead in queue
-      setActiveCaller({
-        id: `call-live-${Date.now().toString().slice(-3)}`,
-        name: "Rohit Deshmukh",
-        phone: "+91 98204 88123",
-        company: "Deshmukh Agro Warehousing",
-        city: "Pune, Maharashtra",
-        intentScore: 86,
-        intentSummary: "Interested in automated voice order confirmations for mandi supplies.",
-        source: "Website Direct Callback",
-        lastCall: "3 days ago",
-        lastOutcome: "Requested quotation",
-        assignedCampaign: "Enterprise renewal desk",
-        dncStatus: "Verified Clean",
-      });
-      setCallDuration(12);
+      // Clear caller after wrap-up
+      setActiveCaller(null);
+      setCallDuration(0);
       setNotes("");
-      setWrapUpSeconds(60);
+      setWrapUpSeconds(0);
     } catch {
       toast.error("Failed to submit call disposition");
     } finally {
@@ -467,25 +490,36 @@ function AgentWorkspace() {
     }
   };
 
-  const handleSimulateNextLead = () => {
-    setActiveCaller({
-      id: `call-live-${Date.now().toString().slice(-3)}`,
-      name: "Meera Venkatesh",
-      phone: "+91 97410 99881",
-      company: "Venkatesh Logistics Solutions",
-      city: "Bangalore, Karnataka",
-      intentScore: 94,
-      intentSummary: "High priority renewal: Wants 30 AI concurrent channels.",
-      source: "Partner Referral Desk",
-      lastCall: "Today, 10:15",
-      lastOutcome: "Requested urgent callback",
-      assignedCampaign: "Enterprise renewal desk",
-      dncStatus: "Verified Clean",
-    });
-    setCallDuration(5);
-    setNotes("");
-    setWrapUpSeconds(60);
-    toast.info("CTI Queue Popped Next Caller: Meera Venkatesh");
+  const handleSimulateNextLead = async () => {
+    try {
+      const res = await fetch("/api/calling/leads");
+      const data = await res.json();
+      if (data && Array.isArray(data.leads) && data.leads.length > 0) {
+        const lead = data.leads[0];
+        setActiveCaller({
+          id: `call-live-${Date.now().toString().slice(-3)}`,
+          name: lead.name,
+          phone: lead.phone,
+          company: lead.company || "Enterprise Account",
+          city: "India",
+          intentScore: lead.score || 80,
+          intentSummary: `CRM lead queued from ${lead.source || "Direct"}. Status: ${lead.stage || "New"}.`,
+          source: lead.source || "Dialer Queue",
+          lastCall: lead.last || "Recently",
+          lastOutcome: lead.stage || "New",
+          assignedCampaign: "Outbound Queue",
+          dncStatus: "Verified Clean",
+        });
+        setCallDuration(0);
+        setNotes("");
+        setWrapUpSeconds(60);
+        toast.info(`CTI Queue Popped Next Caller: ${lead.name}`);
+      } else {
+        toast.info("No leads in queue. Add contacts in 'Leads & CRM' to pop them here.");
+      }
+    } catch {
+      toast.info("No leads available in queue.");
+    }
   };
 
   return (
@@ -513,13 +547,19 @@ function AgentWorkspace() {
       {/* Real-time Telemetry Bar */}
       <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="h-3 w-3 rounded-full bg-emerald-400 animate-ping" />
+          <span className={`h-3 w-3 rounded-full ${activeCaller ? "bg-emerald-400 animate-ping" : "bg-zinc-600"}`} />
           <div>
             <h3 className="text-xs font-bold text-zinc-100 flex items-center gap-2">
-              WebRTC Live Audio Active • Channel: SIP/airtel-pri-01
-              <span className="text-[10px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-1.5 py-0.2 rounded font-mono">
-                CALL IN PROGRESS: {formatTimer(callDuration)}
-              </span>
+              WebRTC {activeCaller ? "Live Audio Active" : "Line Standby (Registered)"} • Channel: SIP/airtel-pri-01
+              {activeCaller ? (
+                <span className="text-[10px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-1.5 py-0.2 rounded font-mono">
+                  CALL IN PROGRESS: {formatTimer(callDuration)}
+                </span>
+              ) : (
+                <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.2 rounded font-mono">
+                  IDLE / READY
+                </span>
+              )}
             </h3>
             <p className="text-[11px] text-zinc-400 font-mono mt-0.5">
               Opus 48kHz Codec • RTT: 24ms • SRTP Encrypted • Asterisk SBC Registered
@@ -530,11 +570,11 @@ function AgentWorkspace() {
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="text-right">
             <span className="text-zinc-500 text-[10px] block">Calls Today</span>
-            <span className="text-zinc-200 font-bold">28 Placed</span>
+            <span className="text-zinc-200 font-bold">0 Placed</span>
           </div>
           <div className="text-right">
             <span className="text-zinc-500 text-[10px] block">Avg Talk Time</span>
-            <span className="text-emerald-400 font-bold">02:45 min</span>
+            <span className="text-emerald-400 font-bold">00:00 min</span>
           </div>
         </div>
       </div>
@@ -542,64 +582,81 @@ function AgentWorkspace() {
       {/* Two-Column Telephony Operational Desk */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left Column: CTI Screen Pop & Caller Intelligence */}
-        <div className="p-5 rounded-xl border border-violet-500/40 bg-zinc-950 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-violet-600/20 text-violet-400 flex items-center justify-center font-bold text-base border border-violet-500/40">
-                {activeCaller.name.split(" ").map((n) => n[0]).join("")}
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-1.5 py-0.2 rounded">
-                    CTI Screen Pop Live
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-400">• TRAI Clean</span>
-                </div>
-                <h3 className="text-base font-bold text-zinc-100 mt-0.5">{activeCaller.name}</h3>
-              </div>
-            </div>
-
-            <ClickToCallButton phoneNumber={activeCaller.phone} leadName={activeCaller.name} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
-              <span className="text-[10px] text-zinc-500 block">Phone Number</span>
-              <span className="font-mono font-bold text-zinc-200">{activeCaller.phone}</span>
-            </div>
-            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
-              <span className="text-[10px] text-zinc-500 block">Organization</span>
-              <span className="font-medium text-zinc-200 truncate block">{activeCaller.company}</span>
-            </div>
-            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
-              <span className="text-[10px] text-zinc-500 block">City & Region</span>
-              <span className="font-medium text-zinc-200">{activeCaller.city}</span>
-            </div>
-            <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
-              <span className="text-[10px] text-zinc-500 block">AI Intent Score</span>
-              <span className="font-mono font-bold text-emerald-400">{activeCaller.intentScore}/100 (High)</span>
-            </div>
-          </div>
-
-          {/* Intent Summary */}
-          <div className="p-3 rounded-lg bg-violet-950/20 border border-violet-800/40 text-xs space-y-1">
-            <div className="flex items-center gap-1.5 text-violet-400 font-semibold text-[11px]">
-              <Sparkles size={13} /> AI Caller Requirement Analysis
-            </div>
-            <p className="text-zinc-300 text-[11px] leading-relaxed font-mono">
-              "{activeCaller.intentSummary}"
+        {!activeCaller ? (
+          <div className="p-8 rounded-xl border border-zinc-800 bg-zinc-950 flex flex-col items-center justify-center text-center space-y-3 min-h-[320px]">
+            <Headphones size={36} className="text-zinc-600 opacity-60" />
+            <h3 className="text-sm font-semibold text-zinc-300">Softphone Line Idle</h3>
+            <p className="text-xs text-zinc-500 max-w-xs">
+              No active caller connected. Click "Next Queue Lead" or use Click-to-Call in Leads & CRM to initiate a call.
             </p>
+            <button
+              type="button"
+              onClick={handleSimulateNextLead}
+              className="primary-button text-xs mt-1"
+            >
+              <RotateCw size={14} /> Pop Next Queue Lead
+            </button>
           </div>
+        ) : (
+          <div className="p-5 rounded-xl border border-violet-500/40 bg-zinc-950 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-violet-600/20 text-violet-400 flex items-center justify-center font-bold text-base border border-violet-500/40">
+                  {activeCaller.name.split(" ").map((n) => n[0]).join("")}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-1.5 py-0.2 rounded">
+                      CTI Screen Pop Live
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-400">• TRAI Clean</span>
+                  </div>
+                  <h3 className="text-base font-bold text-zinc-100 mt-0.5">{activeCaller.name}</h3>
+                </div>
+              </div>
 
-          {/* CRM Past History */}
-          <div className="p-3 rounded-lg bg-zinc-900/40 border border-zinc-800 text-xs space-y-1 text-zinc-400">
-            <div className="flex justify-between text-[11px]">
-              <span>Last Touch: <strong className="text-zinc-300">{activeCaller.lastCall}</strong></span>
-              <span>Outcome: <strong className="text-cyan-400">{activeCaller.lastOutcome}</strong></span>
+              <ClickToCallButton phoneNumber={activeCaller.phone} leadName={activeCaller.name} />
             </div>
-            <div className="text-[10px] text-zinc-500">Assigned: {activeCaller.assignedCampaign}</div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
+                <span className="text-[10px] text-zinc-500 block">Phone Number</span>
+                <span className="font-mono font-bold text-zinc-200">{activeCaller.phone}</span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
+                <span className="text-[10px] text-zinc-500 block">Organization</span>
+                <span className="font-medium text-zinc-200 truncate block">{activeCaller.company}</span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
+                <span className="text-[10px] text-zinc-500 block">City & Region</span>
+                <span className="font-medium text-zinc-200">{activeCaller.city}</span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 space-y-0.5">
+                <span className="text-[10px] text-zinc-500 block">AI Intent Score</span>
+                <span className="font-mono font-bold text-emerald-400">{activeCaller.intentScore}/100</span>
+              </div>
+            </div>
+
+            {/* Intent Summary */}
+            <div className="p-3 rounded-lg bg-violet-950/20 border border-violet-800/40 text-xs space-y-1">
+              <div className="flex items-center gap-1.5 text-violet-400 font-semibold text-[11px]">
+                <Sparkles size={13} /> AI Caller Requirement Analysis
+              </div>
+              <p className="text-zinc-300 text-[11px] leading-relaxed font-mono">
+                "{activeCaller.intentSummary}"
+              </p>
+            </div>
+
+            {/* CRM Past History */}
+            <div className="p-3 rounded-lg bg-zinc-900/40 border border-zinc-800 text-xs space-y-1 text-zinc-400">
+              <div className="flex justify-between text-[11px]">
+                <span>Last Touch: <strong className="text-zinc-300">{activeCaller.lastCall}</strong></span>
+                <span>Outcome: <strong className="text-cyan-400">{activeCaller.lastOutcome}</strong></span>
+              </div>
+              <div className="text-[10px] text-zinc-500">Assigned: {activeCaller.assignedCampaign}</div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Right Column: After-Call Work (ACW) & Disposition Panel */}
         <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950 space-y-4">
@@ -694,10 +751,10 @@ function AgentWorkspace() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
+                disabled={isSubmitting || !activeCaller}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
               >
-                <Send size={13} /> {isSubmitting ? "Saving..." : "Submit Call Outcome & Next"}
+                <Send size={13} /> {isSubmitting ? "Saving..." : !activeCaller ? "Standby (No Active Call)" : "Submit Call Outcome & Next"}
               </button>
             </div>
           </form>
@@ -933,7 +990,7 @@ export default function Home() {
     fetch("/api/calling/leads")
       .then((res) => res.json())
       .then((data) => {
-        if (data && Array.isArray(data.leads) && data.leads.length > 0) {
+        if (data && Array.isArray(data.leads)) {
           setLeadsList(
             data.leads.map((l: any) => ({
               id: l.id,
@@ -946,9 +1003,13 @@ export default function Home() {
               last: l.last || "Recently",
             }))
           );
+        } else {
+          setLeadsList([]);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setLeadsList([]);
+      });
   };
 
   useEffect(() => {

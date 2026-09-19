@@ -67,6 +67,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [customGoogleEmail, setCustomGoogleEmail] = useState("");
   const [customGoogleName, setCustomGoogleName] = useState("");
   const [isUsingCustomGoogle, setIsUsingCustomGoogle] = useState(false);
+  const [lastGoogleUser] = useState<{ name: string; email: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem("creatorai_last_google_user");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return null;
+  });
 
   // Modals & Dialogs
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -236,13 +243,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const handleGoogleAccountSelect = (account: { name: string; email: string }) => {
     setIsGoogleSigningIn(true);
     setSigningInAccountName(account.name);
+    try {
+      localStorage.setItem("creatorai_last_google_user", JSON.stringify(account));
+    } catch {}
     setTimeout(() => {
       setIsGoogleSigningIn(false);
       setShowGoogleModal(false);
       finalizeLogin({
         name: account.name,
         emailOrPhone: account.email,
-        role: "Google Verified Admin",
+        role: "Google Verified User",
         provider: "Google Identity Services",
       });
     }, 750);
@@ -255,15 +265,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       return;
     }
     const name = customGoogleName.trim() || customGoogleEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const email = customGoogleEmail.toLowerCase().trim();
     setIsGoogleSigningIn(true);
     setSigningInAccountName(name);
+    try {
+      localStorage.setItem("creatorai_last_google_user", JSON.stringify({ name, email }));
+    } catch {}
     setTimeout(() => {
       setIsGoogleSigningIn(false);
       setShowGoogleModal(false);
       finalizeLogin({
         name,
-        emailOrPhone: customGoogleEmail.toLowerCase().trim(),
-        role: "Google Workspace Admin",
+        emailOrPhone: email,
+        role: "Google Verified User",
         provider: "Google Identity Services",
       });
     }, 750);
@@ -851,111 +865,70 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     <p className="text-xs text-zinc-500">Authenticating OAuth 2.0 Token</p>
                   </div>
                 </div>
-              ) : !isUsingCustomGoogle ? (
-                // Google Account Selector List
-                <div className="space-y-1.5 divide-y divide-zinc-100">
-                  {/* Account 1: Sumit Khomne */}
+              ) : lastGoogleUser && !isUsingCustomGoogle ? (
+                // Previously authenticated Google account on this browser
+                <div className="space-y-2">
                   <button
                     type="button"
-                    onClick={() =>
-                      handleGoogleAccountSelect({
-                        name: "Sumit Khomne",
-                        email: "sumitkhomne123@gmail.com",
-                      })
-                    }
-                    className="w-full p-3 rounded-xl hover:bg-zinc-50 flex items-center gap-3 transition text-left cursor-pointer group border border-transparent hover:border-zinc-200"
+                    onClick={() => handleGoogleAccountSelect(lastGoogleUser)}
+                    className="w-full p-3 rounded-xl hover:bg-zinc-50 flex items-center gap-3 transition text-left cursor-pointer group border border-zinc-200"
                   >
                     <div className="w-10 h-10 rounded-full bg-[#1a73e8] text-white font-bold flex items-center justify-center text-sm shadow-xs shrink-0">
-                      SK
+                      {lastGoogleUser.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-semibold text-zinc-900 group-hover:text-[#1a73e8]">
-                          Sumit Khomne
+                          {lastGoogleUser.name}
                         </p>
                         <span className="text-[10px] text-emerald-600 bg-emerald-50 font-medium px-2 py-0.5 rounded-full border border-emerald-200">
-                          Active
+                          Current
                         </span>
                       </div>
                       <p className="text-[11px] text-zinc-500 truncate">
-                        sumitkhomne123@gmail.com
+                        {lastGoogleUser.email}
                       </p>
                     </div>
                   </button>
 
-                  {/* Account 2: CreatorAI Telephony Admin */}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleGoogleAccountSelect({
-                        name: "CreatorAI Telephony Admin",
-                        email: "telecom.admin@creatorai.io",
-                      })
-                    }
-                    className="w-full p-3 rounded-xl hover:bg-zinc-50 flex items-center gap-3 transition text-left cursor-pointer group border border-transparent hover:border-zinc-200"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#7c3aed] text-white font-bold flex items-center justify-center text-sm shadow-xs shrink-0">
-                      CA
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-zinc-900 group-hover:text-[#1a73e8]">
-                        CreatorAI Telephony Admin
-                      </p>
-                      <p className="text-[11px] text-zinc-500 truncate">
-                        telecom.admin@creatorai.io
-                      </p>
-                    </div>
-                  </button>
-
-                  {/* Use another account */}
+                  {/* Use another account button */}
                   <button
                     type="button"
                     onClick={() => setIsUsingCustomGoogle(true)}
-                    className="w-full p-3 rounded-xl hover:bg-zinc-50 flex items-center gap-3 transition text-left cursor-pointer text-zinc-700 font-medium text-xs pt-3 group border border-transparent hover:border-zinc-200"
+                    className="w-full p-2.5 rounded-xl hover:bg-zinc-50 flex items-center gap-2.5 transition text-left cursor-pointer text-zinc-700 font-medium text-xs border border-dashed border-zinc-200 group"
                   >
-                    <div className="w-10 h-10 rounded-full border border-dashed border-zinc-300 text-zinc-500 flex items-center justify-center shrink-0 group-hover:border-[#1a73e8] group-hover:text-[#1a73e8]">
-                      <Plus size={18} />
+                    <div className="w-7 h-7 rounded-full border border-zinc-300 text-zinc-500 flex items-center justify-center shrink-0 group-hover:border-[#1a73e8] group-hover:text-[#1a73e8]">
+                      <Plus size={14} />
                     </div>
-                    <span className="group-hover:text-[#1a73e8]">Use another Google account</span>
+                    <span className="group-hover:text-[#1a73e8]">Sign in with another Google account</span>
                   </button>
                 </div>
               ) : (
-                // Custom Google Account Input Form
+                // Clean Direct Google Account Input Form
                 <form onSubmit={handleCustomGoogleSubmit} className="space-y-3.5">
-                  <div className="flex items-center gap-2 mb-1">
-                    <button
-                      type="button"
-                      onClick={() => setIsUsingCustomGoogle(false)}
-                      className="p-1 rounded-full hover:bg-zinc-100 text-zinc-600"
-                    >
-                      <ArrowLeft size={16} />
-                    </button>
-                    <span className="text-xs font-semibold text-zinc-800">
-                      Sign in with another Google Account
-                    </span>
-                  </div>
+                  {lastGoogleUser && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsUsingCustomGoogle(false)}
+                        className="p-1 rounded-full hover:bg-zinc-100 text-zinc-600 cursor-pointer"
+                      >
+                        <ArrowLeft size={16} />
+                      </button>
+                      <span className="text-xs font-semibold text-zinc-800">
+                        Back to saved account
+                      </span>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-[11px] font-medium text-zinc-600 mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={customGoogleName}
-                      onChange={(e) => setCustomGoogleName(e.target.value)}
-                      placeholder="e.g. Sumit Khomne"
-                      className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg text-zinc-900 focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-medium text-zinc-600 mb-1">
-                      Email address
+                      Google Email Address
                     </label>
                     <input
                       type="email"
                       required
+                      autoFocus
                       value={customGoogleEmail}
                       onChange={(e) => setCustomGoogleEmail(e.target.value)}
                       placeholder="yourname@gmail.com"
@@ -963,11 +936,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-600 mb-1">
+                      Your Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={customGoogleName}
+                      onChange={(e) => setCustomGoogleName(e.target.value)}
+                      placeholder="e.g. Rahul Sharma"
+                      className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg text-zinc-900 focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]"
+                    />
+                  </div>
+
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-xs transition"
+                    className="w-full py-2.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-xs transition cursor-pointer shadow-xs mt-1"
                   >
-                    Next
+                    Next & Continue to Workspace
                   </button>
                 </form>
               )}

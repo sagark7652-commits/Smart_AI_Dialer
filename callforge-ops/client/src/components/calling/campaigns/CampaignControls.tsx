@@ -27,45 +27,52 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   className = "",
 }) => {
   const [stats, setStats] = useState<CampaignStats>({
-    id: initialCampaign?.id || "camp-101",
-    name: initialCampaign?.name || "Festive season follow-up",
-    totalLeads: initialCampaign?.totalLeads || 2480,
-    dialed: initialCampaign?.dialed || 1686,
-    connected: initialCampaign?.connected || 842,
-    qualified: initialCampaign?.qualified || 286,
-    failed: initialCampaign?.failed || 120,
-    liveCalls: initialCampaign?.liveCalls || 14,
-    status: (initialCampaign?.status as any) || "Running",
-    avgDuration: initialCampaign?.avgDuration || "03:42",
+    id: initialCampaign?.id || "camp-001",
+    name: initialCampaign?.name || "No Active Campaign",
+    totalLeads: initialCampaign?.totalLeads || 0,
+    dialed: initialCampaign?.dialed || 0,
+    connected: initialCampaign?.connected || 0,
+    qualified: initialCampaign?.qualified || 0,
+    failed: initialCampaign?.failed || 0,
+    liveCalls: initialCampaign?.liveCalls || 0,
+    status: (initialCampaign?.status as any) || "Draft",
+    avgDuration: initialCampaign?.avgDuration || "00:00",
   });
 
   const [isPolling, setIsPolling] = useState(true);
   const [lastPollTime, setLastPollTime] = useState<string>("just now");
 
-  // Simulated live polling effect (every 5 seconds)
+  // Live polling effect (fetch from backend every 5 seconds if running)
   useEffect(() => {
     if (!isPolling || stats.status !== "Running") return;
 
-    const interval = setInterval(() => {
-      setStats((prev) => {
-        if (prev.dialed >= prev.totalLeads) return prev;
-        const newDials = Math.floor(Math.random() * 4) + 1;
-        const newConnects = Math.random() > 0.4 ? 1 : 0;
-        const newQualified = newConnects && Math.random() > 0.6 ? 1 : 0;
+    const fetchStats = () => {
+      fetch(`/api/calling/campaigns/${stats.id}/stats`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.stats) {
+            setStats((prev) => ({
+              ...prev,
+              totalLeads: data.stats.totalLeads ?? prev.totalLeads,
+              dialed: data.stats.dialed ?? prev.dialed,
+              connected: data.stats.connected ?? prev.connected,
+              qualified: data.stats.qualified ?? prev.qualified,
+              failed: data.stats.failed ?? prev.failed,
+              liveCalls: data.stats.liveCalls ?? 0,
+              avgDuration: data.stats.averageDurationSeconds
+                ? `${Math.floor(data.stats.averageDurationSeconds / 60).toString().padStart(2, "0")}:${(data.stats.averageDurationSeconds % 60).toString().padStart(2, "0")}`
+                : prev.avgDuration,
+            }));
+          }
+          setLastPollTime(new Date().toLocaleTimeString());
+        })
+        .catch(() => {});
+    };
 
-        return {
-          ...prev,
-          dialed: Math.min(prev.totalLeads, prev.dialed + newDials),
-          connected: prev.connected + newConnects,
-          qualified: prev.qualified + newQualified,
-          liveCalls: Math.floor(Math.random() * 8) + 10,
-        };
-      });
-      setLastPollTime(new Date().toLocaleTimeString());
-    }, 5000);
-
+    fetchStats();
+    const interval = setInterval(fetchStats, 5000);
     return () => clearInterval(interval);
-  }, [isPolling, stats.status]);
+  }, [isPolling, stats.status, stats.id]);
 
   const toggleRunPause = () => {
     const nextStatus = stats.status === "Running" ? "Paused" : "Running";
@@ -87,7 +94,7 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
     });
   };
 
-  const progressPercent = Math.min(100, Math.round((stats.dialed / stats.totalLeads) * 100));
+  const progressPercent = stats.totalLeads > 0 ? Math.min(100, Math.round((stats.dialed / stats.totalLeads) * 100)) : 0;
   const connectRate = stats.dialed > 0 ? ((stats.connected / stats.dialed) * 100).toFixed(1) : "0";
   const qualRate =
     stats.connected > 0 ? ((stats.qualified / stats.connected) * 100).toFixed(1) : "0";

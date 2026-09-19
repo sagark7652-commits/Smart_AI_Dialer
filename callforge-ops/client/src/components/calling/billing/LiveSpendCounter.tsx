@@ -14,11 +14,11 @@ export const LiveSpendCounter: React.FC<LiveSpendCounterProps> = ({
   className = "",
   refreshTrigger,
 }) => {
-  const [balance, setBalance] = useState<number>(28450.0);
-  const [minutesUsed, setMinutesUsed] = useState<number>(3682);
-  const [burnRatePerMin] = useState<number>(14.2); // INR per min
+  const [balance, setBalance] = useState<number>(0.0);
+  const [minutesUsed, setMinutesUsed] = useState<number>(0);
+  const [burnRatePerMin] = useState<number>(0.0); // INR per min
   const [showInternalTopUp, setShowInternalTopUp] = useState(false);
-  const [autoRechargeEnabled, setAutoRechargeEnabled] = useState(true);
+  const [autoRechargeEnabled, setAutoRechargeEnabled] = useState(false);
 
   const fetchWallet = () => {
     fetch("/api/calling/billing/wallet")
@@ -38,15 +38,6 @@ export const LiveSpendCounter: React.FC<LiveSpendCounterProps> = ({
   useEffect(() => {
     fetchWallet();
   }, [refreshTrigger]);
-
-  // Subtle live balance update
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBalance((b) => Math.max(100, +(b - 0.25).toFixed(2)));
-    }, 6000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const handleOpenTopUp = () => {
     if (onTopUpClick) {

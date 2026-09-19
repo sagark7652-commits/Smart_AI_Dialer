@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -29,110 +29,7 @@ export interface CDRRecord {
   transcript?: Array<{ speaker: string; text: string; time: string }>;
 }
 
-export const SAMPLE_CDR_DATA: CDRRecord[] = [
-  {
-    id: "CDR-98214",
-    time: "Today, 17:15:20",
-    customerName: "Anjali Sharma",
-    customerPhone: "+91 98765 14482",
-    agentName: "Asha (AI Voice Agent)",
-    campaign: "Festive season follow-up",
-    duration: "04:32",
-    disposition: "Interested",
-    cost: "₹3.80",
-    qaScore: 92,
-    hasRecording: true,
-    recordingUrl: "https://actions.google.com/sounds/v1/ambiences/office_cubicle_background.ogg",
-    transcript: [
-      {
-        speaker: "Asha (AI)",
-        text: "Namaste Anjali ji. This is Asha calling on a recorded line from CallForge regarding your enquiry.",
-        time: "00:02",
-      },
-      {
-        speaker: "Customer",
-        text: "Haan Asha ji, hum festive season ke liye bulk automated calling setup dekh rahe the.",
-        time: "00:12",
-      },
-      {
-        speaker: "Asha (AI)",
-        text: "Bahut badhiya. Hamara festive package 40 concurrent AI lines support karta hai with zero server setup.",
-        time: "00:24",
-      },
-      {
-        speaker: "Customer",
-        text: "Great, please schedule a demo for tomorrow 11 AM.",
-        time: "00:45",
-      },
-    ],
-  },
-  {
-    id: "CDR-98213",
-    time: "Today, 16:58:10",
-    customerName: "Rakesh Kumar",
-    customerPhone: "+91 98110 29310",
-    agentName: "Kabir (Renewal Specialist)",
-    campaign: "Enterprise renewal desk",
-    duration: "02:18",
-    disposition: "Callback",
-    cost: "₹1.90",
-    qaScore: 71,
-    hasRecording: true,
-    recordingUrl: "https://actions.google.com/sounds/v1/ambiences/office_cubicle_background.ogg",
-    transcript: [
-      {
-        speaker: "Kabir",
-        text: "Hello Mr. Kumar, calling regarding your enterprise license renewal due this month.",
-        time: "00:04",
-      },
-      {
-        speaker: "Customer",
-        text: "I am currently in a meeting, please call me back on Friday.",
-        time: "00:15",
-      },
-    ],
-  },
-  {
-    id: "CDR-98212",
-    time: "Today, 16:42:04",
-    customerName: "Priya Menon",
-    customerPhone: "+91 98470 82216",
-    agentName: "Asha (AI Voice Agent)",
-    campaign: "Festive season follow-up",
-    duration: "01:04",
-    disposition: "Interested",
-    cost: "₹0.95",
-    qaScore: 86,
-    hasRecording: true,
-    recordingUrl: "https://actions.google.com/sounds/v1/ambiences/office_cubicle_background.ogg",
-  },
-  {
-    id: "CDR-98211",
-    time: "Today, 16:21:44",
-    customerName: "Vikram Shah",
-    customerPhone: "+91 98203 55180",
-    agentName: "Meera (Demo Concierge)",
-    campaign: "Festive season follow-up",
-    duration: "00:48",
-    disposition: "Not Interested",
-    cost: "₹0.48",
-    qaScore: 80,
-    hasRecording: true,
-  },
-  {
-    id: "CDR-98210",
-    time: "Today, 15:55:30",
-    customerName: "Amitabh Sen",
-    customerPhone: "+91 98990 48210",
-    agentName: "Asha (AI Voice Agent)",
-    campaign: "Festive season follow-up",
-    duration: "00:32",
-    disposition: "DNC",
-    cost: "₹0.32",
-    qaScore: 94,
-    hasRecording: true,
-  },
-];
+export const SAMPLE_CDR_DATA: CDRRecord[] = [];
 
 interface CDRDataTableProps {
   onSelectCallForAudio?: (record: CDRRecord) => void;
@@ -143,7 +40,43 @@ export const CDRDataTable: React.FC<CDRDataTableProps> = ({
   onSelectCallForAudio,
   onOpenQAScorecard,
 }) => {
-  const [data, setData] = useState<CDRRecord[]>(SAMPLE_CDR_DATA);
+  const [data, setData] = useState<CDRRecord[]>([]);
+
+  useEffect(() => {
+    fetch("/api/calling/cdrs")
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData && Array.isArray(resData.cdrs)) {
+          setData(
+            resData.cdrs.map((c: any) => ({
+              id: c.id || c.callId,
+              time: c.createdAt
+                ? new Date(c.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : "Recently",
+              customerName: c.customerName,
+              customerPhone: c.customerPhone,
+              agentName: c.agentName || "AI Voice",
+              campaign: c.campaign || "Outbound Dial",
+              duration:
+                typeof c.durationSeconds === "number"
+                  ? `${Math.floor(c.durationSeconds / 60)
+                      .toString()
+                      .padStart(2, "0")}:${(c.durationSeconds % 60).toString().padStart(2, "0")}`
+                  : c.duration || "00:00",
+              disposition: c.disposition || c.status || "Completed",
+              cost: `₹${(c.costInr || 0).toFixed(2)}`,
+              qaScore: c.qaScore || 90,
+              hasRecording: !!c.recordingUrl,
+              recordingUrl: c.recordingUrl,
+              transcript: c.transcript
+                ? [{ speaker: "System", text: c.transcript, time: "00:01" }]
+                : undefined,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
   const [query, setQuery] = useState("");
   const [dispoFilter, setDispoFilter] = useState("All");
 
@@ -262,8 +195,17 @@ export const CDRDataTable: React.FC<CDRDataTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/60 text-zinc-300">
-              {filtered.map((item) => (
-                <tr key={item.id} className="hover:bg-zinc-900/40 transition-colors">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-zinc-500">
+                    <FileText size={28} className="mx-auto text-zinc-600 mb-2" />
+                    <p className="text-xs font-semibold text-zinc-300">No call records found</p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">Calls placed via softphone or campaigns will appear here in real time.</p>
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((item) => (
+                  <tr key={item.id} className="hover:bg-zinc-900/40 transition-colors">
                   <td className="p-3 font-mono font-medium text-zinc-400 text-[11px]">{item.id}</td>
                   <td className="p-3">
                     <strong className="text-zinc-100 font-semibold block">{item.customerName}</strong>
@@ -311,7 +253,7 @@ export const CDRDataTable: React.FC<CDRDataTableProps> = ({
                     </button>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

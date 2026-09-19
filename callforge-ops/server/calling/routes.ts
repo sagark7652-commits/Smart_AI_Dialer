@@ -12,50 +12,7 @@ import { nvidiaVoicePipeline } from "./nvidiaVoicePipeline";
 export const callingRouter = Router();
 
 // Store for CDRs
-const cdrStore: CDRRecord[] = [
-  {
-    id: "cdr_01",
-    callId: "call_init_991",
-    customerPhone: "+91 98201 12345",
-    customerName: "Sanjay Singhania",
-    agentName: "Priya Sharma",
-    disposition: "Interested",
-    durationSeconds: 145,
-    costInr: 1.45,
-    recordingUrl: "https://assets.mixkit.co/active_storage/sfx/2874/2874-preview.mp3",
-    transcript: "Agent: Namaste Sanjay ji, calling from CreatorAI. We noticed your interest in our automated calling suite.\nCustomer: Haan ji, tell me more about the pricing plans.\nAgent: We offer prepaid pricing at ₹0.60 per minute with full TRAI compliance.\nCustomer: Sounds good, please send over the brochure.",
-    summary: "Customer expressed interest in the prepaid calling plans. Brochure sent via WhatsApp.",
-    qaScore: 94,
-    qaRubric: {
-      mandatoryDisclosure: true,
-      greetingPoliteness: 5,
-      objectionHandling: 5,
-      talkOverInterruption: 5,
-    },
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: "cdr_02",
-    callId: "call_init_992",
-    customerPhone: "+91 97110 54321",
-    customerName: "Vikram Malhotra",
-    agentName: "Rahul Verma",
-    disposition: "Callback Requested",
-    durationSeconds: 62,
-    costInr: 0.62,
-    recordingUrl: "https://assets.mixkit.co/active_storage/sfx/2874/2874-preview.mp3",
-    transcript: "Agent: Hello Vikram sir, CreatorAI se call kar raha hoon.\nCustomer: Main abhi meeting mein hoon, please call me back after 4 PM.\nAgent: Sure sir, scheduling your callback at 4:00 PM. Have a great day.",
-    summary: "Customer in a meeting, scheduled callback for 4:00 PM.",
-    qaScore: 88,
-    qaRubric: {
-      mandatoryDisclosure: true,
-      greetingPoliteness: 4,
-      objectionHandling: 4,
-      talkOverInterruption: 5,
-    },
-    createdAt: new Date(Date.now() - 7200000).toISOString(),
-  },
-];
+const cdrStore: CDRRecord[] = [];
 
 // Apply base authentication
 callingRouter.use(callingAuthMiddleware);
@@ -120,20 +77,20 @@ callingRouter.post("/campaigns/:id/stop", (req: Request, res: Response) => {
 callingRouter.get("/campaigns/:id/stats", (req: Request, res: Response) => {
   const campaign = dialerWorker.getCampaign(req.params.id);
   if (!campaign) {
-    // Return sample stats if not found for mock/preview widgets
+    // Return zero stats when not found
     return res.json({
       id: req.params.id,
-      name: "Outbound Demo Campaign",
-      status: "running",
-      progressPercent: 42,
+      name: "Outbound Dialer Queue",
+      status: "idle",
+      progressPercent: 0,
       stats: {
-        totalLeads: 500,
-        dialed: 210,
-        connected: 158,
-        qualified: 72,
-        failed: 12,
-        abandoned: 4,
-        averageDurationSeconds: 78,
+        totalLeads: 0,
+        dialed: 0,
+        connected: 0,
+        qualified: 0,
+        failed: 0,
+        abandoned: 0,
+        averageDurationSeconds: 0,
       },
       updatedAt: new Date().toISOString(),
     });

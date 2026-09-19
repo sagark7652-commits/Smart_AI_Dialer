@@ -165,115 +165,9 @@ interface DatabaseStructure {
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "storage.json");
 
-const INITIAL_LEADS: StoredLead[] = [
-  {
-    id: "lead-01",
-    name: "Aarav Mehta",
-    phone: "+91 99887 11002",
-    company: "Northstar Foods Pvt Ltd",
-    source: "Website Callback",
-    stage: "Interested",
-    score: 88,
-    last: "2 min ago",
-    notes: ["Customer requested pricing for 12 retail outlets.", "Interested in Hindi voice reminders."],
-    isDnc: false,
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: "lead-02",
-    name: "Neha Iyer",
-    phone: "+91 97654 30781",
-    company: "Bloom Retail Mart",
-    source: "Meta Ads Campaign",
-    stage: "Callback",
-    score: 74,
-    last: "8 min ago",
-    notes: ["Asked for demo call on weekend."],
-    isDnc: false,
-    createdAt: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: "lead-03",
-    name: "Kabir Singh",
-    phone: "+91 98990 48210",
-    company: "Suncore Energy Logistics",
-    source: "Partner Referral",
-    stage: "New",
-    score: 66,
-    last: "16 min ago",
-    notes: ["Direct inquiry about IVR routing flows."],
-    isDnc: false,
-    createdAt: new Date(Date.now() - 10800000).toISOString(),
-  },
-  {
-    id: "lead-04",
-    name: "Ishita Rao",
-    phone: "+91 98731 22912",
-    company: "Mango Tree Labs",
-    source: "Landing page demo",
-    stage: "Converted",
-    score: 94,
-    last: "24 min ago",
-    notes: ["Subscribed to Pro Annual calling plan."],
-    isDnc: false,
-    createdAt: new Date(Date.now() - 14400000).toISOString(),
-  },
-  {
-    id: "lead-05",
-    name: "Vikram Shah",
-    phone: "+91 98203 55180",
-    company: "Bharat Machines Corporation",
-    source: "Cold outreach import",
-    stage: "DNC",
-    score: 38,
-    last: "31 min ago",
-    notes: ["Lead requested removal from promotional dialer."],
-    isDnc: true,
-    createdAt: new Date(Date.now() - 18000000).toISOString(),
-  },
-];
+const INITIAL_LEADS: StoredLead[] = [];
 
-const INITIAL_CDR: StoredCDR[] = [
-  {
-    id: "call-901",
-    customerName: "Aarav Mehta",
-    customerPhone: "+91 99887 11002",
-    agentName: "Asha (AI Voice)",
-    campaign: "Festive season follow-up",
-    duration: "01:42",
-    durationSeconds: 102,
-    status: "Completed",
-    sentiment: "Positive",
-    qaScore: 96,
-    createdAt: new Date(Date.now() - 600000).toISOString(),
-  },
-  {
-    id: "call-902",
-    customerName: "Neha Iyer",
-    customerPhone: "+91 97654 30781",
-    agentName: "Rahul Verma",
-    campaign: "Enterprise renewal desk",
-    duration: "02:18",
-    durationSeconds: 138,
-    status: "Completed",
-    sentiment: "Positive",
-    qaScore: 89,
-    createdAt: new Date(Date.now() - 1800000).toISOString(),
-  },
-  {
-    id: "call-903",
-    customerName: "Kabir Singh",
-    customerPhone: "+91 98990 48210",
-    agentName: "Asha (AI Voice)",
-    campaign: "Inbound demo callbacks",
-    duration: "00:45",
-    durationSeconds: 45,
-    status: "Completed",
-    sentiment: "Neutral",
-    qaScore: 82,
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-];
+const INITIAL_CDR: StoredCDR[] = [];
 
 const DEFAULT_AUTO_RECHARGE: StoredAutoRecharge = {
   enabled: true,
@@ -387,156 +281,13 @@ const DEFAULT_AB_SPLIT: StoredABSplit = {
   updatedAt: new Date().toISOString(),
 };
 
-const DEFAULT_TEAM_MEMBERS: StoredTeamMember[] = [
-  {
-    id: "team_01",
-    name: "Arjun Mehta",
-    email: "arjun.mehta@callforge.io",
-    role: "admin",
-    status: "active",
-    extension: "1001",
-    joinedAt: "2026-08-01T09:00:00.000Z",
-    avatarInitials: "AM",
-  },
-  {
-    id: "team_02",
-    name: "Priya Sharma",
-    email: "priya.sharma@callforge.io",
-    role: "supervisor",
-    status: "active",
-    extension: "1002",
-    joinedAt: "2026-08-15T10:30:00.000Z",
-    avatarInitials: "PS",
-  },
-  {
-    id: "team_03",
-    name: "Rohan Verma",
-    email: "rohan.verma@callforge.io",
-    role: "agent",
-    status: "active",
-    extension: "1003",
-    joinedAt: "2026-09-01T11:00:00.000Z",
-    avatarInitials: "RV",
-  },
-  {
-    id: "team_04",
-    name: "Sneha Patil",
-    email: "sneha.patil@callforge.io",
-    role: "agent",
-    status: "active",
-    extension: "1004",
-    joinedAt: "2026-09-10T14:15:00.000Z",
-    avatarInitials: "SP",
-  },
-];
+const DEFAULT_TEAM_MEMBERS: StoredTeamMember[] = [];
 
-const DEFAULT_INVOICES: StoredInvoice[] = [
-  {
-    id: "inv_01",
-    invoiceNumber: "CF-INV-2026-0941",
-    date: "2026-09-15T12:00:00.000Z",
-    description: "Telephony Trunks Auto-Recharge (UPI e-Mandate)",
-    subtotal: 21186.44,
-    gstAmount: 3813.56,
-    totalAmount: 25000.0,
-    status: "paid",
-    paymentMethod: "UPI AutoPay (NPCI)",
-  },
-  {
-    id: "inv_02",
-    invoiceNumber: "CF-INV-2026-0889",
-    date: "2026-09-01T09:30:00.000Z",
-    description: "Growth Pro Monthly Enterprise Subscription",
-    subtotal: 16948.31,
-    gstAmount: 3050.69,
-    totalAmount: 19999.0,
-    status: "paid",
-    paymentMethod: "Corporate Credit Card",
-  },
-  {
-    id: "inv_03",
-    invoiceNumber: "CF-INV-2026-0812",
-    date: "2026-08-18T16:45:00.000Z",
-    description: "Prepaid Trunk Balance Top-Up",
-    subtotal: 8474.58,
-    gstAmount: 1525.42,
-    totalAmount: 10000.0,
-    status: "paid",
-    paymentMethod: "NetBanking HDFC",
-  },
-];
+const DEFAULT_INVOICES: StoredInvoice[] = [];
 
-const DEFAULT_TRANSACTIONS: StoredTransaction[] = [
-  {
-    id: "txn_01",
-    type: "recharge",
-    amount: 25000,
-    description: "Auto-recharge trigger (Threshold < ₹7,500)",
-    paymentMethod: "UPI AutoPay",
-    status: "success",
-    timestamp: "2026-09-15T12:00:00.000Z",
-    referenceId: "UPI-4289100234",
-  },
-  {
-    id: "txn_02",
-    type: "deduction",
-    amount: 842.5,
-    description: "Campaign festive follow-up (593 minutes)",
-    paymentMethod: "Wallet Balance",
-    status: "success",
-    timestamp: "2026-09-16T18:30:00.000Z",
-    referenceId: "DIAL-883921",
-  },
-  {
-    id: "txn_03",
-    type: "subscription_payment",
-    amount: 19999,
-    description: "Growth Pro Subscription Renewal",
-    paymentMethod: "Corporate Card",
-    status: "success",
-    timestamp: "2026-09-01T09:30:00.000Z",
-    referenceId: "PAY-99238120",
-  },
-];
+const DEFAULT_TRANSACTIONS: StoredTransaction[] = [];
 
-const DEFAULT_AUDIT_LOGS: StoredAuditLog[] = [
-  {
-    id: "log_01",
-    action: "Updated RBAC Matrix",
-    user: "Arjun Mehta (Admin)",
-    ip: "10.107.157.9",
-    timestamp: "2026-09-18T14:30:00.000Z",
-    details: "Granted Start Campaigns permission to Floor Supervisor role.",
-    category: "security",
-  },
-  {
-    id: "log_02",
-    action: "Saved Auto-Recharge Policy",
-    user: "Arjun Mehta (Admin)",
-    ip: "10.107.157.9",
-    timestamp: "2026-09-17T11:00:00.000Z",
-    details: "Threshold updated to ₹7,500, auto top-up ₹35,000 via UPI.",
-    category: "billing",
-  },
-  {
-    id: "log_03",
-    action: "Carrier Trunk Test",
-    user: "System Diagnostics",
-    ip: "127.0.0.1",
-    timestamp: "2026-09-17T10:25:00.000Z",
-    details: "Tata Smartflo & Twilio PRI trunks verified successfully.",
-    category: "carrier",
-  },
-  {
-    id: "log_04",
-    action: "Campaign Started",
-    user: "Priya Sharma (Supervisor)",
-    ip: "10.107.157.14",
-    timestamp: "2026-09-16T09:15:00.000Z",
-    details: "Festive Season follow-up launched with 2,480 leads.",
-    category: "campaign",
-  },
-];
+const DEFAULT_AUDIT_LOGS: StoredAuditLog[] = [];
 
 class PersistentStorage {
   private data: DatabaseStructure;
@@ -562,7 +313,7 @@ class PersistentStorage {
         if (!parsed.ivrNodes || !Array.isArray(parsed.ivrNodes)) parsed.ivrNodes = DEFAULT_IVR_NODES;
         if (!parsed.rolesMatrix || !parsed.rolesMatrix.roles) parsed.rolesMatrix = DEFAULT_ROLES_MATRIX;
         if (!parsed.abSplitConfig) parsed.abSplitConfig = DEFAULT_AB_SPLIT;
-        if (typeof parsed.walletBalance !== "number") parsed.walletBalance = 28450.0;
+        if (typeof parsed.walletBalance !== "number") parsed.walletBalance = 0;
         if (!parsed.transactions || !Array.isArray(parsed.transactions)) parsed.transactions = DEFAULT_TRANSACTIONS;
         if (!parsed.invoices || !Array.isArray(parsed.invoices)) parsed.invoices = DEFAULT_INVOICES;
         if (!parsed.teamMembers || !Array.isArray(parsed.teamMembers)) parsed.teamMembers = DEFAULT_TEAM_MEMBERS;
@@ -589,18 +340,18 @@ class PersistentStorage {
         updatedAt: new Date().toISOString(),
       },
       subscription: {
-        planId: "plan_pro",
-        planName: "Pro Enterprise Calling",
-        price: 5999,
+        planId: "plan_starter",
+        planName: "Starter Tier",
+        price: 0,
         status: "active",
-        callingMinutesRemaining: 4850,
+        callingMinutesRemaining: 0,
         renewalDate: new Date(Date.now() + 30 * 86400000).toISOString(),
       },
       autoRecharge: DEFAULT_AUTO_RECHARGE,
       ivrNodes: DEFAULT_IVR_NODES,
       rolesMatrix: DEFAULT_ROLES_MATRIX,
       abSplitConfig: DEFAULT_AB_SPLIT,
-      walletBalance: 28450.0,
+      walletBalance: 0.0,
       transactions: DEFAULT_TRANSACTIONS,
       invoices: DEFAULT_INVOICES,
       teamMembers: DEFAULT_TEAM_MEMBERS,

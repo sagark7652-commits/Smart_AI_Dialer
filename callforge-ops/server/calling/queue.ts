@@ -43,12 +43,8 @@ export class PersistentDialerWorker {
   }
 
   private seedDefaultAgents() {
-    const defaultAgents = [
-      { id: "agt-01", name: "Priya Sharma", avatar: "PS", state: "ready" as AgentState, timeInStateSeconds: 142 },
-      { id: "agt-02", name: "Rahul Verma", avatar: "RV", state: "on_call" as AgentState, timeInStateSeconds: 215 },
-      { id: "agt-03", name: "Ananya Iyer", avatar: "AI", state: "wrap_up" as AgentState, timeInStateSeconds: 38 },
-      { id: "agt-04", name: "Amit Patel", avatar: "AP", state: "break" as AgentState, timeInStateSeconds: 520 },
-    ];
+    // Agents start empty; populated as team members log in or register
+    const defaultAgents: Array<{ id: string; name: string; avatar: string; state: AgentState; timeInStateSeconds: number }> = [];
     for (const a of defaultAgents) {
       this.agents.set(a.id, a);
     }
