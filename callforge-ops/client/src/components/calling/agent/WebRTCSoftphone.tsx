@@ -15,6 +15,7 @@ import {
   Sparkles,
   Info,
   Check,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenPopCard, ScreenPopLead } from "./ScreenPopCard";
@@ -81,6 +82,7 @@ export const WebRTCSoftphone: React.FC = () => {
     Array<{ sender: "agent" | "user"; text: string; time: string }>
   >([]);
   const [isListening, setIsListening] = useState(false);
+  const [softphoneInputText, setSoftphoneInputText] = useState("");
   const [showCarrierModal, setShowCarrierModal] = useState(false);
 
   // Subscribe to global calling bus
@@ -178,6 +180,7 @@ export const WebRTCSoftphone: React.FC = () => {
 
       audioEngine.speakAgentMessage(greeting, () => {
         setAgentSpeaking(false);
+        handleStartListening();
       });
     }, 2200);
   };
@@ -212,7 +215,10 @@ export const WebRTCSoftphone: React.FC = () => {
 
     audioEngine.speakAgentMessage(
       greeting,
-      () => setAgentSpeaking(false)
+      () => {
+        setAgentSpeaking(false);
+        handleStartListening();
+      }
     );
     toast.success("Call connected. Audio stream live.");
   };
@@ -268,27 +274,17 @@ export const WebRTCSoftphone: React.FC = () => {
   };
 
   const handleStartListening = () => {
+    if (callState === "idle" || callState === "on_hold") return;
     audioEngine.unlockAudio();
     setIsListening(true);
-    toast.info("Listening to your voice...", {
-      description: "Speak in Hindi or English into your microphone.",
-    });
 
     const started = audioEngine.startSpeechRecognition(
       (transcript) => {
         setIsListening(false);
-        const userTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        setConversationLogs((prev) => [...prev, { sender: "user", text: transcript, time: userTime }]);
-
-        // Generate intelligent AI response
-        const reply = audioEngine.generateConversationalReply(transcript);
-        const agentTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        setConversationLogs((prev) => [...prev, { sender: "agent", text: reply, time: agentTime }]);
-
-        setAgentSpeaking(true);
-        audioEngine.speakAgentMessage(reply, () => {
-          setAgentSpeaking(false);
-        });
+        handleProcessUserSpeech(transcript);
+      },
+      () => {
+        setIsListening(false);
       },
       () => {
         setIsListening(false);
@@ -297,18 +293,37 @@ export const WebRTCSoftphone: React.FC = () => {
 
     if (!started) {
       setIsListening(false);
-      toast.info("Speech recognition not supported in this browser. Use quick voice responses.");
     }
   };
 
-  const handleTriggerAIResponse = (text: string) => {
-    audioEngine.unlockAudio();
-    const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setConversationLogs((prev) => [...prev, { sender: "agent", text, time: timeStr }]);
-    setAgentSpeaking(true);
-    audioEngine.speakAgentMessage(text, () => {
-      setAgentSpeaking(false);
+  const handleProcessUserSpeech = (userSpeech: string) => {
+    if (!userSpeech.trim()) return;
+    audioEngine.stopSpeechRecognition();
+    setIsListening(false);
+
+    const userTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setConversationLogs((prev) => [...prev, { sender: "user", text: userSpeech, time: userTime }]);
+
+    // Generate intelligent AI response with active lead context
+    const reply = audioEngine.generateConversationalReply(userSpeech, {
+      leadName: activeLead.name,
+      agentName: "Asha",
     });
+    const agentTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setConversationLogs((prev) => [...prev, { sender: "agent", text: reply, time: agentTime }]);
+
+    setAgentSpeaking(true);
+    audioEngine.speakAgentMessage(reply, () => {
+      setAgentSpeaking(false);
+      // Auto-rearm speech recognition for ongoing two-way conversation
+      setTimeout(() => {
+        handleStartListening();
+      }, 350);
+    });
+  };
+
+  const handleTriggerAIResponse = (text: string) => {
+    handleProcessUserSpeech(text);
   };
 
   return (
@@ -501,6 +516,33 @@ export const WebRTCSoftphone: React.FC = () => {
                       </button>
                     ))}
                   </div>
+
+                  {/* In-Call Text Query Input */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!softphoneInputText.trim()) return;
+                      const q = softphoneInputText.trim();
+                      setSoftphoneInputText("");
+                      handleProcessUserSpeech(q);
+                    }}
+                    className="flex gap-1 pt-1.5"
+                  >
+                    <input
+                      type="text"
+                      value={softphoneInputText}
+                      onChange={(e) => setSoftphoneInputText(e.target.value)}
+                      placeholder="Type message to AI agent..."
+                      className="flex-1 px-2.5 py-1 text-[11px] bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 focus:outline-none focus:border-violet-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!softphoneInputText.trim()}
+                      className="px-2.5 py-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-[10px] font-semibold rounded-lg flex items-center gap-1 cursor-pointer transition"
+                    >
+                      <Send size={11} /> Send
+                    </button>
+                  </form>
                 </div>
               )}
 

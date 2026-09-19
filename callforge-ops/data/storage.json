@@ -1,6 +1,33 @@
 {
   "leads": [],
-  "cdrLogs": [],
+  "cdrLogs": [
+    {
+      "id": "call_4_X5r2gu",
+      "customerName": "Aarav Mehta",
+      "customerPhone": "+91 99887 11002",
+      "agentName": "Asha (AI Voice)",
+      "campaign": "Festive season follow-up",
+      "duration": "01:10",
+      "durationSeconds": 70,
+      "status": "Completed",
+      "sentiment": "Positive",
+      "qaScore": 94,
+      "createdAt": "2026-09-19T17:06:14.081Z"
+    },
+    {
+      "id": "call_sOh_D-Oe",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Asha (Hindi/English)",
+      "campaign": "Sandbox Voice Test",
+      "duration": "00:11",
+      "durationSeconds": 11,
+      "status": "Completed",
+      "sentiment": "Positive",
+      "qaScore": 92,
+      "createdAt": "2026-09-19T17:04:26.086Z"
+    }
+  ],
   "carrierConfig": {
     "provider": "mock",
     "twilioAccountSid": "",

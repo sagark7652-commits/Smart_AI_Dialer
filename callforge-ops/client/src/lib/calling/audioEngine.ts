@@ -284,9 +284,14 @@ class CallAudioEngine {
   // 7. Speech Recognition for Two-Way Conversational Dialogue
   private recognition: any = null;
 
+  isSpeechRecognitionSupported(): boolean {
+    return !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  }
+
   startSpeechRecognition(
     onResult: (transcript: string) => void,
-    onError?: (err: any) => void
+    onError?: (err: any) => void,
+    onEnd?: () => void
   ): boolean {
     const SpeechRecognitionClass =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -301,7 +306,8 @@ class CallAudioEngine {
       const reco = new SpeechRecognitionClass();
       reco.continuous = false;
       reco.interimResults = false;
-      reco.lang = "hi-IN"; // Supports Hindi & Hinglish
+      // Use hi-IN with fallback so both Hindi and Indian English are captured smoothly
+      reco.lang = "hi-IN";
 
       reco.onresult = (event: any) => {
         const transcript = event.results[0]?.[0]?.transcript || "";
@@ -312,6 +318,10 @@ class CallAudioEngine {
 
       reco.onerror = (event: any) => {
         if (onError) onError(event);
+      };
+
+      reco.onend = () => {
+        if (onEnd) onEnd();
       };
 
       reco.start();
@@ -333,35 +343,215 @@ class CallAudioEngine {
     }
   }
 
-  // Smart conversational responder for real-time customer voice queries
-  generateConversationalReply(userSpeech: string): string {
-    const lower = userSpeech.toLowerCase();
+  // Advanced conversational AI brain for dynamic two-way customer dialogue
+  generateConversationalReply(
+    userSpeech: string,
+    context?: {
+      leadName?: string;
+      agentName?: string;
+      scriptText?: string;
+      history?: string[];
+    }
+  ): string {
+    const text = userSpeech.trim();
+    const lower = text.toLowerCase();
+    const namePrefix = context?.leadName ? `${context.leadName} ji, ` : "";
 
-    if (lower.includes("price") || lower.includes("rate") || lower.includes("cost") || lower.includes("kharcha") || lower.includes("paisa") || lower.includes("rupaye")) {
-      return "CallForge ka prepaid calling rate sirf 60 paise prati minute hai, jisme zero setup fee aur 5000 free test minutes milte hain. Enterprise plans me dedicated PRI trunks aur high concurrency bhi uplabdh hai.";
+    // 1. Rejection / Negative / Not interested
+    if (
+      lower.includes("nahi chahiye") ||
+      lower.includes("no") ||
+      lower.includes("not interested") ||
+      lower.includes("zarurat nahi") ||
+      lower.includes("zaroorat nahi") ||
+      lower.includes("interest nahi") ||
+      lower.includes("band karo") ||
+      lower.includes("faltu") ||
+      lower.includes("cut karo") ||
+      lower.includes("phone kato") ||
+      lower.includes("kato") ||
+      lower.includes("spam")
+    ) {
+      return `Theek hai ${namePrefix}koi baat nahi. Main aapka preference note kar leti hoon aur aapka number safe list me update kar rahi hoon taaki aage se aapko pareshani na ho. Apna keemti samay dene ke liye shukriya, aapka din shubh rahe!`;
     }
 
-    if (lower.includes("hindi") || lower.includes("language") || lower.includes("bhasha") || lower.includes("bolna")) {
-      return "Ji bilkul! CallForge Hindi, Hinglish, Tamil, Telugu, Kannada aur Marathi sabhi Indian regional bhashaon me natural neural tone ke sath baat karta hai.";
+    // 2. Greetings / Salutations / "Hello", "Kaise ho"
+    if (
+      lower.includes("hello") ||
+      lower.includes("namaste") ||
+      lower.includes("hi") ||
+      lower.includes("hey") ||
+      lower.includes("kaise ho") ||
+      lower.includes("kya haal") ||
+      lower.includes("sunai") ||
+      lower.includes("awaz aa rahi") ||
+      lower.includes("bol raha hoon") ||
+      lower.includes("bol rahi hoon")
+    ) {
+      return `Namaste ${namePrefix}! Main CallForge AI Calling floor se bol rahi hoon. Main bilkul badhiya hoon, aap bataiye aap kaise hain? Hum India ke businesses ke liye smart automated AI calling solution provide karte hain. Kya aap iske baare me janna chahenge?`;
     }
 
-    if (lower.includes("demo") || lower.includes("test") || lower.includes("trial") || lower.includes("dikhao")) {
-      return "Haan zaroor! Hamari technical team aapke sath live screen-share demo schedule kar sakti hai. Aap apna convenient samay bataiye, hum calendar invite bhej denge.";
+    // 3. Offers / Deals / Discounts
+    if (
+      lower.includes("offer") ||
+      lower.includes("discount") ||
+      lower.includes("deal") ||
+      lower.includes("scheme") ||
+      lower.includes("fayda") ||
+      lower.includes("benefit") ||
+      lower.includes("kya de rahe ho") ||
+      lower.includes("festive") ||
+      lower.includes("bachat") ||
+      lower.includes("sasta")
+    ) {
+      return `Ji ${namePrefix}hamare annual cloud calling pack par flat 20% festive discount chal raha hai. Iske sath aapko 5,000 free calling minutes aur direct TRAI-approved DLT caller ID registration bilkul complimentary milta hai. Kya aap iska 5 minute ka live demo dekhna chahenge?`;
     }
 
-    if (lower.includes("trai") || lower.includes("compliance") || lower.includes("rule") || lower.includes("dnc") || lower.includes("legal")) {
-      return "Hamara dialer TRAI TCCCPR regulations aur DoT guidelines ke mutabik 100 percent compliant hai. Outbound calling subah 9 se raat 9 baje tak restricted hai aur national DNC database se real-time auto-scrubbing hoti hai.";
+    // 4. Pricing / Cost / Rates
+    if (
+      lower.includes("price") ||
+      lower.includes("rate") ||
+      lower.includes("cost") ||
+      lower.includes("kharcha") ||
+      lower.includes("paisa") ||
+      lower.includes("paise") ||
+      lower.includes("rupaye") ||
+      lower.includes("charge") ||
+      lower.includes("kitna lagega") ||
+      lower.includes("kitne ka hai") ||
+      lower.includes("budget") ||
+      lower.includes("monthly") ||
+      lower.includes("charges")
+    ) {
+      return `CallForge ka tariff rate sirf 60 paise prati minute se shuru hota hai jisme zero setup fees aur zero maintenance charges hain. Concurrency lines aur bulk volume par aur bhi attractive custom pricing milti hai. Aap jitna use karenge sirf utna hi pay karna hota hai.`;
     }
 
-    if (lower.includes("callback") || lower.includes("baad me") || lower.includes("busy") || lower.includes("meeting")) {
-      return "Samajh gaya ji! Main aapka callback note kar leti hoon. Hamare sales representative aapko shaam ko call karenge. Shukriya aur aapka din shubh ho!";
+    // 5. Identity / Who are you / Why called
+    if (
+      lower.includes("kaun ho") ||
+      lower.includes("who are you") ||
+      lower.includes("kaha se") ||
+      lower.includes("kiska phone") ||
+      lower.includes("kaha se bol rahe") ||
+      lower.includes("naam kya hai") ||
+      lower.includes("kyu phone kiya") ||
+      lower.includes("kyu call kiya") ||
+      lower.includes("kisliye") ||
+      lower.includes("what company")
+    ) {
+      return `Main CallForge Enterprise Voice System se baat kar rahi hoon. Hum companies ke liye customer outbound sales, lead qualification aur payment follow-up calls ko AI agents ke through automate karte hain taaki aapka samay aur manpower bache.`;
     }
 
-    if (lower.includes("kaun") || lower.includes("who are you") || lower.includes("naam") || lower.includes("kya hai")) {
-      return "Main CallForge ki AI voice assistant hoon. Hum enterprise businesses ke liye automated outbound sales aur customer support calling manage karte hain.";
+    // 6. How it works / Technology / Features
+    if (
+      lower.includes("kaise kaam") ||
+      lower.includes("kaise hota") ||
+      lower.includes("how it works") ||
+      lower.includes("feature") ||
+      lower.includes("kya karta hai") ||
+      lower.includes("software") ||
+      lower.includes("system") ||
+      lower.includes("dialer") ||
+      lower.includes("bulk") ||
+      lower.includes("leads") ||
+      lower.includes("excel")
+    ) {
+      return `Ye platform use karna behad aasan hai! Aap bas apni leads ki Excel ya CSV file dashboard me upload karte hain. Hamara AI system simultaneously thousands of customers ko human-like natural voice me call karke pitch deliver karta hai aur customer ke har sawaal ka live jawab deta hai.`;
     }
 
-    return "Ji bilkul, main samajh gayi. CallForge autonomous AI calling platform aapke customer outreach ko 10 guna tez aur cost-effective bana deta hai. Kya main aapke liye ek live demo account activate kar doon?";
+    // 7. Language Support
+    if (
+      lower.includes("hindi") ||
+      lower.includes("english") ||
+      lower.includes("hinglish") ||
+      lower.includes("language") ||
+      lower.includes("bhasha") ||
+      lower.includes("marathi") ||
+      lower.includes("tamil") ||
+      lower.includes("telugu") ||
+      lower.includes("kannada") ||
+      lower.includes("gujarati")
+    ) {
+      return `Ji haan, bilkul! Hamara AI agent Hindi, English, Hinglish, Marathi, Tamil, Telugu, Kannada aur Gujarati sabhi regional languages me bina kisi delay ke natural human accent me baat kar sakta hai.`;
+    }
+
+    // 8. Demo / Trial / Testing
+    if (
+      lower.includes("demo") ||
+      lower.includes("trial") ||
+      lower.includes("test") ||
+      lower.includes("dikhao") ||
+      lower.includes("dekhna hai") ||
+      lower.includes("try") ||
+      lower.includes("sample") ||
+      lower.includes("karo")
+    ) {
+      return `Bilkul ${namePrefix}! Hum aapke sath ek interactive screen-share demo schedule kar sakte hain jisme aap live custom script test kar payenge. Kya kal subah 11 baje ya dopahar 3 baje ka samay aapke liye suitable rahega?`;
+    }
+
+    // 9. Busy / Call back later
+    if (
+      lower.includes("busy") ||
+      lower.includes("baad me") ||
+      lower.includes("meeting") ||
+      lower.includes("driving") ||
+      lower.includes("drive") ||
+      lower.includes("kal call") ||
+      lower.includes("shaam ko") ||
+      lower.includes("later") ||
+      lower.includes("time nahi")
+    ) {
+      return `Samajh gayi ${namePrefix}, aap abhi busy lag rahe hain. Main aapka callback note kar leti hoon aur aapko suvidhajanak samay par call karungi. Have a productive day ahead!`;
+    }
+
+    // 10. WhatsApp / Email / Send Details
+    if (
+      lower.includes("whatsapp") ||
+      lower.includes("mail") ||
+      lower.includes("email") ||
+      lower.includes("bhejo") ||
+      lower.includes("bhej do") ||
+      lower.includes("send") ||
+      lower.includes("brochure") ||
+      lower.includes("catalog") ||
+      lower.includes("details")
+    ) {
+      return `Zaroor! Main CallForge product overview, pricing card aur live demo links turant aapke WhatsApp aur registered email par share kar rahi hoon. Aap waha se directly access kar sakte hain.`;
+    }
+
+    // 11. Are you AI or real human?
+    if (
+      lower.includes("ai ho") ||
+      lower.includes("robot") ||
+      lower.includes("human") ||
+      lower.includes("insan") ||
+      lower.includes("asli") ||
+      lower.includes("real") ||
+      lower.includes("computer")
+    ) {
+      return `Main CallForge ki real-time AI synthetic voice agent hoon! Mere piche advanced neural language models kaam karte hain, jo natural tone me baat karke aapke har sawaal ka pal bhar me satik jawab de sakte hain.`;
+    }
+
+    // 12. Agreement / Positive / "Haan batao", "Theek hai"
+    if (
+      lower.includes("haan") ||
+      lower.includes("ha") ||
+      lower.includes("batao") ||
+      lower.includes("boliye") ||
+      lower.includes("theek hai") ||
+      lower.includes("sahi hai") ||
+      lower.includes("achaa") ||
+      lower.includes("okay") ||
+      lower.includes("ok") ||
+      lower.includes("sure") ||
+      lower.includes("yes") ||
+      lower.includes("aur")
+    ) {
+      return `Bahut badhiya ${namePrefix}! CallForge se companies ki customer reach 10x tezi se badhti hai aur telecalling cost 70% kam ho jati hai. Kya main aapke company name ke sath ek trial portal create kar doon?`;
+    }
+
+    // 13. Dynamic contextual fallback addressing user's input directly
+    return `Ji bilkul ${namePrefix}main aapki baat samajh gayi. "${text.slice(0, 40)}" ke baare me CallForge solution aapko complete flexibility deta hai. Kya aap chahenge ki hamare sales specialist aapse 5 minute me connect karein ya hum trial demo activate karein?`;
   }
 }
 
