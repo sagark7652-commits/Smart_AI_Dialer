@@ -1554,7 +1554,12 @@ export default function Home() {
     case "Overview":
       content = (
         <Overview
-          onNavigate={setActive}
+          onNavigate={(tab, subTab) => {
+            setActive(tab);
+            if (subTab) {
+              setAdminBillingSubTab(subTab);
+            }
+          }}
           onNewCampaign={() => setShowCampaignBuilder(true)}
           onExportReport={handleDownloadExecutiveReport}
           userName={currentUser.name}

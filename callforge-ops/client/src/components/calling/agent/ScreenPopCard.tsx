@@ -32,6 +32,7 @@ interface ScreenPopCardProps {
   onClose: () => void;
   lead?: ScreenPopLead;
   onTransfer?: () => void;
+  onOpenProfile?: (lead: ScreenPopLead) => void;
 }
 
 export const ScreenPopCard: React.FC<ScreenPopCardProps> = ({
@@ -51,8 +52,19 @@ export const ScreenPopCard: React.FC<ScreenPopCardProps> = ({
     dncStatus: "Verified Clean",
   },
   onTransfer,
+  onOpenProfile,
 }) => {
   if (!isOpen) return null;
+
+  const initials = lead?.name
+    ? lead.name
+        .split(" ")
+        .filter(Boolean)
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "CF";
 
   return (
     <div className="fixed top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 z-50 bg-zinc-950 border border-violet-500/60 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-right-8 duration-200">
@@ -60,10 +72,7 @@ export const ScreenPopCard: React.FC<ScreenPopCardProps> = ({
       <div className="p-4 bg-gradient-to-r from-violet-950/70 via-zinc-900/90 to-zinc-900 border-b border-zinc-800 flex items-start justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full bg-violet-600/30 text-violet-300 flex items-center justify-center font-bold text-sm border border-violet-500/40">
-            {lead.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
+            {initials}
           </div>
           <div>
             <div className="flex items-center gap-1.5">
@@ -147,7 +156,11 @@ export const ScreenPopCard: React.FC<ScreenPopCardProps> = ({
           <button
             type="button"
             onClick={() => {
-              toast.info(`Opening ${lead.name}'s complete CRM timeline`);
+              if (onOpenProfile) {
+                onOpenProfile(lead);
+              } else {
+                toast.info(`Opening ${lead.name}'s complete CRM timeline`);
+              }
             }}
             className="flex-1 py-1.5 px-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium text-[11px] flex items-center justify-center gap-1 transition-colors cursor-pointer"
           >
