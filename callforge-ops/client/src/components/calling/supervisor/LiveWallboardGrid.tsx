@@ -147,9 +147,9 @@ export const LiveWallboardGrid: React.FC = () => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return (
-        a.name.toLowerCase().includes(q) ||
-        a.currentCall?.customerName.toLowerCase().includes(q) ||
-        a.currentCall?.customerPhone.includes(q)
+        String(a?.name || "").toLowerCase().includes(q) ||
+        String(a?.currentCall?.customerName || "").toLowerCase().includes(q) ||
+        String(a?.currentCall?.customerPhone || "").includes(q)
       );
     }
     return true;

@@ -36,9 +36,9 @@ export const AuditLogsUI: React.FC = () => {
   const filtered = logs.filter((log) => {
     const matchesCat = selectedCategory === "all" || log.category === selectedCategory;
     const matchesSearch =
-      log.action.toLowerCase().includes(search.toLowerCase()) ||
-      log.user.toLowerCase().includes(search.toLowerCase()) ||
-      log.details.toLowerCase().includes(search.toLowerCase());
+      String(log?.action || "").toLowerCase().includes(search.toLowerCase()) ||
+      String(log?.user || "").toLowerCase().includes(search.toLowerCase()) ||
+      String(log?.details || "").toLowerCase().includes(search.toLowerCase());
     return matchesCat && matchesSearch;
   });
 

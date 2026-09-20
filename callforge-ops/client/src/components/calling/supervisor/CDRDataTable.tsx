@@ -85,10 +85,10 @@ export const CDRDataTable: React.FC<CDRDataTableProps> = ({
     if (query) {
       const q = query.toLowerCase();
       return (
-        item.customerName.toLowerCase().includes(q) ||
-        item.customerPhone.includes(q) ||
-        item.agentName.toLowerCase().includes(q) ||
-        item.id.toLowerCase().includes(q)
+        String(item?.customerName || "").toLowerCase().includes(q) ||
+        String(item?.customerPhone || "").includes(q) ||
+        String(item?.agentName || "").toLowerCase().includes(q) ||
+        String(item?.id || "").toLowerCase().includes(q)
       );
     }
     return true;

@@ -391,10 +391,7 @@ export const WebRTCSoftphone: React.FC = () => {
                       : "bg-gradient-to-tr from-amber-950 to-amber-800 text-amber-300 border-amber-500/50"
                   }`}
                 >
-                  {activeLead.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
+                  {((activeLead.name || "Customer").trim().split(/\s+/).map((n) => n[0] || "").join("").slice(0, 2) || "CU").toUpperCase()}
                 </div>
               </div>
 

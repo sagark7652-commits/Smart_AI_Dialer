@@ -120,7 +120,7 @@ export function LeadDetailsDrawer({
                 Lead CRM Profile
               </h3>
               <p className="text-[11px] text-zinc-400">
-                Contact ID: #{lead.phone.replace(/[^0-9]/g, "").slice(-6)}
+                Contact ID: #{String(lead.phone || "").replace(/[^0-9]/g, "").slice(-6) || "000000"}
               </p>
             </div>
           </div>

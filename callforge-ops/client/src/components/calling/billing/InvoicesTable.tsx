@@ -194,9 +194,9 @@ export const InvoicesTable: React.FC = () => {
 
   const filtered = invoices.filter(
     (i) =>
-      i.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
-      i.description.toLowerCase().includes(search.toLowerCase()) ||
-      i.paymentMethod.toLowerCase().includes(search.toLowerCase())
+      String(i?.invoiceNumber || "").toLowerCase().includes(search.toLowerCase()) ||
+      String(i?.description || "").toLowerCase().includes(search.toLowerCase()) ||
+      String(i?.paymentMethod || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (

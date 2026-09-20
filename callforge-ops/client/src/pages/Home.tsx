@@ -194,8 +194,8 @@ function Overview({
 
   const qualifiedLeadsCount = leads.filter(
     (l) =>
-      l.stage.toLowerCase() === "interested" ||
-      l.stage.toLowerCase() === "converted" ||
+      String(l?.stage || "").toLowerCase() === "interested" ||
+      String(l?.stage || "").toLowerCase() === "converted" ||
       (l.score && l.score >= 70)
   ).length;
 
@@ -749,7 +749,7 @@ function AgentWorkspace({ onCallLogged }: { onCallLogged?: () => void }) {
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl bg-violet-600/20 text-violet-400 flex items-center justify-center font-bold text-base border border-violet-500/40">
-                  {activeCaller.name.split(" ").map((n) => n[0]).join("")}
+                  {((activeCaller.name || "Caller").trim().split(/\s+/).map((n) => n[0] || "").join("").slice(0, 2) || "CL").toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
@@ -1476,8 +1476,8 @@ export default function Home() {
       );
     const qualifiedCount = leadsList.filter(
       (l) =>
-        l.stage.toLowerCase() === "interested" ||
-        l.stage.toLowerCase() === "converted" ||
+        String(l?.stage || "").toLowerCase() === "interested" ||
+        String(l?.stage || "").toLowerCase() === "converted" ||
         (l.score && l.score >= 70)
     ).length;
 
