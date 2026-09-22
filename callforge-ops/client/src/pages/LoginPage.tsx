@@ -124,43 +124,60 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // ---------------------------------------------------------------------------
   // 1. EMAIL & PASSWORD -> SEND OTP TO EMAIL
   // ---------------------------------------------------------------------------
-  const handleRequestEmailOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const generateSecureOtp = (previous?: string | null): string => {
+    let newCode = "";
+    let attempts = 0;
+    do {
+      if (typeof window !== "undefined" && window.crypto && window.crypto.getRandomValues) {
+        const arr = new Uint32Array(1);
+        window.crypto.getRandomValues(arr);
+        newCode = ((arr[0] % 900000) + 100000).toString();
+      } else {
+        newCode = Math.floor(100000 + Math.random() * 900000).toString();
+      }
+      attempts++;
+    } while (previous && newCode === previous && attempts < 10);
+    return newCode;
+  };
+
+  const handleRequestEmailOtp = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e?.preventDefault) e.preventDefault();
     if (!email || !email.includes("@")) {
       toast.error("Please enter a valid corporate email address.");
       return;
     }
-    if (!password || password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      return;
-    }
 
     setIsSendingEmailOtp(true);
+    // Clear boxes for fresh code entry
+    setEmailOtpDigits(["", "", "", "", "", ""]);
+
     try {
       const res = await fetch("/api/calling/auth/email/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
-      const code = data.otp || Math.floor(100000 + Math.random() * 900000).toString();
+      const data = await res.json().catch(() => null);
+      const code = data?.otp && data.otp !== dispatchedEmailOtp
+        ? data.otp
+        : generateSecureOtp(dispatchedEmailOtp);
+
       setDispatchedEmailOtp(code);
       setEmailOtpSent(true);
       setEmailTimer(30);
-      setEmailOtpDigits(code.split("")); // Pre-fill for instant test convenience
-      toast.success(`Security OTP sent to ${email}!`, {
-        description: `Your OTP is ${code}. Please enter it below to verify.`,
+      toast.success(`New Security OTP dispatched!`, {
+        description: `Your 6-digit code is ${code}. Please enter it below.`,
       });
       setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } catch {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const fallbackCode = generateSecureOtp(dispatchedEmailOtp);
       setDispatchedEmailOtp(fallbackCode);
       setEmailOtpSent(true);
       setEmailTimer(30);
-      setEmailOtpDigits(fallbackCode.split(""));
-      toast.success(`Security OTP sent to ${email}!`, {
-        description: `Your OTP is ${fallbackCode}.`,
+      toast.success(`New Security OTP generated!`, {
+        description: `Your 6-digit code is ${fallbackCode}.`,
       });
+      setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } finally {
       setIsSendingEmailOtp(false);
     }
@@ -388,8 +405,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // ---------------------------------------------------------------------------
   // 3. PHONE NUMBER + OTP
   // ---------------------------------------------------------------------------
-  const handleSendPhoneOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSendPhoneOtp = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e?.preventDefault) e.preventDefault();
     const cleanPhone = phoneNumber.replace(/\D/g, "");
     if (cleanPhone.length < 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
@@ -397,31 +414,36 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
 
     setIsSendingPhoneOtp(true);
+    // Clear boxes for fresh code entry
+    setPhoneOtpDigits(["", "", "", "", "", ""]);
+
     try {
       const res = await fetch("/api/calling/auth/phone/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: cleanPhone, countryCode }),
       });
-      const data = await res.json();
-      const code = data.otp || Math.floor(100000 + Math.random() * 900000).toString();
+      const data = await res.json().catch(() => null);
+      const code = data?.otp && data.otp !== dispatchedPhoneOtp
+        ? data.otp
+        : generateSecureOtp(dispatchedPhoneOtp);
+
       setDispatchedPhoneOtp(code);
       setPhoneOtpSent(true);
       setPhoneTimer(30);
-      setPhoneOtpDigits(code.split(""));
-      toast.success(`SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
-        description: `Your OTP is ${code}. Please enter it below to verify.`,
+      toast.success(`New SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
+        description: `Your 6-digit code is ${code}. Please enter it below.`,
       });
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } catch {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const fallbackCode = generateSecureOtp(dispatchedPhoneOtp);
       setDispatchedPhoneOtp(fallbackCode);
       setPhoneOtpSent(true);
       setPhoneTimer(30);
-      setPhoneOtpDigits(fallbackCode.split(""));
-      toast.success(`SMS OTP generated for ${countryCode} ${cleanPhone}!`, {
-        description: `Your OTP is ${fallbackCode}. Please enter it below to verify.`,
+      toast.success(`New SMS OTP generated for ${countryCode} ${cleanPhone}!`, {
+        description: `Your 6-digit code is ${fallbackCode}.`,
       });
+      setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } finally {
       setIsSendingPhoneOtp(false);
     }
@@ -683,6 +705,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </button>
                 </div>
 
+                {/* Dynamic OTP Display Banner */}
+                {dispatchedEmailOtp && (
+                  <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles size={13} className="text-emerald-400 shrink-0" />
+                      <span className="text-zinc-300 text-[11px]">New Security OTP:</span>
+                      <strong className="text-emerald-300 font-mono tracking-widest text-sm font-bold">{dispatchedEmailOtp}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmailOtpDigits(dispatchedEmailOtp.split(""))}
+                      className="text-[10px] text-emerald-300 hover:text-white font-semibold bg-emerald-900/60 hover:bg-emerald-800 px-2 py-1 rounded transition cursor-pointer"
+                    >
+                      Auto-Fill Code
+                    </button>
+                  </div>
+                )}
+
                 {/* 6 OTP Boxes */}
                 <div className="py-1">
                   <div className="flex justify-center gap-2">
@@ -703,31 +743,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
                 </div>
 
-                {/* Resend link & Copy OTP */}
+                {/* Resend link */}
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="text-zinc-400">
                     {emailTimer > 0 ? (
-                      <>Resend in <strong className="text-violet-400 font-mono">{emailTimer}s</strong></>
+                      <>Resend new code in <strong className="text-violet-400 font-mono">{emailTimer}s</strong></>
                     ) : (
                       <button
                         type="button"
                         onClick={(e) => handleRequestEmailOtp(e)}
-                        className="text-violet-400 hover:underline cursor-pointer"
+                        className="text-violet-400 hover:underline font-semibold cursor-pointer"
                       >
-                        Resend Code
+                        Resend New Code
                       </button>
                     )}
                   </span>
-
-                  {dispatchedEmailOtp && (
-                    <button
-                      type="button"
-                      onClick={() => setEmailOtpDigits(dispatchedEmailOtp.split(""))}
-                      className="text-[10px] text-zinc-400 hover:text-emerald-400 font-mono bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded cursor-pointer"
-                    >
-                      Paste OTP ({dispatchedEmailOtp})
-                    </button>
-                  )}
+                  <span className="text-[10px] text-zinc-500">6-digit verification</span>
                 </div>
 
                 {/* Verify & Enter Button */}
@@ -832,6 +863,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </button>
                 </div>
 
+                {/* Dynamic SMS OTP Display Banner */}
+                {dispatchedPhoneOtp && (
+                  <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles size={13} className="text-emerald-400 shrink-0" />
+                      <span className="text-zinc-300 text-[11px]">New SMS OTP:</span>
+                      <strong className="text-emerald-300 font-mono tracking-widest text-sm font-bold">{dispatchedPhoneOtp}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPhoneOtpDigits(dispatchedPhoneOtp.split(""))}
+                      className="text-[10px] text-emerald-300 hover:text-white font-semibold bg-emerald-900/60 hover:bg-emerald-800 px-2 py-1 rounded transition cursor-pointer"
+                    >
+                      Auto-Fill Code
+                    </button>
+                  </div>
+                )}
+
                 {/* 6 OTP Boxes */}
                 <div className="py-1">
                   <div className="flex justify-center gap-2">
@@ -855,27 +904,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="text-zinc-400">
                     {phoneTimer > 0 ? (
-                      <>Resend in <strong className="text-violet-400 font-mono">{phoneTimer}s</strong></>
+                      <>Resend new code in <strong className="text-violet-400 font-mono">{phoneTimer}s</strong></>
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleSendPhoneOtp()}
-                        className="text-violet-400 hover:underline cursor-pointer"
+                        onClick={(e) => handleSendPhoneOtp(e)}
+                        className="text-violet-400 hover:underline font-semibold cursor-pointer"
                       >
-                        Resend Code
+                        Resend New Code
                       </button>
                     )}
                   </span>
-
-                  {dispatchedPhoneOtp && (
-                    <button
-                      type="button"
-                      onClick={() => setPhoneOtpDigits(dispatchedPhoneOtp.split(""))}
-                      className="text-[10px] text-zinc-400 hover:text-emerald-400 font-mono bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded cursor-pointer"
-                    >
-                      Paste OTP ({dispatchedPhoneOtp})
-                    </button>
-                  )}
+                  <span className="text-[10px] text-zinc-500">SMS Verification</span>
                 </div>
 
                 {/* Verify & Enter Button */}
