@@ -3,6 +3,10 @@
   "outputDirectory": "callforge-ops/dist/public",
   "rewrites": [
     {
+      "source": "/api/send-email-otp",
+      "destination": "/api/send-email-otp"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

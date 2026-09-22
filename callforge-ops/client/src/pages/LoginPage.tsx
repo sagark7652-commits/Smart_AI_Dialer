@@ -151,31 +151,40 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     // Clear boxes for fresh code entry
     setEmailOtpDigits(["", "", "", "", "", ""]);
 
+    const code = generateSecureOtp(dispatchedEmailOtp);
+    setDispatchedEmailOtp(code);
+    setEmailOtpSent(true);
+    setEmailTimer(30);
+
     try {
-      const res = await fetch("/api/calling/auth/email/send-otp", {
+      // 1. Try Vercel Serverless Gmail SMTP endpoint
+      const res = await fetch("/api/send-email-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim(), otp: code }),
       });
       const data = await res.json().catch(() => null);
-      const code = data?.otp && data.otp !== dispatchedEmailOtp
-        ? data.otp
-        : generateSecureOtp(dispatchedEmailOtp);
 
-      setDispatchedEmailOtp(code);
-      setEmailOtpSent(true);
-      setEmailTimer(30);
-      toast.success(`New Security OTP dispatched!`, {
-        description: `Your 6-digit code is ${code}. Please enter it below.`,
-      });
+      if (res.ok && data?.success) {
+        toast.success(`Real OTP Email Sent to ${email}!`, {
+          description: `Check your Gmail/inbox for verification code ${code}.`,
+        });
+      } else {
+        // 2. Try Node/Express local endpoint
+        await fetch("/api/calling/auth/email/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), otp: code }),
+        }).catch(() => null);
+
+        toast.success(`Security OTP generated!`, {
+          description: `Your 6-digit verification code is ${code}.`,
+        });
+      }
       setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } catch {
-      const fallbackCode = generateSecureOtp(dispatchedEmailOtp);
-      setDispatchedEmailOtp(fallbackCode);
-      setEmailOtpSent(true);
-      setEmailTimer(30);
-      toast.success(`New Security OTP generated!`, {
-        description: `Your 6-digit code is ${fallbackCode}.`,
+      toast.success(`Security OTP generated!`, {
+        description: `Your 6-digit verification code is ${code}.`,
       });
       setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } finally {

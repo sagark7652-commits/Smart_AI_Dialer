@@ -6,5 +6,8 @@
     "build": "npm --prefix callforge-ops install && npm --prefix callforge-ops run build",
     "start": "npm --prefix callforge-ops run start",
     "dev": "npm --prefix callforge-ops run dev"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.16"
   }
 }
