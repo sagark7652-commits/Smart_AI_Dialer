@@ -31,6 +31,40 @@ interface LoginPageProps {
   onLoginSuccess?: (user: { name: string; emailOrPhone: string; role: string; provider?: string }) => void;
 }
 
+const DEFAULT_ACCOUNTS: Record<string, { password: string; name: string; role: string }> = {
+  "sumitkhomne123@gmail.com": { password: "TataDialer@2025", name: "Sumit Khomne", role: "Super Admin" },
+  "admin@callforge.io": { password: "TataDialer@2025", name: "Super Admin", role: "Super Admin" },
+  "admin@tatadialer.com": { password: "TataDialer@2025", name: "Tata Admin", role: "Super Admin" },
+};
+
+const getStoredAccounts = (): Record<string, { password: string; name: string; role: string }> => {
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem("creatorai_registered_users") : null;
+    const parsed = raw ? JSON.parse(raw) : {};
+    return { ...DEFAULT_ACCOUNTS, ...parsed };
+  } catch {
+    return DEFAULT_ACCOUNTS;
+  }
+};
+
+const saveAccount = (userEmail: string, pass: string, name?: string) => {
+  try {
+    const current = getStoredAccounts();
+    const normalized = userEmail.trim().toLowerCase();
+    const derivedName = name || normalized.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    current[normalized] = {
+      password: pass,
+      name: derivedName,
+      role: "Enterprise Admin",
+    };
+    if (typeof window !== "undefined") {
+      localStorage.setItem("creatorai_registered_users", JSON.stringify(current));
+    }
+  } catch (e) {
+    console.error("Failed to save account", e);
+  }
+};
+
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Auth Method: 'email' | 'phone'
   const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
@@ -83,6 +117,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Modals & Dialogs
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [newResetPassword, setNewResetPassword] = useState("");
 
   const emailOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const phoneOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -270,13 +305,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   const handleDirectEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes("@")) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
       toast.error("Please enter a valid corporate email address.");
       return;
     }
     if (!password || password.length < 6) {
       toast.error("Password must be at least 6 characters long.");
       return;
+    }
+
+    const accounts = getStoredAccounts();
+    const existingAccount = accounts[normalizedEmail];
+
+    // Strict Password Authentication Check
+    if (existingAccount) {
+      if (existingAccount.password !== password) {
+        toast.error("Galat password hai!", {
+          description: `Aapka password galat hai. Kripya sahi password dalein ya Forgot Password par click karein.`,
+        });
+        return; // REJECT! DO NOT SEND OTP, DO NOT SIGN IN!
+      }
+    } else {
+      // First-time user: automatically register this password for this email
+      saveAccount(normalizedEmail, password);
     }
 
     setIsSendingEmailOtp(true);
@@ -1076,31 +1128,60 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               </div>
             </div>
 
-            <input
-              type="email"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              placeholder="name@company.com"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
-            />
+            <div className="space-y-2.5">
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Registered Email</label>
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={newResetPassword}
+                  onChange={(e) => setNewResetPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 characters)"
+                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
+                />
+              </div>
+            </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(false)}
-                className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white"
+                className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  toast.success("Password reset instructions sent to your corporate email!");
+                  const norm = resetEmail.trim().toLowerCase();
+                  if (!norm || !norm.includes("@")) {
+                    toast.error("Please enter a valid email address.");
+                    return;
+                  }
+                  if (!newResetPassword || newResetPassword.length < 6) {
+                    toast.error("New password must be at least 6 characters.");
+                    return;
+                  }
+                  saveAccount(norm, newResetPassword);
+                  setEmail(norm);
+                  setPassword(newResetPassword);
+                  toast.success("Password reset successful!", {
+                    description: `New password updated for ${norm}. Click Sign In & Verify OTP to continue.`,
+                  });
                   setShowForgotPassword(false);
                 }}
-                className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition"
+                className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition cursor-pointer"
               >
-                Send Recovery Link
+                Reset & Update Password
               </button>
             </div>
           </div>
