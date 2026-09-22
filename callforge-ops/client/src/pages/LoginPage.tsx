@@ -306,9 +306,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setDispatchedPhoneOtp(code);
       setPhoneOtpSent(true);
       setPhoneTimer(30);
-      setPhoneOtpDigits(["", "", "", "", "", ""]);
+      setPhoneOtpDigits(code.split(""));
       toast.success(`SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
-        description: "Please check your mobile phone's SMS messages and enter the 6-digit code.",
+        description: `Your OTP is ${code}. Please enter it below to verify.`,
       });
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } catch {
@@ -316,9 +316,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setDispatchedPhoneOtp(fallbackCode);
       setPhoneOtpSent(true);
       setPhoneTimer(30);
-      setPhoneOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
-        description: "Please check your mobile phone's SMS messages and enter the 6-digit code.",
+      setPhoneOtpDigits(fallbackCode.split(""));
+      toast.success(`SMS OTP generated for ${countryCode} ${cleanPhone}!`, {
+        description: `Your OTP is ${fallbackCode}. Please enter it below to verify.`,
       });
     } finally {
       setIsSendingPhoneOtp(false);
@@ -739,6 +739,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       </button>
                     )}
                   </span>
+
+                  {dispatchedPhoneOtp && (
+                    <button
+                      type="button"
+                      onClick={() => setPhoneOtpDigits(dispatchedPhoneOtp.split(""))}
+                      className="text-[10px] text-zinc-400 hover:text-emerald-400 font-mono bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded cursor-pointer"
+                    >
+                      Paste OTP ({dispatchedPhoneOtp})
+                    </button>
+                  )}
                 </div>
 
                 {/* Verify & Enter Button */}
@@ -797,6 +807,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             />
           </svg>
           <span>Continue with Google</span>
+        </button>
+
+        {/* Quick Demo Instant Access */}
+        <button
+          type="button"
+          onClick={() => {
+            finalizeLogin({
+              name: "Super Admin",
+              emailOrPhone: "admin@callforge.io",
+              role: "Super Admin",
+              provider: "1-Click Direct Access",
+            });
+          }}
+          className="w-full py-2 px-3 rounded-lg border border-dashed border-violet-500/40 bg-violet-950/20 hover:bg-violet-950/40 text-violet-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
+        >
+          <Sparkles size={13} className="text-violet-400" />
+          <span>Quick 1-Click Demo Login</span>
         </button>
       </div>
 
