@@ -1006,7 +1006,7 @@ callingRouter.post("/webhooks/voice/status", (req: Request, res: Response) => {
 // =============================================================================
 const emailOtpStore = new Map<string, { code: string; expiresAt: number }>();
 
-const GMAIL_USER = process.env.GMAIL_USER || "sagarkarale@gmail.com";
+const GMAIL_USER = process.env.GMAIL_USER || "sumitkhomne123@gmail.com";
 const GMAIL_APP_PASS = (process.env.GMAIL_APP_PASSWORD || "ciza lcdh zohp krxg").replace(/\s+/g, "");
 
 const emailTransporter = nodemailer.createTransport({

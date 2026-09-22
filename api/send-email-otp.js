@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Both email and OTP code are required." });
   }
 
-  const senderUser = process.env.GMAIL_USER || "sagarkarale@gmail.com";
+  const senderUser = process.env.GMAIL_USER || "sumitkhomne123@gmail.com";
   const appPassword = (process.env.GMAIL_APP_PASSWORD || "cizalcdhzohpkrxg").replace(/\s+/g, "");
 
   try {
