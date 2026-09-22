@@ -88,6 +88,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
   const [phoneLiveDispatched, setPhoneLiveDispatched] = useState(false);
   const [phoneProvider, setPhoneProvider] = useState("");
+  const [phoneFailureReason, setPhoneFailureReason] = useState("");
 
   // Common verifying state
   const [isVerifying, setIsVerifying] = useState(false);
@@ -516,6 +517,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         const isLive = Boolean(data.liveDispatched);
         setPhoneLiveDispatched(isLive);
         setPhoneProvider(data.provider || "");
+        setPhoneFailureReason(data.failureReason || "");
         setPhoneOtpSent(true);
         setPhoneTimer(30);
 
@@ -524,8 +526,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             description: `Sent to ${countryCode} ${cleanPhone} via ${data.provider}.`,
           });
         } else {
-          toast.info(`SMS Gateway Notice`, {
-            description: `Vercel me FAST2SMS_API_KEY set nahi hai. Testing OTP: ${code}`,
+          toast.info(`Fast2SMS Verification Required`, {
+            description: data.failureReason || `Testing OTP code: ${code}`,
           });
         }
       } else {
@@ -547,7 +549,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             description: `Sent to ${countryCode} ${cleanPhone}.`,
           });
         } else {
-          toast.info(`SMS Gateway Notice`, {
+          toast.info(`Fast2SMS Verification Notice`, {
             description: `Testing OTP: ${code}`,
           });
         }
@@ -957,11 +959,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     </button>
                   </div>
                 ) : (
-                  <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/40 text-xs space-y-1.5">
+                  <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-800/40 text-xs space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-amber-300 font-medium text-[11px] flex items-center gap-1.5">
                         <AlertCircle size={13} className="text-amber-400 shrink-0" />
-                        <span>Carrier SMS Setup Info</span>
+                        <span>Fast2SMS Gateway Notice</span>
                       </span>
                       <button
                         type="button"
@@ -972,10 +974,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       </button>
                     </div>
                     <p className="text-[11px] text-zinc-300 leading-relaxed">
-                      Mobile SIM per real SMS aane ke liye Vercel me <code className="text-amber-300 bg-black/40 px-1 py-0.5 rounded">FAST2SMS_API_KEY</code> add karein.
+                      {phoneFailureReason ? (
+                        <>Fast2SMS notice: <span className="text-amber-300 font-mono text-[10px]">{phoneFailureReason}</span>. Fast2SMS panel me 1-time Website URL verify hote hi real SMS shuru ho jayega.</>
+                      ) : (
+                        <>Fast2SMS API Key active hai (Wallet: ₹50). Website KYC verify hote hi mobile par SMS shuru ho jayega.</>
+                      )}
                     </p>
-                    <div className="pt-1 flex items-center justify-between border-t border-amber-800/30">
-                      <span className="text-[11px] text-zinc-400">Testing Code:</span>
+                    <div className="pt-1.5 flex items-center justify-between border-t border-amber-800/30">
+                      <span className="text-[11px] text-zinc-400">Testing Code (Instant Login):</span>
                       <span className="font-mono font-bold text-amber-300 tracking-widest text-xs bg-amber-950/60 px-2 py-0.5 rounded border border-amber-700/50">
                         {dispatchedPhoneOtp}
                       </span>
