@@ -1134,12 +1134,13 @@ callingRouter.post("/auth/phone/send-otp", async (req: Request, res: Response) =
   let providerName = "Direct Telecom Carrier Gateway (DLT Approved)";
 
   // 1. Check for Fast2SMS (India Direct SIM Dispatch)
-  if (process.env.FAST2SMS_API_KEY) {
+  const fast2smsKey = (process.env.FAST2SMS_API_KEY || "mVafnBFHiAvjPChyWt4K9T7Uz6SYJD0G8bekouLqQc5lwMRX1sCNMu6EqHhALzDX9TwsoG0FpSiO7eJZ").trim();
+  if (fast2smsKey) {
     try {
       const fRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
         method: "POST",
         headers: {
-          authorization: process.env.FAST2SMS_API_KEY,
+          authorization: fast2smsKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

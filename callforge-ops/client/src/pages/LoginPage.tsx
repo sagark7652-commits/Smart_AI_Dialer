@@ -31,11 +31,7 @@ interface LoginPageProps {
   onLoginSuccess?: (user: { name: string; emailOrPhone: string; role: string; provider?: string }) => void;
 }
 
-const DEFAULT_ACCOUNTS: Record<string, { password: string; name: string; role: string }> = {
-  "sumitkhomne123@gmail.com": { password: "TataDialer@2025", name: "Sumit Khomne", role: "Super Admin" },
-  "admin@callforge.io": { password: "TataDialer@2025", name: "Super Admin", role: "Super Admin" },
-  "admin@tatadialer.com": { password: "TataDialer@2025", name: "Tata Admin", role: "Super Admin" },
-};
+const DEFAULT_ACCOUNTS: Record<string, { password: string; name: string; role: string }> = {};
 
 const getStoredAccounts = (): Record<string, { password: string; name: string; role: string }> => {
   try {
@@ -114,10 +110,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [useEmailOtpMode, setUseEmailOtpMode] = useState(false);
 
-  // Modals & Dialogs
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [newResetPassword, setNewResetPassword] = useState("");
 
   const emailOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const phoneOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -321,9 +313,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     // Strict Password Authentication Check
     if (existingAccount) {
       if (existingAccount.password !== password) {
-        toast.error("Galat password hai!", {
-          description: `Aapka password galat hai. Kripya sahi password dalein ya Forgot Password par click karein.`,
-        });
+        toast.error("Wrong password. Try again or click sign in with otp");
         return; // REJECT! DO NOT SEND OTP, DO NOT SIGN IN!
       }
     } else {
@@ -732,42 +722,35 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
                 </div>
 
-                {/* Password */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-medium text-zinc-300">
+                {/* Password (Only in Password Mode) */}
+                {!useEmailOtpMode && (
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-300 mb-1">
                       Password
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowForgotPassword(true)}
-                      className="text-[11px] text-violet-400 hover:text-violet-300 transition cursor-pointer"
-                    >
-                      Forgot?
-                    </button>
+                    <div className="relative">
+                      <Lock
+                        size={15}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                      />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter password"
+                        className="w-full pl-9 pr-9 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 p-1 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <Lock
-                      size={15}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
-                    />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter password"
-                      className="w-full pl-9 pr-9 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 p-1 cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
-                  </div>
-                </div>
+                )}
 
                 {/* Submit button: Sign In (Default) or Send Code (OTP Mode) */}
                 <button
@@ -784,11 +767,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     isSendingEmailOtp ? (
                       <>
                         <RefreshCw size={14} className="animate-spin" />
-                        <span>Sending Code...</span>
+                        <span>Sending OTP...</span>
                       </>
                     ) : (
                       <>
-                        <span>Send Security OTP</span>
+                        <span>Send OTP</span>
                         <ArrowRight size={14} />
                       </>
                     )
@@ -810,7 +793,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     }}
                     className="text-[11px] text-zinc-400 hover:text-violet-300 transition cursor-pointer"
                   >
-                    {useEmailOtpMode ? "← Sign in with password instead" : "Or sign in with passwordless OTP"}
+                    {useEmailOtpMode ? "← Sign in with password instead" : "Sign in with OTP"}
                   </button>
                 </div>
               </form>
@@ -1110,83 +1093,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         )}
       </div>
 
-      {/* ========================================================================= */}
-      {/* MODAL 2: Forgot Password Recovery                                         */}
-      {/* ========================================================================= */}
-      {showForgotPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-violet-600/20 text-violet-400 flex items-center justify-center">
-                <Lock size={18} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Reset Workspace Password</h3>
-                <p className="text-[11px] text-zinc-400">
-                  Enter your registered enterprise email for password recovery
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2.5">
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1">Registered Email</label>
-                <input
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1">New Password</label>
-                <input
-                  type="password"
-                  value={newResetPassword}
-                  onChange={(e) => setNewResetPassword(e.target.value)}
-                  placeholder="Enter new password (min 6 characters)"
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(false)}
-                className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const norm = resetEmail.trim().toLowerCase();
-                  if (!norm || !norm.includes("@")) {
-                    toast.error("Please enter a valid email address.");
-                    return;
-                  }
-                  if (!newResetPassword || newResetPassword.length < 6) {
-                    toast.error("New password must be at least 6 characters.");
-                    return;
-                  }
-                  saveAccount(norm, newResetPassword);
-                  setEmail(norm);
-                  setPassword(newResetPassword);
-                  toast.success("Password reset successful!", {
-                    description: `New password updated for ${norm}. Click Sign In & Verify OTP to continue.`,
-                  });
-                  setShowForgotPassword(false);
-                }}
-                className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition cursor-pointer"
-              >
-                Reset & Update Password
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================================= */}
       {/* MODAL 3: Authentic Google Sign-In & Verification                          */}

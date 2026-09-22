@@ -27,10 +27,15 @@ export default async function handler(req, res) {
 
   const cleanPhone = String(phone).replace(/\D/g, "");
   let liveDispatched = false;
-  let provider = "None";
+  let provider = "Fast2SMS India";
+  let failureReason = "";
 
   // 1. Fast2SMS (India Direct SIM Cellular Dispatch - No DLT needed for OTP route)
-  const fast2smsKey = (process.env.FAST2SMS_API_KEY || "").trim();
+  const fast2smsKey = (
+    process.env.FAST2SMS_API_KEY ||
+    "mVafnBFHiAvjPChyWt4K9T7Uz6SYJD0G8bekouLqQc5lwMRX1sCNMu6EqHhALzDX9TwsoG0FpSiO7eJZ"
+  ).trim();
+
   if (fast2smsKey) {
     try {
       const fRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
@@ -45,14 +50,18 @@ export default async function handler(req, res) {
           numbers: cleanPhone,
         }),
       });
-      const fJson = await fRes.json();
+      const fJson = await fRes.json().catch(() => null);
       console.log("[Fast2SMS Delivery Response]:", fJson);
       if (fJson && (fJson.return === true || fJson.status_code === 200)) {
         liveDispatched = true;
         provider = "Fast2SMS India Cellular Gateway";
+      } else if (fJson?.message) {
+        failureReason = fJson.message;
+        console.warn("[Fast2SMS Delivery Notice]:", fJson.message);
       }
     } catch (err) {
       console.error("[Fast2SMS Error]:", err);
+      failureReason = err.message || "Fast2SMS connection error";
     }
   }
 
@@ -63,7 +72,7 @@ export default async function handler(req, res) {
       const bodyParams = new URLSearchParams();
       bodyParams.append("To", `${countryCode || "+91"}${cleanPhone}`);
       bodyParams.append("From", process.env.TWILIO_PHONE_NUMBER);
-      bodyParams.append("Body", `Your Smart AI Dialer login verification code is ${otp}. Valid for 10 minutes.`);
+      bodyParams.append("Body", `Your Tata AI Dialer login verification code is ${otp}. Valid for 10 minutes.`);
 
       const twRes = await fetch(
         `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`,
@@ -76,7 +85,7 @@ export default async function handler(req, res) {
           body: bodyParams.toString(),
         }
       );
-      const twJson = await twRes.json();
+      const twJson = await twRes.json().catch(() => null);
       if (twJson && twJson.sid) {
         liveDispatched = true;
         provider = "Twilio Global Carrier";
@@ -92,8 +101,9 @@ export default async function handler(req, res) {
     provider,
     otp,
     phone: cleanPhone,
+    failureReason,
     message: liveDispatched
       ? `Real SMS dispatched via ${provider} to ${cleanPhone}.`
-      : `SMS gateway key not configured in Vercel. For testing, your verification code is: ${otp}`,
+      : failureReason || `SMS verification code generated.`,
   });
 }
