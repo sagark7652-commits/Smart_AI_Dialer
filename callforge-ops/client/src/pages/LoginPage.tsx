@@ -56,6 +56,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [dispatchedPhoneOtp, setDispatchedPhoneOtp] = useState<string | null>(null);
   const [phoneTimer, setPhoneTimer] = useState(30);
   const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
+  const [phoneLiveDispatched, setPhoneLiveDispatched] = useState(false);
+  const [phoneProvider, setPhoneProvider] = useState("");
 
   // Common verifying state
   const [isVerifying, setIsVerifying] = useState(false);
@@ -423,34 +425,67 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
 
     setIsSendingPhoneOtp(true);
-    // Clear boxes for fresh code entry
     setPhoneOtpDigits(["", "", "", "", "", ""]);
 
+    const code = generateSecureOtp(dispatchedPhoneOtp);
+    setDispatchedPhoneOtp(code);
+
     try {
-      const res = await fetch("/api/calling/auth/phone/send-otp", {
+      // 1. Primary: Vercel Serverless Phone SMS endpoint (Fast2SMS / Twilio)
+      const res = await fetch("/api/send-phone-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanPhone, countryCode }),
+        body: JSON.stringify({ phone: cleanPhone, countryCode, otp: code }),
       });
       const data = await res.json().catch(() => null);
-      const code = data?.otp && data.otp !== dispatchedPhoneOtp
-        ? data.otp
-        : generateSecureOtp(dispatchedPhoneOtp);
 
-      setDispatchedPhoneOtp(code);
-      setPhoneOtpSent(true);
-      setPhoneTimer(30);
-      toast.success(`SMS verification code sent!`, {
-        description: `Please enter the 6-digit code sent to ${countryCode} ${cleanPhone}.`,
-      });
+      if (res.ok && data?.success) {
+        const isLive = Boolean(data.liveDispatched);
+        setPhoneLiveDispatched(isLive);
+        setPhoneProvider(data.provider || "");
+        setPhoneOtpSent(true);
+        setPhoneTimer(30);
+
+        if (isLive) {
+          toast.success(`SMS verification code sent!`, {
+            description: `Sent to ${countryCode} ${cleanPhone} via ${data.provider}.`,
+          });
+        } else {
+          toast.info(`SMS Gateway Notice`, {
+            description: `Vercel me FAST2SMS_API_KEY set nahi hai. Testing OTP: ${code}`,
+          });
+        }
+      } else {
+        // Fallback: local Express server route
+        const localRes = await fetch("/api/calling/auth/phone/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: cleanPhone, countryCode }),
+        }).catch(() => null);
+        const localData = await localRes?.json().catch(() => null);
+
+        const isLive = Boolean(localData?.sentReal);
+        setPhoneLiveDispatched(isLive);
+        setPhoneOtpSent(true);
+        setPhoneTimer(30);
+
+        if (isLive) {
+          toast.success(`SMS verification code sent!`, {
+            description: `Sent to ${countryCode} ${cleanPhone}.`,
+          });
+        } else {
+          toast.info(`SMS Gateway Notice`, {
+            description: `Testing OTP: ${code}`,
+          });
+        }
+      }
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } catch {
-      const fallbackCode = generateSecureOtp(dispatchedPhoneOtp);
-      setDispatchedPhoneOtp(fallbackCode);
+      setPhoneLiveDispatched(false);
       setPhoneOtpSent(true);
       setPhoneTimer(30);
-      toast.success(`SMS verification code sent!`, {
-        description: `Please enter the 6-digit code sent to ${countryCode} ${cleanPhone}.`,
+      toast.info(`Testing OTP Generated`, {
+        description: `Code: ${code}`,
       });
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } finally {
@@ -501,29 +536,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: cleanPhone, countryCode, otp: fullOtp }),
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
         finalizeLogin({
           name: data.user?.name || `Agent (+${cleanPhone.slice(-4)})`,
           emailOrPhone: `${countryCode} ${cleanPhone}`,
           role: "Telephony Supervisor",
           provider: "Phone SMS OTP",
         });
-      } else {
-        toast.error(data.error || "Invalid OTP code. Please check your SMS and try again.");
+        return;
       }
     } catch {
-      if (fullOtp === dispatchedPhoneOtp) {
-        finalizeLogin({
-          name: `Agent (+${cleanPhone.slice(-4)})`,
-          emailOrPhone: `${countryCode} ${cleanPhone}`,
-          role: "Telephony Supervisor",
-          provider: "Phone SMS OTP",
-        });
-      } else {
-        toast.error("Invalid OTP code. Please check your SMS and try again.");
-      }
-    } finally {
+      // Ignore: continue to local OTP check
+    }
+
+    if (fullOtp === dispatchedPhoneOtp) {
+      finalizeLogin({
+        name: `Agent (+${cleanPhone.slice(-4)})`,
+        emailOrPhone: `${countryCode} ${cleanPhone}`,
+        role: "Telephony Supervisor",
+        provider: "Phone SMS OTP",
+      });
+    } else {
+      toast.error("Invalid OTP code. Please enter the correct verification code.");
       setIsVerifying(false);
     }
   };
@@ -838,21 +873,48 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             ) : (
               // Step 2: 6-Digit Phone OTP Verification Box
               <form onSubmit={handleVerifyPhoneOtp} className="space-y-3">
-                <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 truncate">
-                    <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
-                    <span className="text-emerald-300 truncate text-[11px] font-mono">
-                      Code sent to {countryCode} {phoneNumber}
-                    </span>
+                {phoneLiveDispatched ? (
+                  <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 truncate">
+                      <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+                      <span className="text-emerald-300 truncate text-[11px] font-mono">
+                        SMS dispatched to {countryCode} {phoneNumber} via {phoneProvider || "Gateway"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPhoneOtpSent(false)}
+                      className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                    >
+                      Edit
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setPhoneOtpSent(false)}
-                    className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer shrink-0 ml-2"
-                  >
-                    Edit
-                  </button>
-                </div>
+                ) : (
+                  <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/40 text-xs space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-amber-300 font-medium text-[11px] flex items-center gap-1.5">
+                        <AlertCircle size={13} className="text-amber-400 shrink-0" />
+                        <span>Carrier SMS Setup Info</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPhoneOtpSent(false)}
+                        className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer"
+                      >
+                        Edit No.
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-zinc-300 leading-relaxed">
+                      Mobile SIM per real SMS aane ke liye Vercel me <code className="text-amber-300 bg-black/40 px-1 py-0.5 rounded">FAST2SMS_API_KEY</code> add karein.
+                    </p>
+                    <div className="pt-1 flex items-center justify-between border-t border-amber-800/30">
+                      <span className="text-[11px] text-zinc-400">Testing Code:</span>
+                      <span className="font-mono font-bold text-amber-300 tracking-widest text-xs bg-amber-950/60 px-2 py-0.5 rounded border border-amber-700/50">
+                        {dispatchedPhoneOtp}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* 6 OTP Boxes */}
                 <div className="py-1">
@@ -962,23 +1024,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             )}
           </button>
         )}
-
-        {/* Quick Demo Instant Access */}
-        <button
-          type="button"
-          onClick={() => {
-            finalizeLogin({
-              name: "Super Admin",
-              emailOrPhone: "admin@callforge.io",
-              role: "Super Admin",
-              provider: "1-Click Direct Access",
-            });
-          }}
-          className="w-full py-2 px-3 rounded-lg border border-dashed border-violet-500/40 bg-violet-950/20 hover:bg-violet-950/40 text-violet-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
-        >
-          <Sparkles size={13} className="text-violet-400" />
-          <span>Quick 1-Click Demo Login</span>
-        </button>
       </div>
 
       {/* ========================================================================= */}
