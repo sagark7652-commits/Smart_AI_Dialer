@@ -18,13 +18,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed. Use POST." });
   }
 
-  const { email, otp } = req.body || {};
+  let body = req.body;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
+  }
+
+  const { email, otp } = body || {};
   if (!email || !otp) {
     return res.status(400).json({ error: "Both email and OTP code are required." });
   }
 
   const senderUser = process.env.GMAIL_USER || "sumitkhomne123@gmail.com";
   const appPassword = (process.env.GMAIL_APP_PASSWORD || "cizalcdhzohpkrxg").replace(/\s+/g, "");
+  const senderDisplayName = process.env.SMTP_FROM_NAME || "Tata AI Dialer";
+  const fromAddress = `"${senderDisplayName}" <${senderUser}>`;
 
   try {
     const transporter = nodemailer.createTransport({
@@ -36,46 +47,59 @@ export default async function handler(req, res) {
     });
 
     await transporter.sendMail({
-      from: `"Smart AI Dialer" <${senderUser}>`,
+      from: fromAddress,
       to: email.trim(),
-      subject: `Your Login Verification Code: ${otp}`,
+      replyTo: "support@tatadialer.com",
+      subject: `[Tata AI Dialer] Login Verification Code: ${otp}`,
       html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <div style="display: inline-block; padding: 10px 16px; background: #18181b; border-radius: 12px; border: 1px solid #3f3f46;">
-              <h2 style="color: #a78bfa; margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.5px;">Smart AI Dialer</h2>
+            <div style="display: inline-block; padding: 8px 18px; background: #1e1b4b; border-radius: 9999px; border: 1px solid #4338ca;">
+              <span style="color: #a78bfa; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+                Tata AI Dialer &bull; Security
+              </span>
             </div>
+            <h2 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 16px 0 6px 0;">
+              Account Verification
+            </h2>
+            <p style="color: #a1a1aa; font-size: 13px; margin: 0;">
+              Two-Factor Authentication for <strong>${email.trim()}</strong>
+            </p>
           </div>
           
-          <h3 style="color: #f4f4f5; font-size: 16px; margin: 0 0 12px 0;">Sign in to your account</h3>
-          <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6; margin: 0 0 20px 0;">
-            We received a request to verify your account. Use the one-time code below to complete your sign-in:
-          </p>
+          <div style="background: #18181b; border-radius: 12px; padding: 20px; border: 1px solid #27272a; margin: 20px 0;">
+            <p style="color: #d4d4d8; font-size: 13px; line-height: 1.6; margin: 0 0 16px 0; text-align: center;">
+              Enter this 6-digit one-time password (OTP) to authenticate your session:
+            </p>
 
-          <div style="text-align: center; margin: 28px 0;">
-            <div style="display: inline-block; font-family: monospace; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #38bdf8; background: #1e1b4b; padding: 16px 32px; border-radius: 12px; border: 1px solid #4338ca; box-shadow: 0 4px 20px rgba(67, 56, 202, 0.25);">
-              ${otp}
+            <div style="text-align: center; margin: 16px 0;">
+              <div style="display: inline-block; font-family: 'SF Mono', Consolas, Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 10px; color: #38bdf8; background: #090a0f; padding: 14px 28px; border-radius: 10px; border: 1px solid #38bdf8; box-shadow: 0 0 24px rgba(56, 189, 248, 0.2);">
+                ${otp}
+              </div>
             </div>
+
+            <p style="color: #a1a1aa; font-size: 11px; text-align: center; margin: 12px 0 0 0;">
+              ⏱ Valid for <strong>10 minutes</strong>. Never share this code with anyone.
+            </p>
           </div>
 
-          <p style="color: #a1a1aa; font-size: 12px; line-height: 1.6; margin: 0 0 8px 0;">
-            ⏱ This code is valid for <strong>10 minutes</strong>.
-          </p>
-          <p style="color: #71717a; font-size: 11px; line-height: 1.6; margin: 0 0 24px 0;">
-            If you did not request this verification code, you can safely ignore this email.
+          <p style="color: #71717a; font-size: 11px; line-height: 1.5; margin: 16px 0 0 0; text-align: center;">
+            If you did not attempt to sign in to Tata AI Dialer, please ignore this email or contact security support.
           </p>
 
-          <hr style="border: none; border-top: 1px solid #27272a; margin: 24px 0;" />
-          <p style="color: #52525b; font-size: 10px; text-align: center; margin: 0;">
-            Smart AI Dialer Security System &bull; Enterprise Voice AI Platform
-          </p>
+          <hr style="border: none; border-top: 1px solid #27272a; margin: 24px 0 16px 0;" />
+          <div style="text-align: center; color: #52525b; font-size: 11px; line-height: 1.6;">
+            <strong>Tata AI Dialer Enterprise Platform</strong><br />
+            Secure Cloud Telephony &bull; AI Agent Voice Automation
+          </div>
         </div>
       `,
     });
 
-    console.log(`[SMTP Mailer] Real OTP email successfully sent to ${email}`);
+    console.log(`[SMTP Mailer] Real OTP email from '${senderDisplayName}' successfully sent to ${email}`);
     return res.status(200).json({
       success: true,
+      sender: senderDisplayName,
       message: `Real verification OTP email dispatched to ${email}.`,
       recipient: email,
     });
