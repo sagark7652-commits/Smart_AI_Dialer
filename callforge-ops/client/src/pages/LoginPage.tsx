@@ -61,10 +61,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [isVerifying, setIsVerifying] = useState(false);
 
   // Google SSO State
+  const DEFAULT_GOOGLE_CLIENT_ID = "456489309402-0dc3qkkt1dqvtsqh3rm3vk0thaom8h18.apps.googleusercontent.com";
   const [googleClientId, setGoogleClientId] = useState<string>(() => {
     return (
       (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
-      (typeof window !== "undefined" ? localStorage.getItem("creatorai_google_client_id") || "" : "")
+      (typeof window !== "undefined" ? localStorage.getItem("creatorai_google_client_id") || "" : "") ||
+      DEFAULT_GOOGLE_CLIENT_ID
     );
   });
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
@@ -72,7 +74,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [googleModalTab, setGoogleModalTab] = useState<"quick" | "oauth">("quick");
   const [customGoogleEmail, setCustomGoogleEmail] = useState("");
   const [customGoogleName, setCustomGoogleName] = useState("");
-  const [clientIdInput, setClientIdInput] = useState("");
+  const [clientIdInput, setClientIdInput] = useState(DEFAULT_GOOGLE_CLIENT_ID);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [useEmailOtpMode, setUseEmailOtpMode] = useState(false);
 
@@ -276,7 +278,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
         callback: async (tokenResponse: any) => {
           if (tokenResponse?.error) {
-            toast.error(`Google authentication error: ${tokenResponse.error}`);
+            console.error("Google OAuth error:", tokenResponse);
+            if (String(tokenResponse.error).includes("origin") || tokenResponse.error === "idpiframe_initialization_failed") {
+              toast.error("Google Origin Notice: Make sure https://smart-ai-dialer.vercel.app is in Authorized JavaScript Origins in Google Cloud.");
+            } else {
+              toast.error(`Google authentication was cancelled or encountered an error.`);
+            }
+            setShowGoogleModal(true);
             setIsGoogleSigningIn(false);
             return;
           }
