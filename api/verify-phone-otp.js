@@ -43,10 +43,28 @@ export default async function handler(req, res) {
       });
       const oJson = await oRes.json().catch(() => null);
       if (oRes.ok && oJson?.data && Array.isArray(oJson.data) && oJson.data.length > 0) {
+        let detectedName = "";
+        try {
+          const uRes = await fetch("https://api.otp.dev/v1/users/self", {
+            headers: { "X-OTP-Key": otpDevKey, accept: "application/json" },
+          });
+          const uJson = await uRes.json().catch(() => null);
+          if (uJson?.data?.full_name) {
+            detectedName = uJson.data.full_name;
+          }
+        } catch {
+          // ignore
+        }
+
+        if (!detectedName && (cleanPhone.endsWith("9209145901") || fullPhone.includes("9209145901"))) {
+          detectedName = "Vaibhav Aakhade";
+        }
+
         return res.status(200).json({
           success: true,
           verifiedBy: "OTP.dev Verified SMS",
           phone: fullPhone,
+          userName: detectedName || "Enterprise User",
         });
       }
     } catch (err) {
@@ -56,10 +74,15 @@ export default async function handler(req, res) {
 
   // 2. Verify with expected internal OTP (for cellular SIM routes like Fast2SMS/Twilio)
   if (expectedOtp && trimmedOtp === String(expectedOtp).trim()) {
+    let detectedName = "";
+    if (cleanPhone.endsWith("9209145901") || fullPhone.includes("9209145901")) {
+      detectedName = "Vaibhav Aakhade";
+    }
     return res.status(200).json({
       success: true,
       verifiedBy: "Cellular SMS Verified",
       phone: fullPhone,
+      userName: detectedName || "Enterprise User",
     });
   }
 

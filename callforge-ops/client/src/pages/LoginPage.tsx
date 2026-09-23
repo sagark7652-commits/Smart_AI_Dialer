@@ -40,6 +40,30 @@ const DEFAULT_ACCOUNTS: Record<string, { password: string; name: string; role: s
   },
 };
 
+const DEFAULT_PHONE_ACCOUNTS: Record<string, { name: string; role: string }> = {
+  "9209145901": { name: "Vaibhav Aakhade", role: "Enterprise Admin" },
+  "919209145901": { name: "Vaibhav Aakhade", role: "Enterprise Admin" },
+};
+
+const resolvePhoneUserName = (phone: string, serverName?: string): string => {
+  if (serverName && !serverName.startsWith("Agent (") && !serverName.startsWith("User ")) {
+    return serverName;
+  }
+  const clean = phone.replace(/\D/g, "");
+  const last10 = clean.slice(-10);
+  if (DEFAULT_PHONE_ACCOUNTS[clean]?.name) return DEFAULT_PHONE_ACCOUNTS[clean].name;
+  if (DEFAULT_PHONE_ACCOUNTS[last10]?.name) return DEFAULT_PHONE_ACCOUNTS[last10].name;
+
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem("creatorai_phone_users") : null;
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (parsed[clean]?.name) return parsed[clean].name;
+    if (parsed[last10]?.name) return parsed[last10].name;
+  } catch {}
+
+  return serverName || "Enterprise Admin";
+};
+
 const getStoredAccounts = (): Record<string, { password: string; name: string; role: string }> => {
   try {
     const raw = typeof window !== "undefined" ? localStorage.getItem("creatorai_registered_users") : null;
@@ -642,10 +666,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.success) {
+        const resolvedName = resolvePhoneUserName(cleanPhone, data.userName);
         finalizeLogin({
-          name: `Agent (+${cleanPhone.slice(-4)})`,
+          name: resolvedName,
           emailOrPhone: `${countryCode} ${cleanPhone}`,
-          role: "Telephony Supervisor",
+          role: "Enterprise Admin",
           provider: data.verifiedBy || "Phone SMS OTP",
         });
         return;
@@ -659,10 +684,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       });
       const localData = await localRes.json().catch(() => null);
       if (localRes.ok && localData?.success) {
+        const resolvedName = resolvePhoneUserName(cleanPhone, localData.user?.name);
         finalizeLogin({
-          name: localData.user?.name || `Agent (+${cleanPhone.slice(-4)})`,
+          name: resolvedName,
           emailOrPhone: `${countryCode} ${cleanPhone}`,
-          role: "Telephony Supervisor",
+          role: "Enterprise Admin",
           provider: "Phone SMS OTP",
         });
         return;
@@ -672,10 +698,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
 
     if (fullOtp === dispatchedPhoneOtp) {
+      const resolvedName = resolvePhoneUserName(cleanPhone);
       finalizeLogin({
-        name: `Agent (+${cleanPhone.slice(-4)})`,
+        name: resolvedName,
         emailOrPhone: `${countryCode} ${cleanPhone}`,
-        role: "Telephony Supervisor",
+        role: "Enterprise Admin",
         provider: "Phone SMS OTP",
       });
     } else {
