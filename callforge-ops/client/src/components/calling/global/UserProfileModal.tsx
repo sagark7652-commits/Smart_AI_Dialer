@@ -11,6 +11,7 @@ import {
   Server,
   Globe,
   LogOut,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,11 +25,9 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
   const [audioChime, setAudioChime] = useState(true);
   const [autoDisposition, setAutoDisposition] = useState(true);
 
-  if (!isOpen) return null;
-
-  const currentUser = (() => {
+  const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const saved = localStorage.getItem("creatorai_auth_user");
+      const saved = typeof window !== "undefined" ? localStorage.getItem("creatorai_auth_user") : null;
       if (saved) return JSON.parse(saved);
     } catch {}
     return {
@@ -36,7 +35,39 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
       emailOrPhone: "admin@callforge.io",
       role: "Super Admin",
     };
-  })();
+  });
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(currentUser.name || "Workspace Admin");
+
+  const handleSaveName = () => {
+    const trimmed = editedName.trim();
+    if (!trimmed) {
+      toast.error("Name cannot be empty");
+      return;
+    }
+    const updatedUser = { ...currentUser, name: trimmed };
+    setCurrentUser(updatedUser);
+    localStorage.setItem("creatorai_auth_user", JSON.stringify(updatedUser));
+
+    // Also update phone profile if logged in via phone
+    const cleanPhone = (currentUser.emailOrPhone || "").replace(/\D/g, "");
+    if (cleanPhone.length >= 10) {
+      try {
+        const raw = localStorage.getItem("creatorai_phone_users");
+        const parsed = raw ? JSON.parse(raw) : {};
+        parsed[cleanPhone] = { name: trimmed, role: currentUser.role || "Enterprise Admin" };
+        parsed[cleanPhone.slice(-10)] = { name: trimmed, role: currentUser.role || "Enterprise Admin" };
+        localStorage.setItem("creatorai_phone_users", JSON.stringify(parsed));
+      } catch {}
+    }
+
+    setIsEditingName(false);
+    toast.success(`Account name updated to ${trimmed}!`);
+    window.dispatchEvent(new Event("storage"));
+  };
+
+  if (!isOpen) return null;
 
   const initials = (() => {
     const parts = (currentUser.name || "User").trim().split(" ");
@@ -69,7 +100,45 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
               {initials}
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">{currentUser.name}</h3>
+              {isEditingName ? (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="py-1 px-2 text-xs bg-zinc-900 border border-violet-500 rounded text-white focus:outline-none"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    className="p-1 rounded bg-violet-600 text-white hover:bg-violet-500 cursor-pointer"
+                    title="Save Name"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditedName(currentUser.name);
+                      setIsEditingName(false);
+                    }}
+                    className="p-1 rounded bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
+                    title="Cancel"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-white">{currentUser.name}</h3>
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    className="text-zinc-500 hover:text-violet-400 transition p-0.5 cursor-pointer"
+                    title="Edit Name"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                </div>
+              )}
               <p className="text-xs text-zinc-400">{currentUser.emailOrPhone}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">

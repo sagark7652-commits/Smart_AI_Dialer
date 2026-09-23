@@ -40,28 +40,42 @@ const DEFAULT_ACCOUNTS: Record<string, { password: string; name: string; role: s
   },
 };
 
-const DEFAULT_PHONE_ACCOUNTS: Record<string, { name: string; role: string }> = {
-  "9209145901": { name: "Vaibhav Aakhade", role: "Enterprise Admin" },
-  "919209145901": { name: "Vaibhav Aakhade", role: "Enterprise Admin" },
+const getStoredPhoneAccounts = (): Record<string, { name: string; role?: string }> => {
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem("creatorai_phone_users") : null;
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
 };
 
-const resolvePhoneUserName = (phone: string, serverName?: string): string => {
-  if (serverName && !serverName.startsWith("Agent (") && !serverName.startsWith("User ")) {
-    return serverName;
+const savePhoneAccount = (phone: string, name: string) => {
+  try {
+    const clean = phone.replace(/\D/g, "");
+    const last10 = clean.slice(-10);
+    const current = getStoredPhoneAccounts();
+    const trimmed = name.trim();
+    if (trimmed) {
+      current[clean] = { name: trimmed, role: "Enterprise Admin" };
+      if (last10) current[last10] = { name: trimmed, role: "Enterprise Admin" };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("creatorai_phone_users", JSON.stringify(current));
+      }
+    }
+  } catch {}
+};
+
+const resolvePhoneUserName = (phone: string, providedName?: string): string => {
+  if (providedName && providedName.trim()) {
+    return providedName.trim();
   }
   const clean = phone.replace(/\D/g, "");
   const last10 = clean.slice(-10);
-  if (DEFAULT_PHONE_ACCOUNTS[clean]?.name) return DEFAULT_PHONE_ACCOUNTS[clean].name;
-  if (DEFAULT_PHONE_ACCOUNTS[last10]?.name) return DEFAULT_PHONE_ACCOUNTS[last10].name;
+  const stored = getStoredPhoneAccounts();
+  if (stored[clean]?.name) return stored[clean].name;
+  if (stored[last10]?.name) return stored[last10].name;
 
-  try {
-    const raw = typeof window !== "undefined" ? localStorage.getItem("creatorai_phone_users") : null;
-    const parsed = raw ? JSON.parse(raw) : {};
-    if (parsed[clean]?.name) return parsed[clean].name;
-    if (parsed[last10]?.name) return parsed[last10].name;
-  } catch {}
-
-  return serverName || "Enterprise Admin";
+  return "Workspace Admin";
 };
 
 const getStoredAccounts = (): Record<string, { password: string; name: string; role: string }> => {
@@ -112,6 +126,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Phone & OTP state
   const [countryCode, setCountryCode] = useState("+91");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneUserName, setPhoneUserName] = useState("");
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
   const [phoneOtpDigits, setPhoneOtpDigits] = useState(["", "", "", "", "", ""]);
   const [dispatchedPhoneOtp, setDispatchedPhoneOtp] = useState<string | null>(null);
@@ -120,6 +135,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [phoneLiveDispatched, setPhoneLiveDispatched] = useState(false);
   const [phoneProvider, setPhoneProvider] = useState("");
   const [phoneFailureReason, setPhoneFailureReason] = useState("");
+
+  const handlePhoneNumberChange = (val: string) => {
+    setPhoneNumber(val);
+    const clean = val.replace(/\D/g, "");
+    const last10 = clean.slice(-10);
+    const stored = getStoredPhoneAccounts();
+    const existing = stored[clean]?.name || stored[last10]?.name;
+    if (existing) {
+      setPhoneUserName(existing);
+    }
+  };
 
   // Common verifying state
   const [isVerifying, setIsVerifying] = useState(false);
@@ -657,18 +683,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     setIsVerifying(true);
     const cleanPhone = phoneNumber.replace(/\D/g, "");
+    const preferredName = phoneUserName.trim();
     try {
       // 1. Primary: Vercel serverless verify endpoint (supports OTP.dev and cellular fallback)
       const res = await fetch("/api/verify-phone-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanPhone, countryCode, otp: fullOtp, expectedOtp: dispatchedPhoneOtp }),
+        body: JSON.stringify({
+          phone: cleanPhone,
+          countryCode,
+          otp: fullOtp,
+          expectedOtp: dispatchedPhoneOtp,
+          name: preferredName,
+        }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.success) {
-        const resolvedName = resolvePhoneUserName(cleanPhone, data.userName);
+        const finalName = preferredName || data.userName || resolvePhoneUserName(cleanPhone);
+        if (finalName) savePhoneAccount(cleanPhone, finalName);
         finalizeLogin({
-          name: resolvedName,
+          name: finalName,
           emailOrPhone: `${countryCode} ${cleanPhone}`,
           role: "Enterprise Admin",
           provider: data.verifiedBy || "Phone SMS OTP",
@@ -684,9 +718,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       });
       const localData = await localRes.json().catch(() => null);
       if (localRes.ok && localData?.success) {
-        const resolvedName = resolvePhoneUserName(cleanPhone, localData.user?.name);
+        const finalName = preferredName || resolvePhoneUserName(cleanPhone, localData.user?.name);
+        if (finalName) savePhoneAccount(cleanPhone, finalName);
         finalizeLogin({
-          name: resolvedName,
+          name: finalName,
           emailOrPhone: `${countryCode} ${cleanPhone}`,
           role: "Enterprise Admin",
           provider: "Phone SMS OTP",
@@ -698,9 +733,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
 
     if (fullOtp === dispatchedPhoneOtp) {
-      const resolvedName = resolvePhoneUserName(cleanPhone);
+      const finalName = preferredName || resolvePhoneUserName(cleanPhone);
+      if (finalName) savePhoneAccount(cleanPhone, finalName);
       finalizeLogin({
-        name: resolvedName,
+        name: finalName,
         emailOrPhone: `${countryCode} ${cleanPhone}`,
         role: "Enterprise Admin",
         provider: "Phone SMS OTP",
@@ -987,11 +1023,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         type="tel"
                         required
                         value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        onChange={(e) => handlePhoneNumberChange(e.target.value)}
                         placeholder="98200 11223"
                         className="w-full pl-8 pr-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 font-mono transition"
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* Account / User Name */}
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1">
+                    Your Name / Account Name
+                  </label>
+                  <div className="relative">
+                    <User
+                      size={14}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                    />
+                    <input
+                      type="text"
+                      value={phoneUserName}
+                      onChange={(e) => setPhoneUserName(e.target.value)}
+                      placeholder="Enter your name (e.g. Sumit Khomne)"
+                      className="w-full pl-8 pr-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                    />
                   </div>
                 </div>
 
