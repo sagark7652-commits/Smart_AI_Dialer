@@ -1006,8 +1006,8 @@ callingRouter.post("/webhooks/voice/status", (req: Request, res: Response) => {
 // =============================================================================
 const emailOtpStore = new Map<string, { code: string; expiresAt: number }>();
 
-const GMAIL_USER = process.env.GMAIL_USER || "sumitkhomne123@gmail.com";
-const GMAIL_APP_PASS = (process.env.GMAIL_APP_PASSWORD || "ciza lcdh zohp krxg").replace(/\s+/g, "");
+const GMAIL_USER = process.env.GMAIL_USER || "tatadialer7@gmail.com";
+const GMAIL_APP_PASS = (process.env.GMAIL_APP_PASSWORD || "weyfveenhgunvyrb").replace(/\s+/g, "");
 
 const emailTransporter = nodemailer.createTransport({
   service: "gmail",
@@ -1034,13 +1034,13 @@ callingRouter.post("/auth/email/send-otp", async (req: Request, res: Response) =
   let sentReal = false;
   try {
     await emailTransporter.sendMail({
-      from: `"Tata AI Dialer" <${GMAIL_USER}>`,
+      from: `"TATA Dialer" <${GMAIL_USER}>`,
       to: normalizedEmail,
-      replyTo: "support@tatadialer.com",
-      subject: `[Tata AI Dialer] Your Login Verification Code: ${code}`,
+      replyTo: "tatadialer7@gmail.com",
+      subject: `[TATA Dialer] Your Login Verification Code: ${code}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
-          <h2 style="color: #a78bfa; margin: 0 0 16px 0; font-size: 20px;">Tata AI Dialer</h2>
+          <h2 style="color: #a78bfa; margin: 0 0 16px 0; font-size: 20px;">TATA Dialer</h2>
           <p style="color: #d4d4d8; font-size: 14px; line-height: 1.6;">Hello,</p>
           <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6;">Your 6-digit login verification OTP is:</p>
           <div style="text-align: center; margin: 24px 0;">

@@ -32,9 +32,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Both email and OTP code are required." });
   }
 
-  const senderUser = process.env.GMAIL_USER || "sumitkhomne123@gmail.com";
-  const appPassword = (process.env.GMAIL_APP_PASSWORD || "cizalcdhzohpkrxg").replace(/\s+/g, "");
-  const senderDisplayName = process.env.SMTP_FROM_NAME || "Tata AI Dialer";
+  const senderUser = process.env.GMAIL_USER || "tatadialer7@gmail.com";
+  const appPassword = (process.env.GMAIL_APP_PASSWORD || "weyfveenhgunvyrb").replace(/\s+/g, "");
+  const senderDisplayName = process.env.SMTP_FROM_NAME || "TATA Dialer";
   const fromAddress = `"${senderDisplayName}" <${senderUser}>`;
 
   try {
@@ -49,14 +49,14 @@ export default async function handler(req, res) {
     await transporter.sendMail({
       from: fromAddress,
       to: email.trim(),
-      replyTo: "support@tatadialer.com",
-      subject: `[Tata AI Dialer] Login Verification Code: ${otp}`,
+      replyTo: "tatadialer7@gmail.com",
+      subject: `[TATA Dialer] Login Verification Code: ${otp}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
           <div style="text-align: center; margin-bottom: 24px;">
             <div style="display: inline-block; padding: 8px 18px; background: #1e1b4b; border-radius: 9999px; border: 1px solid #4338ca;">
               <span style="color: #a78bfa; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
-                Tata AI Dialer &bull; Security
+                TATA Dialer &bull; Security
               </span>
             </div>
             <h2 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 16px 0 6px 0;">
@@ -84,19 +84,19 @@ export default async function handler(req, res) {
           </div>
 
           <p style="color: #71717a; font-size: 11px; line-height: 1.5; margin: 16px 0 0 0; text-align: center;">
-            If you did not attempt to sign in to Tata AI Dialer, please ignore this email or contact security support.
+            If you did not attempt to sign in to TATA Dialer, please ignore this email or contact support.
           </p>
 
           <hr style="border: none; border-top: 1px solid #27272a; margin: 24px 0 16px 0;" />
           <div style="text-align: center; color: #52525b; font-size: 11px; line-height: 1.6;">
-            <strong>Tata AI Dialer Enterprise Platform</strong><br />
+            <strong>TATA Dialer Enterprise Platform</strong><br />
             Secure Cloud Telephony &bull; AI Agent Voice Automation
           </div>
         </div>
       `,
     });
 
-    console.log(`[SMTP Mailer] Real OTP email from '${senderDisplayName}' successfully sent to ${email}`);
+    console.log(`[SMTP Mailer] Real OTP email from '${fromAddress}' successfully sent to ${email}`);
     return res.status(200).json({
       success: true,
       sender: senderDisplayName,
