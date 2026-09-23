@@ -634,15 +634,33 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setIsVerifying(true);
     const cleanPhone = phoneNumber.replace(/\D/g, "");
     try {
-      const res = await fetch("/api/calling/auth/phone/verify-otp", {
+      // 1. Primary: Vercel serverless verify endpoint (supports OTP.dev and cellular fallback)
+      const res = await fetch("/api/verify-phone-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanPhone, countryCode, otp: fullOtp }),
+        body: JSON.stringify({ phone: cleanPhone, countryCode, otp: fullOtp, expectedOtp: dispatchedPhoneOtp }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.success) {
         finalizeLogin({
-          name: data.user?.name || `Agent (+${cleanPhone.slice(-4)})`,
+          name: `Agent (+${cleanPhone.slice(-4)})`,
+          emailOrPhone: `${countryCode} ${cleanPhone}`,
+          role: "Telephony Supervisor",
+          provider: data.verifiedBy || "Phone SMS OTP",
+        });
+        return;
+      }
+
+      // 2. Secondary: Express backend route
+      const localRes = await fetch("/api/calling/auth/phone/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanPhone, countryCode, otp: fullOtp }),
+      });
+      const localData = await localRes.json().catch(() => null);
+      if (localRes.ok && localData?.success) {
+        finalizeLogin({
+          name: localData.user?.name || `Agent (+${cleanPhone.slice(-4)})`,
           emailOrPhone: `${countryCode} ${cleanPhone}`,
           role: "Telephony Supervisor",
           provider: "Phone SMS OTP",
@@ -650,7 +668,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         return;
       }
     } catch {
-      // Ignore: continue to local OTP check
+      // Ignore: continue to direct check
     }
 
     if (fullOtp === dispatchedPhoneOtp) {
