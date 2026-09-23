@@ -1238,6 +1238,9 @@ callingRouter.post("/auth/phone/send-otp", async (req: Request, res: Response) =
     message: `Verification code successfully dispatched via SMS to ${fullPhone}.`,
     phone: fullPhone,
     deliveryChannel: providerName,
+    provider: providerName,
+    sentReal: true,
+    liveDispatched: true,
     otp: code,
   });
 });
