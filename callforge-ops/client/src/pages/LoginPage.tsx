@@ -170,7 +170,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [useEmailOtpMode, setUseEmailOtpMode] = useState(false);
 
-
   const emailOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const phoneOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -231,13 +230,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   const handleRequestEmailOtp = async (e?: React.FormEvent | React.MouseEvent) => {
     if (e?.preventDefault) e.preventDefault();
-    if (!email || !email.includes("@")) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
       toast.error("Please enter a valid corporate email address.");
       return;
     }
 
     setIsSendingEmailOtp(true);
-    // Clear boxes for fresh code entry
     setEmailOtpDigits(["", "", "", "", "", ""]);
 
     const code = generateSecureOtp(dispatchedEmailOtp);
@@ -246,29 +245,36 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setEmailTimer(30);
 
     try {
-      // 1. Try Vercel Serverless Gmail SMTP endpoint
-      const res = await fetch("/api/send-email-otp", {
+      // 1. Try local Express backend route first
+      const localRes = await fetch("/api/calling/auth/email/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), otp: code }),
+        body: JSON.stringify({ email: normalizedEmail, otp: code }),
       });
-      const data = await res.json().catch(() => null);
+      const localData = await localRes.json().catch(() => null);
 
-      if (res.ok && data?.success) {
-        toast.success(`OTP Email Sent to ${email}!`, {
+      if (localRes.ok && localData?.success) {
+        toast.success(`OTP Email Sent to ${normalizedEmail}!`, {
           description: `Please check your email inbox (and Spam folder) for the 6-digit code.`,
         });
       } else {
-        // 2. Try Node/Express local endpoint
-        await fetch("/api/calling/auth/email/send-otp", {
+        // 2. Fallback to Vercel Serverless Tata AI Dialer SMTP endpoint
+        const res = await fetch("/api/send-email-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim(), otp: code }),
-        }).catch(() => null);
-
-        toast.success(`Verification code dispatched!`, {
-          description: `Please check your email inbox for the code.`,
+          body: JSON.stringify({ email: normalizedEmail, otp: code }),
         });
+        const data = await res.json().catch(() => null);
+
+        if (res.ok && data?.success) {
+          toast.success(`OTP Email Sent to ${normalizedEmail}!`, {
+            description: `Please check your email inbox (and Spam folder) for the 6-digit code.`,
+          });
+        } else {
+          toast.success(`Verification code dispatched!`, {
+            description: `Please check your email inbox for the code.`,
+          });
+        }
       }
       setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } catch {
@@ -312,6 +318,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Verify Email OTP
   const handleVerifyEmailOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
     const enteredOtp = emailOtpDigits.join("");
     if (enteredOtp.length !== 6) {
       toast.error("Please enter the complete 6-digit OTP sent to your email.");
@@ -323,17 +330,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       const res = await fetch("/api/calling/auth/email/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: enteredOtp }),
+        body: JSON.stringify({ email: normalizedEmail, otp: enteredOtp }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.success) {
-        const derivedName = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        const derivedName = normalizedEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
         if (password && password.length >= 6) {
-          saveAccount(email.toLowerCase().trim(), password);
+          saveAccount(normalizedEmail, password);
         }
         finalizeLogin({
           name: derivedName,
-          emailOrPhone: email.toLowerCase().trim(),
+          emailOrPhone: normalizedEmail,
           role: "Enterprise Admin",
           provider: "Email + OTP",
         });
@@ -343,22 +350,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       // Ignored: continue to direct check
     }
 
-    // Direct verification against the dispatched OTP
+    // Direct check against dispatched OTP
     if (enteredOtp === dispatchedEmailOtp) {
-      const derivedName = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      const derivedName = normalizedEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
       if (password && password.length >= 6) {
-        saveAccount(email.toLowerCase().trim(), password);
+        saveAccount(normalizedEmail, password);
       }
       finalizeLogin({
         name: derivedName,
-        emailOrPhone: email.toLowerCase().trim(),
+        emailOrPhone: normalizedEmail,
         role: "Enterprise Admin",
         provider: "Email + OTP",
       });
-    } else {
-      toast.error("Invalid OTP code. Please enter the correct code sent to your email.");
-      setIsVerifying(false);
+      return;
     }
+
+    toast.error("Invalid OTP code. Please enter the correct code sent to your email.");
+    setIsVerifying(false);
   };
 
   const handleDirectEmailLogin = async (e: React.FormEvent) => {
@@ -411,29 +419,36 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setEmailTimer(30);
 
     try {
-      // 1. Send OTP via Vercel Serverless Tata AI Dialer SMTP endpoint
-      const res = await fetch("/api/send-email-otp", {
+      // 1. Primary: local Express backend route
+      const localRes = await fetch("/api/calling/auth/email/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), otp: code }),
+        body: JSON.stringify({ email: normalizedEmail, otp: code }),
       });
-      const data = await res.json().catch(() => null);
+      const localData = await localRes.json().catch(() => null);
 
-      if (res.ok && data?.success) {
-        toast.success(`Tata AI Dialer OTP sent to ${email}!`, {
+      if (localRes.ok && localData?.success) {
+        toast.success(`Tata AI Dialer OTP sent to ${normalizedEmail}!`, {
           description: `Apni email check karein aur 6-digit code enter karke login verify karein.`,
         });
       } else {
-        // Fallback to Express backend if running locally
-        await fetch("/api/calling/auth/email/send-otp", {
+        // 2. Fallback: Vercel SMTP route
+        const res = await fetch("/api/send-email-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim(), otp: code }),
-        }).catch(() => null);
-
-        toast.success(`Verification code dispatched!`, {
-          description: `Please check your email inbox for the code.`,
+          body: JSON.stringify({ email: normalizedEmail, otp: code }),
         });
+        const data = await res.json().catch(() => null);
+
+        if (res.ok && data?.success) {
+          toast.success(`Tata AI Dialer OTP sent to ${normalizedEmail}!`, {
+            description: `Apni email check karein aur 6-digit code enter karke login verify karein.`,
+          });
+        } else {
+          toast.success(`Verification code dispatched!`, {
+            description: `Please check your email inbox for the code.`,
+          });
+        }
       }
       setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } catch {
@@ -563,7 +578,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       if (launched) return;
     }
 
-    // Do NOT auto-login silently without user consent. Open authentic verification/setup dialog
     setShowGoogleModal(true);
   };
 
@@ -607,7 +621,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         const localRes = await fetch("/api/calling/auth/phone/send-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: cleanPhone, countryCode }),
+          body: JSON.stringify({ phone: cleanPhone, countryCode, otp: code }),
         }).catch(() => null);
         const localData = await localRes?.json().catch(() => null);
 
@@ -672,7 +686,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const cleanPhone = phoneNumber.replace(/\D/g, "");
     const preferredName = phoneUserName.trim();
     try {
-      // 1. Primary: Vercel serverless verify endpoint (supports OTP.dev and cellular fallback)
+      // 1. Primary: Vercel serverless verify endpoint
       const res = await fetch("/api/verify-phone-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -719,6 +733,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       // Ignore: continue to direct check
     }
 
+    // Direct check against dispatched OTP
     if (fullOtp === dispatchedPhoneOtp) {
       const finalName = preferredName || resolvePhoneUserName(cleanPhone);
       if (finalName) savePhoneAccount(cleanPhone, finalName);
@@ -728,10 +743,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         role: "Enterprise Admin",
         provider: "Phone SMS OTP",
       });
-    } else {
-      toast.error("Invalid OTP code. Please enter the correct verification code.");
-      setIsVerifying(false);
+      return;
     }
+
+    toast.error("Invalid OTP code. Please enter the correct verification code.");
+    setIsVerifying(false);
   };
 
   return (
@@ -1184,7 +1200,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           </button>
         )}
       </div>
-
 
       {/* ========================================================================= */}
       {/* MODAL 3: Authentic Google Sign-In & Verification                          */}
