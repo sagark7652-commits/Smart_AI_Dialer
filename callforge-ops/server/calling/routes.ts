@@ -1133,28 +1133,66 @@ callingRouter.post("/auth/phone/send-otp", async (req: Request, res: Response) =
   let liveDispatched = false;
   let providerName = "Direct Telecom Carrier Gateway (DLT Approved)";
 
-  // 1. Check for Fast2SMS (India Direct SIM Dispatch)
-  const fast2smsKey = (process.env.FAST2SMS_API_KEY || "mVafnBFHiAvjPChyWt4K9T7Uz6SYJD0G8bekouLqQc5lwMRX1sCNMu6EqHhALzDX9TwsoG0FpSiO7eJZ").trim();
-  if (fast2smsKey) {
+  // 1. OTP.dev Global SMS Gateway
+  const otpDevKey = (process.env.OTP_DEV_KEY || "b76ad11ef66e89dc6482b7078ac1bce3").trim();
+  const otpDevSender = (process.env.OTP_DEV_SENDER || "3612d841-3d1a-49bc-a6e1-5e13e54eb6a0").trim();
+  const otpDevTemplate = (process.env.OTP_DEV_TEMPLATE || "c2c25ca9-d8da-4430-8ffc-3ef096c773d8").trim();
+
+  if (otpDevKey) {
     try {
-      const fRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+      const dialCode = prefix.replace(/\+/g, "");
+      const destPhone = `${dialCode}${cleanPhone}`;
+      const oRes = await fetch("https://api.otp.dev/v1/verifications", {
         method: "POST",
         headers: {
-          authorization: fast2smsKey,
-          "Content-Type": "application/json",
+          "X-OTP-Key": otpDevKey,
+          accept: "application/json",
+          "content-type": "application/json",
         },
         body: JSON.stringify({
-          route: "otp",
-          variables_values: code,
-          numbers: cleanPhone,
+          data: {
+            channel: "sms",
+            sender: otpDevSender,
+            phone: destPhone,
+            template: otpDevTemplate,
+            code_length: code.length,
+          },
         }),
       });
-      const fJson = await fRes.json();
-      console.log(`[Fast2SMS Gateway] Cellular SMS sent to ${cleanPhone}:`, fJson);
-      liveDispatched = true;
-      providerName = "Fast2SMS Cellular India";
+      const oJson = await oRes.json().catch(() => null);
+      if (oRes.status === 200 || oRes.status === 201 || oJson?.data?.message_id) {
+        liveDispatched = true;
+        providerName = "OTP.dev Global SMS Gateway";
+      }
     } catch (err) {
-      console.error("[Fast2SMS Delivery Error]:", err);
+      console.error("[OTP.dev Delivery Error]:", err);
+    }
+  }
+
+  // 2. Check for Fast2SMS (India Direct SIM Dispatch)
+  if (!liveDispatched) {
+    const fast2smsKey = (process.env.FAST2SMS_API_KEY || "mVafnBFHiAvjPChyWt4K9T7Uz6SYJD0G8bekouLqQc5lwMRX1sCNMu6EqHhALzDX9TwsoG0FpSiO7eJZ").trim();
+    if (fast2smsKey) {
+      try {
+        const fRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+          method: "POST",
+          headers: {
+            authorization: fast2smsKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            route: "otp",
+            variables_values: code,
+            numbers: cleanPhone,
+          }),
+        });
+        const fJson = await fRes.json();
+        console.log(`[Fast2SMS Gateway] Cellular SMS sent to ${cleanPhone}:`, fJson);
+        liveDispatched = true;
+        providerName = "Fast2SMS Cellular India";
+      } catch (err) {
+        console.error("[Fast2SMS Delivery Error]:", err);
+      }
     }
   }
 
