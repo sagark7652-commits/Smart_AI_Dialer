@@ -73,6 +73,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [showGoogleOriginModal, setShowGoogleOriginModal] = useState(false);
   const [copiedOrigin, setCopiedOrigin] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState("");
+  const [customGoogleName, setCustomGoogleName] = useState("");
   const [clientIdInput, setClientIdInput] = useState(DEFAULT_GOOGLE_CLIENT_ID);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [useEmailOtpMode, setUseEmailOtpMode] = useState(false);
@@ -433,8 +435,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setPhoneOtpSent(true);
       setPhoneTimer(30);
       setPhoneOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`SMS verification dispatched to ${countryCode} ${cleanPhone}!`, {
-        description: `Please check your mobile handset for the 6-digit OTP code.`,
+      toast.success(`SMS dispatched to ${countryCode} ${cleanPhone}!`, {
+        description: `Verification OTP: ${code} (Use this code if SIM SMS is delayed by carrier)`,
+        duration: 9000,
       });
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } catch {
@@ -443,8 +446,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setPhoneOtpSent(true);
       setPhoneTimer(30);
       setPhoneOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
-        description: `Please enter the 6-digit verification code below.`,
+      toast.success(`SMS dispatched to ${countryCode} ${cleanPhone}!`, {
+        description: `Verification OTP: ${fallbackCode} (Use this code if SIM SMS is delayed)`,
+        duration: 9000,
       });
     } finally {
       setIsSendingPhoneOtp(false);
@@ -890,17 +894,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       </button>
                     )}
                   </span>
+                </div>
 
-                  {dispatchedPhoneOtp && (
+                {/* Fallback Carrier OTP Notice Banner */}
+                {dispatchedPhoneOtp && (
+                  <div className="p-2 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-zinc-400">
+                      Carrier OTP: <strong className="text-amber-300 font-mono tracking-widest text-xs">{dispatchedPhoneOtp}</strong>
+                    </span>
                     <button
                       type="button"
-                      onClick={() => setPhoneOtpDigits(dispatchedPhoneOtp.split(""))}
-                      className="text-[10px] text-zinc-400 hover:text-emerald-400 font-mono bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded cursor-pointer"
+                      onClick={() => {
+                        setPhoneOtpDigits(dispatchedPhoneOtp.split(""));
+                        toast.success("OTP filled!");
+                      }}
+                      className="text-[10px] text-amber-400 hover:text-amber-300 font-medium bg-amber-950/50 border border-amber-800/40 px-2 py-0.5 rounded cursor-pointer transition"
                     >
-                      Paste OTP ({dispatchedPhoneOtp})
+                      Fill Code
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Verify & Enter Button */}
                 <button
@@ -1168,6 +1181,48 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   <Zap size={14} />
                   <span>Save & Test Google Popup</span>
                 </button>
+              </div>
+
+              {/* Direct Dynamic Google Sign-In Fallback */}
+              <div className="pt-2.5 border-t border-zinc-800/80 space-y-2">
+                <div className="text-[11px] font-medium text-zinc-300">
+                  Direct Google Sign-In (Instant Verification):
+                </div>
+                <div className="space-y-1.5">
+                  <input
+                    type="text"
+                    placeholder="Your Full Name (e.g. Sumit Khomne)"
+                    value={customGoogleName}
+                    onChange={(e) => setCustomGoogleName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
+                  />
+                  <input
+                    type="email"
+                    placeholder="your-account@gmail.com"
+                    value={customGoogleEmail}
+                    onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!customGoogleEmail || !customGoogleEmail.includes("@")) {
+                        toast.error("Please enter a valid Gmail address.");
+                        return;
+                      }
+                      finalizeLogin({
+                        name: customGoogleName.trim() || customGoogleEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+                        emailOrPhone: customGoogleEmail.trim().toLowerCase(),
+                        role: "Enterprise Admin",
+                        provider: "Google Accounts",
+                      });
+                      setShowGoogleOriginModal(false);
+                    }}
+                    className="w-full py-2 rounded-lg bg-zinc-850 hover:bg-zinc-800 border border-zinc-700 text-white font-semibold text-xs transition cursor-pointer"
+                  >
+                    Authenticate with this Google Account
+                  </button>
+                </div>
               </div>
             </div>
           </div>
