@@ -1203,7 +1203,7 @@ callingRouter.post("/auth/phone/send-otp", async (req: Request, res: Response) =
       const bodyParams = new URLSearchParams();
       bodyParams.append("To", fullPhone.replace(/\s+/g, ""));
       bodyParams.append("From", process.env.TWILIO_PHONE_NUMBER);
-      bodyParams.append("Body", `Your CreatorAI Studio login verification code is ${code}. Valid for 10 minutes.`);
+      bodyParams.append("Body", `Your Smart AI Dialer login verification code is ${code}. Valid for 10 minutes.`);
 
       const twRes = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`, {
         method: "POST",
@@ -1226,7 +1226,7 @@ callingRouter.post("/auth/phone/send-otp", async (req: Request, res: Response) =
   console.log(`[TELECOM SMS GATEWAY] 📲 OUTBOUND SMS DISPATCHED`);
   console.log(`Recipient:   ${fullPhone}`);
   console.log(`Provider:    ${providerName}`);
-  console.log(`SMS Content: Your CreatorAI Studio verification code is ${code}`);
+  console.log(`SMS Content: Your Smart AI Dialer verification code is ${code}`);
   console.log(`Timestamp:   ${new Date().toISOString()}`);
   if (!process.env.FAST2SMS_API_KEY && !process.env.TWILIO_ACCOUNT_SID) {
     console.log(`[Info] Set FAST2SMS_API_KEY in .env for direct mobile handset SMS delivery in India.`);

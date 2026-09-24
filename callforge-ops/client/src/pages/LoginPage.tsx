@@ -1,4 +1,4 @@
-// CreatorAI Studio — Enterprise Autonomous AI Dialer Authentication & Login
+// Smart AI Dialer — Enterprise Autonomous AI Dialer Authentication & Login
 // Verified with OTP.dev SMS Gateway, Strict Email Password Auth, and Dynamic Profiles
 import React, { useState, useEffect, useRef } from "react";
 import {
