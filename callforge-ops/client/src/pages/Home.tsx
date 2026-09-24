@@ -1774,6 +1774,7 @@ export default function Home() {
           }}
           onNewCampaign={() => setShowCampaignBuilder(true)}
           onExportReport={handleDownloadExecutiveReport}
+          userName={currentUser.name}
         />
       );
   }

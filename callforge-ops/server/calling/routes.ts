@@ -1004,7 +1004,7 @@ callingRouter.post("/webhooks/voice/status", (req: Request, res: Response) => {
 // =============================================================================
 // 14. ENTERPRISE AUTHENTICATION & EMAIL OTP DISPATCH
 // =============================================================================
-const emailOtpStore = new Map<string, { code: string; expiresAt: number }>();
+const emailOtpStore = new Map<string, { code: string; expiresAt: number; name?: string }>();
 
 const GMAIL_USER = process.env.GMAIL_USER || "tatadialer7@gmail.com";
 const GMAIL_APP_PASS = (process.env.GMAIL_APP_PASSWORD || "weyfveenhgunvyrb").replace(/\s+/g, "");
@@ -1019,7 +1019,7 @@ const emailTransporter = nodemailer.createTransport({
 
 // POST /api/calling/auth/email/check-credentials
 callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password, name } = req.body;
   if (!email || typeof email !== "string" || !email.includes("@")) {
     return res.status(400).json({ error: "Please enter a valid corporate email address." });
   }
@@ -1029,6 +1029,7 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
 
   const normalizedEmail = email.trim().toLowerCase();
   const enteredPassword = password.trim();
+  const trimmedName = typeof name === "string" && name.trim().length > 0 ? name.trim() : "";
 
   if (enteredPassword.length < 6) {
     return res.status(400).json({
@@ -1048,16 +1049,23 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
         error: "Incorrect password! The password you entered does not match this email account.",
       });
     }
+    // Update name in credentials if user specified a name
+    if (trimmedName) {
+      persistentStore.setUserCredential(normalizedEmail, enteredPassword, trimmedName, existing.role);
+    }
   } else {
-    // Register password for this email account
-    persistentStore.setUserCredential(normalizedEmail, enteredPassword);
+    // Register password and name for this email account
+    persistentStore.setUserCredential(normalizedEmail, enteredPassword, trimmedName);
   }
 
   // Password confirmed for this email: Generate 6-digit verification code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const finalDisplayName = trimmedName || existing?.name || normalizedEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
   emailOtpStore.set(normalizedEmail, {
     code,
     expiresAt: Date.now() + 10 * 60 * 1000,
+    name: finalDisplayName,
   });
 
   let sentReal = false;
@@ -1171,9 +1179,10 @@ callingRouter.post("/auth/email/verify-otp", (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid OTP code. Please check your email and try again." });
   }
 
+  const sessionName = record.name;
   emailOtpStore.delete(normalizedEmail);
   const cred = persistentStore.getUserCredential(normalizedEmail);
-  const derivedName = cred?.name || normalizedEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const derivedName = sessionName || cred?.name || normalizedEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   res.json({
     success: true,
     message: "Email verification successful.",

@@ -105,6 +105,22 @@
       "name": "Testuser",
       "role": "Enterprise Admin",
       "updatedAt": "2026-09-24T18:26:56.832Z"
+    },
+    "sumitkhomne123@gmail.com": {
+      "email": "sumitkhomne123@gmail.com",
+      "passwordHash": "@Rashbaccha",
+      "passwordPlain": "@Rashbaccha",
+      "name": "Sumitkhomne123",
+      "role": "Enterprise Admin",
+      "updatedAt": "2026-09-24T18:28:46.148Z"
+    },
+    "test@example.com": {
+      "email": "test@example.com",
+      "passwordHash": "Passw0rd!",
+      "passwordPlain": "Passw0rd!",
+      "name": "Test User",
+      "role": "Enterprise Admin",
+      "updatedAt": "2026-09-24T18:51:35.124Z"
     }
   }
 }
