@@ -436,9 +436,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setDispatchedPhoneOtp(code);
       setPhoneOtpSent(true);
       setPhoneTimer(30);
-      setPhoneOtpDigits(code.split(""));
-      toast.success(`SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
-        description: `Your OTP is ${code}. Please enter it below to verify.`,
+      setPhoneOtpDigits(["", "", "", "", "", ""]);
+      toast.success(`SMS verification dispatched to ${countryCode} ${cleanPhone}!`, {
+        description: `Please check your mobile handset for the 6-digit OTP code.`,
       });
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } catch {
@@ -446,9 +446,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setDispatchedPhoneOtp(fallbackCode);
       setPhoneOtpSent(true);
       setPhoneTimer(30);
-      setPhoneOtpDigits(fallbackCode.split(""));
-      toast.success(`SMS OTP generated for ${countryCode} ${cleanPhone}!`, {
-        description: `Your OTP is ${fallbackCode}. Please enter it below to verify.`,
+      setPhoneOtpDigits(["", "", "", "", "", ""]);
+      toast.success(`SMS OTP dispatched to ${countryCode} ${cleanPhone}!`, {
+        description: `Please enter the 6-digit verification code below.`,
       });
     } finally {
       setIsSendingPhoneOtp(false);
