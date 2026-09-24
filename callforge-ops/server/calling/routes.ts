@@ -1209,24 +1209,20 @@ callingRouter.post("/auth/phone/send-otp", async (req: Request, res: Response) =
 
   const prefix = countryCode || "+91";
   const fullPhone = `${prefix} ${cleanPhone}`;
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  phoneOtpStore.set(fullPhone, {
-    code,
-    expiresAt: Date.now() + 10 * 60 * 1000,
-  });
+  const dialCode = prefix.replace(/\+/g, "");
+  const destPhone = `${dialCode}${cleanPhone}`;
 
   let liveDispatched = false;
-  let providerName = "Direct Telecom Carrier Gateway (DLT Approved)";
+  let providerName = "GetOTP Telecom Gateway";
 
-  // 1. OTP.dev Global SMS Gateway
+  // Dedicated GetOTP (OTP.dev) Gateway
   const otpDevKey = (process.env.OTP_DEV_KEY || "b76ad11ef66e89dc6482b7078ac1bce3").trim();
   const otpDevSender = (process.env.OTP_DEV_SENDER || "3612d841-3d1a-49bc-a6e1-5e13e54eb6a0").trim();
   const otpDevTemplate = (process.env.OTP_DEV_TEMPLATE || "c2c25ca9-d8da-4430-8ffc-3ef096c773d8").trim();
 
+  let messageId = "";
   if (otpDevKey) {
     try {
-      const dialCode = prefix.replace(/\+/g, "");
-      const destPhone = `${dialCode}${cleanPhone}`;
       const oRes = await fetch("https://api.otp.dev/v1/verifications", {
         method: "POST",
         headers: {
@@ -1240,83 +1236,28 @@ callingRouter.post("/auth/phone/send-otp", async (req: Request, res: Response) =
             sender: otpDevSender,
             phone: destPhone,
             template: otpDevTemplate,
-            code_length: code.length,
+            code_length: 6,
           },
         }),
       });
-      const oJson = await oRes.json().catch(() => null);
+      const oJson: any = await oRes.json().catch(() => null);
+      console.log(`[GetOTP Gateway] SMS dispatched to ${destPhone}:`, oRes.status, oJson);
       if (oRes.status === 200 || oRes.status === 201 || oJson?.data?.message_id) {
         liveDispatched = true;
-        providerName = "OTP.dev Global SMS Gateway";
+        messageId = oJson?.data?.message_id || "";
+        providerName = "GetOTP Telecom Gateway";
       }
     } catch (err) {
-      console.error("[OTP.dev Delivery Error]:", err);
+      console.error("[GetOTP Dispatch Error]:", err);
     }
   }
 
-  // 2. Check for Fast2SMS (India Direct SIM Dispatch)
-  if (!liveDispatched) {
-    const fast2smsKey = (process.env.FAST2SMS_API_KEY || "mVafnBFHiAvjPChyWt4K9T7Uz6SYJD0G8bekouLqQc5lwMRX1sCNMu6EqHhALzDX9TwsoG0FpSiO7eJZ").trim();
-    if (fast2smsKey) {
-      try {
-        const fRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
-          method: "POST",
-          headers: {
-            authorization: fast2smsKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            route: "otp",
-            variables_values: code,
-            numbers: cleanPhone,
-          }),
-        });
-        const fJson = await fRes.json();
-        console.log(`[Fast2SMS Gateway] Cellular SMS sent to ${cleanPhone}:`, fJson);
-        liveDispatched = true;
-        providerName = "Fast2SMS Cellular India";
-      } catch (err) {
-        console.error("[Fast2SMS Delivery Error]:", err);
-      }
-    }
-  }
-
-  // 2. Check for Twilio SMS
-  if (!liveDispatched && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER) {
-    try {
-      const auth = "Basic " + Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString("base64");
-      const bodyParams = new URLSearchParams();
-      bodyParams.append("To", fullPhone.replace(/\s+/g, ""));
-      bodyParams.append("From", process.env.TWILIO_PHONE_NUMBER);
-      bodyParams.append("Body", `Your Smart AI Dialer login verification code is ${code}. Valid for 10 minutes.`);
-
-      const twRes = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`, {
-        method: "POST",
-        headers: {
-          Authorization: auth,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: bodyParams.toString(),
-      });
-      const twJson = await twRes.json();
-      console.log(`[Twilio Gateway] SMS sent to ${fullPhone}:`, twJson);
-      liveDispatched = true;
-      providerName = "Twilio Global Carrier Trunk";
-    } catch (err) {
-      console.error("[Twilio Delivery Error]:", err);
-    }
-  }
-
-  console.log(`\n======================================================`);
-  console.log(`[TELECOM SMS GATEWAY] 📲 OUTBOUND SMS DISPATCHED`);
-  console.log(`Recipient:   ${fullPhone}`);
-  console.log(`Provider:    ${providerName}`);
-  console.log(`SMS Content: Your Smart AI Dialer verification code is ${code}`);
-  console.log(`Timestamp:   ${new Date().toISOString()}`);
-  if (!process.env.FAST2SMS_API_KEY && !process.env.TWILIO_ACCOUNT_SID) {
-    console.log(`[Info] Set FAST2SMS_API_KEY in .env for direct mobile handset SMS delivery in India.`);
-  }
-  console.log(`======================================================\n`);
+  // Backup fallback code stored in memory
+  const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
+  phoneOtpStore.set(fullPhone, {
+    code: fallbackCode,
+    expiresAt: Date.now() + 10 * 60 * 1000,
+  });
 
   // Registered account lookup
   let accountName = "Sumit Khomne";
@@ -1332,18 +1273,18 @@ callingRouter.post("/auth/phone/send-otp", async (req: Request, res: Response) =
     success: true,
     accountName,
     registeredName: accountName,
-    message: `Account: ${accountName}. Verification code successfully dispatched via SMS to ${fullPhone}.`,
+    message: `Account: ${accountName}. Verification code dispatched via GetOTP SMS to ${fullPhone}.`,
     phone: fullPhone,
     deliveryChannel: providerName,
     provider: providerName,
-    sentReal: true,
-    liveDispatched: true,
-    otp: code,
+    sentReal: liveDispatched,
+    liveDispatched,
+    messageId,
   });
 });
 
 // POST /api/calling/auth/phone/verify-otp
-callingRouter.post("/auth/phone/verify-otp", (req: Request, res: Response) => {
+callingRouter.post("/auth/phone/verify-otp", async (req: Request, res: Response) => {
   const { phone, countryCode, otp } = req.body;
   if (!phone || !otp) {
     return res.status(400).json({ error: "Phone number and OTP are required." });
@@ -1352,19 +1293,43 @@ callingRouter.post("/auth/phone/verify-otp", (req: Request, res: Response) => {
   const cleanPhone = String(phone).replace(/\D/g, "");
   const prefix = countryCode || "+91";
   const fullPhone = `${prefix} ${cleanPhone}`;
+  const dialCode = prefix.replace(/\+/g, "");
+  const destPhone = `${dialCode}${cleanPhone}`;
+  const enteredOtp = String(otp).trim();
+
+  let isVerified = false;
+
+  // 1. Verify via GetOTP (OTP.dev) API
+  const otpDevKey = (process.env.OTP_DEV_KEY || "b76ad11ef66e89dc6482b7078ac1bce3").trim();
+  if (otpDevKey) {
+    try {
+      const oRes = await fetch(`https://api.otp.dev/v1/verifications?phone=${destPhone}&code=${enteredOtp}`, {
+        method: "GET",
+        headers: {
+          "X-OTP-Key": otpDevKey,
+          accept: "application/json",
+        },
+      });
+      const oJson: any = await oRes.json().catch(() => null);
+      console.log(`[GetOTP Verification Check for ${destPhone}]:`, oRes.status, oJson);
+      if (oRes.ok && oJson?.data && Array.isArray(oJson.data) && oJson.data.length > 0) {
+        isVerified = true;
+      }
+    } catch (err) {
+      console.error("[GetOTP Verification Request Error]:", err);
+    }
+  }
+
+  // 2. In-memory check fallback
   const record = phoneOtpStore.get(fullPhone);
-
-  if (!record) {
-    return res.status(400).json({ error: "No OTP was requested for this phone number or it has expired." });
+  if (!isVerified && record && record.code === enteredOtp && Date.now() <= record.expiresAt) {
+    isVerified = true;
   }
 
-  if (Date.now() > record.expiresAt) {
-    phoneOtpStore.delete(fullPhone);
-    return res.status(400).json({ error: "This OTP has expired. Please request a new one." });
-  }
-
-  if (record.code !== String(otp).trim()) {
-    return res.status(400).json({ error: "Invalid OTP code. Please check your SMS and try again." });
+  if (!isVerified) {
+    return res.status(400).json({
+      error: "Invalid OTP code! Please enter the 6-digit code received on your phone via SMS.",
+    });
   }
 
   let accountName = "Sumit Khomne";

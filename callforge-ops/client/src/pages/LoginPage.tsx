@@ -247,63 +247,76 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // 2. GOOGLE IDENTITY SERVICES AUTHENTICATION (AUTHENTIC OAUTH FLOW)
   // ---------------------------------------------------------------------------
+  const tokenClientRef = useRef<any>(null);
+
   const launchGoogleOAuth = (cId: string): boolean => {
     const googleObj = typeof window !== "undefined" ? (window as any).google : null;
     if (!googleObj?.accounts?.oauth2 || !cId) return false;
 
     try {
+      if (!tokenClientRef.current) {
+        tokenClientRef.current = googleObj.accounts.oauth2.initTokenClient({
+          client_id: cId,
+          scope: "email profile openid",
+          prompt: "",
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse?.error) {
+              setIsGoogleSigningIn(false);
+              console.error("Google OAuth error:", tokenResponse);
+              const errStr = String(tokenResponse.error || "");
+              if (errStr.includes("origin") || tokenResponse.error === "idpiframe_initialization_failed") {
+                const currentOrigin = typeof window !== "undefined" ? window.location.origin : "current origin";
+                toast.error(`Google Origin Mismatch: Origin "${currentOrigin}" is not registered in Google Cloud Console.`, {
+                  duration: 8000,
+                });
+                setShowGoogleOriginModal(true);
+              } else if (tokenResponse.error === "access_denied") {
+                toast.info("Google Sign-In was cancelled.");
+              } else {
+                toast.error(`Google authentication error: ${tokenResponse.error_description || tokenResponse.error}`);
+              }
+              return;
+            }
+
+            try {
+              // Rapid profile fetch
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 4000);
+              const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                signal: controller.signal,
+              });
+              clearTimeout(timeoutId);
+              const profile = await res.json();
+              setIsGoogleSigningIn(false);
+              if (profile?.email) {
+                finalizeLogin({
+                  name: profile.name || profile.given_name || "Google User",
+                  emailOrPhone: profile.email,
+                  role: "Enterprise Admin",
+                  provider: "Google Accounts",
+                });
+              } else {
+                toast.error("Could not retrieve Google profile details. Please try again.");
+              }
+            } catch (err) {
+              setIsGoogleSigningIn(false);
+              console.error("Failed to fetch Google profile:", err);
+              toast.error("Failed to connect to Google API. Please check your network connection.");
+            }
+          },
+        });
+      }
+
       setIsGoogleSigningIn(true);
-      const tokenClient = googleObj.accounts.oauth2.initTokenClient({
-        client_id: cId,
-        scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
-        prompt: "select_account",
-        callback: async (tokenResponse: any) => {
-          setIsGoogleSigningIn(false);
-          if (tokenResponse?.error) {
-            console.error("Google OAuth error:", tokenResponse);
-            const errStr = String(tokenResponse.error || "");
-            if (errStr.includes("origin") || tokenResponse.error === "idpiframe_initialization_failed") {
-              const currentOrigin = typeof window !== "undefined" ? window.location.origin : "current origin";
-              toast.error(`Google Origin Mismatch: Origin "${currentOrigin}" is not registered in Google Cloud Console.`, {
-                duration: 8000,
-              });
-              setShowGoogleOriginModal(true);
-            } else if (tokenResponse.error === "access_denied") {
-              toast.info("Google Sign-In was closed.");
-            } else {
-              toast.error(`Google authentication error: ${tokenResponse.error_description || tokenResponse.error}`);
-            }
-            return;
-          }
-
-          try {
-            const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-            });
-            const profile = await res.json();
-            if (profile?.email) {
-              finalizeLogin({
-                name: profile.name || profile.given_name || "Google User",
-                emailOrPhone: profile.email,
-                role: "Enterprise Admin",
-                provider: "Google Accounts",
-              });
-            } else {
-              toast.error("Could not retrieve Google profile details. Please try again.");
-            }
-          } catch (err) {
-            console.error("Failed to fetch Google profile:", err);
-            toast.error("Failed to connect to Google API. Please check your network connection.");
-          }
-        },
-      });
-
-      tokenClient.requestAccessToken({ prompt: "select_account" });
+      tokenClientRef.current.requestAccessToken({ prompt: "" });
+      // Reset button state after 6 seconds if user closes popup without responding
       setTimeout(() => {
         setIsGoogleSigningIn(false);
-      }, 10000);
+      }, 6000);
       return true;
     } catch (e) {
       console.warn("Failed to request Google access token:", e);
@@ -418,28 +431,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       if (data.accountName) {
         setRegisteredAccountName(data.accountName);
       }
-      const code = data.otp || Math.floor(100000 + Math.random() * 900000).toString();
-      setDispatchedPhoneOtp(code);
       setPhoneOtpSent(true);
-      setPhoneTimer(30);
+      setPhoneTimer(45);
       setPhoneOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`SMS dispatched to ${countryCode} ${cleanPhone}!`, {
-        description: `Verification OTP: ${code} (Use this code if SIM SMS is delayed by carrier)`,
-        duration: 9000,
+      toast.success(`SMS dispatched via GetOTP!`, {
+        description: `Verification code sent to ${countryCode} ${cleanPhone}. Please check your phone messages.`,
+        duration: 8000,
       });
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } catch {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
       if (cleanPhone === "8080562451" || cleanPhone.endsWith("8080562451")) {
         setRegisteredAccountName("Sumit Khomne");
       }
-      setDispatchedPhoneOtp(fallbackCode);
       setPhoneOtpSent(true);
-      setPhoneTimer(30);
+      setPhoneTimer(45);
       setPhoneOtpDigits(["", "", "", "", "", ""]);
       toast.success(`SMS dispatched to ${countryCode} ${cleanPhone}!`, {
-        description: `Verification OTP: ${fallbackCode} (Use this code if SIM SMS is delayed)`,
-        duration: 9000,
+        description: `Please enter the 6-digit code received on your phone.`,
+        duration: 8000,
       });
     } finally {
       setIsSendingPhoneOtp(false);
@@ -877,24 +886,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </span>
                 </div>
 
-                {/* Fallback Carrier OTP Notice Banner */}
-                {dispatchedPhoneOtp && (
-                  <div className="p-2 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs">
-                    <span className="text-[11px] text-zinc-400">
-                      Carrier OTP: <strong className="text-amber-300 font-mono tracking-widest text-xs">{dispatchedPhoneOtp}</strong>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPhoneOtpDigits(dispatchedPhoneOtp.split(""));
-                        toast.success("OTP filled!");
-                      }}
-                      className="text-[10px] text-amber-400 hover:text-amber-300 font-medium bg-amber-950/50 border border-amber-800/40 px-2 py-0.5 rounded cursor-pointer transition"
-                    >
-                      Fill Code
-                    </button>
-                  </div>
-                )}
+                {/* GetOTP Delivery Status Badge */}
+                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center gap-2 text-xs">
+                  <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
+                  <span className="text-[11px] text-zinc-300">
+                    6-digit verification SMS dispatched via <strong>GetOTP Gateway</strong>. Please enter the code from your handset.
+                  </span>
+                </div>
 
                 {/* Verify & Enter Button */}
                 <button
