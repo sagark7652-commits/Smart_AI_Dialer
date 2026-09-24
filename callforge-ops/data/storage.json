@@ -96,5 +96,15 @@
   "invoices": [],
   "teamMembers": [],
   "auditLogs": [],
-  "whatsappLogs": []
+  "whatsappLogs": [],
+  "userCredentials": {
+    "testuser@example.com": {
+      "email": "testuser@example.com",
+      "passwordHash": "Password@123",
+      "passwordPlain": "Password@123",
+      "name": "Testuser",
+      "role": "Enterprise Admin",
+      "updatedAt": "2026-09-24T18:26:56.832Z"
+    }
+  }
 }

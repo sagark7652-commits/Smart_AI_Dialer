@@ -1017,16 +1017,6 @@ const emailTransporter = nodemailer.createTransport({
   },
 });
 
-// Registered Accounts Database with secure credentials
-const REGISTERED_ACCOUNTS_MAP: Record<string, { password: string; name: string; role: string }> = {
-  "admin@callforge.io": { password: "Admin@123", name: "Sumit Khomne", role: "Enterprise Admin" },
-  "sumit@callforge.io": { password: "Sumit@123", name: "Sumit Khomne", role: "Enterprise Admin" },
-  "tatadialer7@gmail.com": { password: "Dialer@123", name: "Sumit Khomne", role: "Enterprise Admin" },
-  "sumitkhomne@gmail.com": { password: "Sumit@123", name: "Sumit Khomne", role: "Enterprise Admin" },
-  "sumitkhomne123@gmail.com": { password: "Sumit@123", name: "Sumit Khomne", role: "Enterprise Admin" },
-  "superadmin@dialer.ai": { password: "Admin@123", name: "Sumit Khomne", role: "Enterprise Admin" },
-};
-
 // POST /api/calling/auth/email/check-credentials
 callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -1038,25 +1028,32 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
   }
 
   const normalizedEmail = email.trim().toLowerCase();
-  
-  // Verify account is registered
-  const registered = REGISTERED_ACCOUNTS_MAP[normalizedEmail];
-  if (!registered) {
-    return res.status(401).json({
+  const enteredPassword = password.trim();
+
+  if (enteredPassword.length < 6) {
+    return res.status(400).json({
       success: false,
-      error: `Email "${normalizedEmail}" is not registered in the system. Please use a registered account.`,
+      error: "Password must be at least 6 characters long.",
     });
   }
 
-  // Strictly verify password matches this specific email account
-  if (password !== registered.password) {
-    return res.status(401).json({
-      success: false,
-      error: "Incorrect password! The password you entered does not match this email account.",
-    });
+  // Look up credentials for this specific email from persistent store
+  const existing = persistentStore.getUserCredential(normalizedEmail);
+
+  if (existing) {
+    // If account already exists, strictly verify that the entered password matches this email!
+    if (existing.passwordPlain !== enteredPassword && existing.passwordHash !== enteredPassword) {
+      return res.status(401).json({
+        success: false,
+        error: "Incorrect password! The password you entered does not match this email account.",
+      });
+    }
+  } else {
+    // Register password for this email account
+    persistentStore.setUserCredential(normalizedEmail, enteredPassword);
   }
 
-  // Password correct: Generate 6-digit verification code
+  // Password confirmed for this email: Generate 6-digit verification code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   emailOtpStore.set(normalizedEmail, {
     code,
@@ -1074,7 +1071,7 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
           <h2 style="color: #a78bfa; margin: 0 0 16px 0; font-size: 20px;">Smart AI Dialer</h2>
           <p style="color: #d4d4d8; font-size: 14px; line-height: 1.6;">Hello,</p>
-          <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6;">Your workspace password was verified. Your 6-digit login verification OTP is:</p>
+          <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6;">Your workspace password was verified for <strong>${normalizedEmail}</strong>. Your 6-digit login verification OTP is:</p>
           <div style="text-align: center; margin: 24px 0;">
             <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #38bdf8; background: #1e1b4b; padding: 12px 28px; border-radius: 10px; border: 1px solid #4338ca; display: inline-block;">
               ${code}
@@ -1097,7 +1094,6 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
       : `Password verified! Security OTP generated for ${normalizedEmail}.`,
     email: normalizedEmail,
     sentReal,
-    otp: code,
   });
 });
 
@@ -1149,7 +1145,6 @@ callingRouter.post("/auth/email/send-otp", async (req: Request, res: Response) =
       : `Security verification OTP successfully dispatched to ${normalizedEmail}.`,
     email: normalizedEmail,
     sentReal,
-    otp: code,
   });
 });
 
@@ -1177,14 +1172,15 @@ callingRouter.post("/auth/email/verify-otp", (req: Request, res: Response) => {
   }
 
   emailOtpStore.delete(normalizedEmail);
-  const derivedName = normalizedEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const cred = persistentStore.getUserCredential(normalizedEmail);
+  const derivedName = cred?.name || normalizedEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   res.json({
     success: true,
     message: "Email verification successful.",
     user: {
       email: normalizedEmail,
       name: derivedName,
-      role: "Enterprise Admin",
+      role: cred?.role || "Enterprise Admin",
     },
   });
 });

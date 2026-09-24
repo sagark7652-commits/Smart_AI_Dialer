@@ -221,18 +221,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         toast.error(data.error || "Invalid OTP code. Please check your email.");
       }
     } catch {
-      // Fallback verification
-      if (enteredOtp === dispatchedEmailOtp) {
-        const derivedName = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-        finalizeLogin({
-          name: derivedName,
-          emailOrPhone: email.toLowerCase().trim(),
-          role: "Enterprise Admin",
-          provider: "Email + OTP",
-        });
-      } else {
-        toast.error("Invalid OTP code. Please enter the code sent to your email.");
-      }
+      toast.error("Network error: Please verify your internet connection and try again.");
     } finally {
       setIsVerifying(false);
     }

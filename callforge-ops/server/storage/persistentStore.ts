@@ -203,6 +203,16 @@ interface DatabaseStructure {
   supportTickets?: StoredSupportTicket[];
   consentRecords?: StoredConsentRecord[];
   appSettings?: StoredAppSettings;
+  userCredentials?: Record<string, StoredUserCredential>;
+}
+
+export interface StoredUserCredential {
+  email: string;
+  passwordHash: string;
+  passwordPlain?: string;
+  name: string;
+  role: string;
+  updatedAt: string;
 }
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -925,6 +935,35 @@ class PersistentStorage {
     };
     this.save(this.data);
     return this.data.appSettings;
+  }
+
+  // --- Dynamic Enterprise User Credentials Operations ---
+  getUserCredential(email: string): StoredUserCredential | undefined {
+    const norm = email.trim().toLowerCase();
+    if (!this.data.userCredentials) {
+      this.data.userCredentials = {};
+    }
+    return this.data.userCredentials[norm];
+  }
+
+  setUserCredential(email: string, password: string, name?: string, role?: string): StoredUserCredential {
+    const norm = email.trim().toLowerCase();
+    if (!this.data.userCredentials) {
+      this.data.userCredentials = {};
+    }
+    const existing = this.data.userCredentials[norm];
+    const derivedName = name || existing?.name || norm.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const entry: StoredUserCredential = {
+      email: norm,
+      passwordHash: password,
+      passwordPlain: password,
+      name: derivedName || "Enterprise User",
+      role: role || existing?.role || "Enterprise Admin",
+      updatedAt: new Date().toISOString(),
+    };
+    this.data.userCredentials[norm] = entry;
+    this.save(this.data);
+    return entry;
   }
 }
 
