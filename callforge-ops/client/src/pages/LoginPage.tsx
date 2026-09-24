@@ -24,6 +24,7 @@ import {
   Plus,
   ArrowLeft,
   X,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -70,10 +71,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     );
   });
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
-  const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [googleModalTab, setGoogleModalTab] = useState<"quick" | "oauth">("quick");
-  const [customGoogleEmail, setCustomGoogleEmail] = useState("");
-  const [customGoogleName, setCustomGoogleName] = useState("");
+  const [showGoogleOriginModal, setShowGoogleOriginModal] = useState(false);
+  const [copiedOrigin, setCopiedOrigin] = useState(false);
   const [clientIdInput, setClientIdInput] = useState(DEFAULT_GOOGLE_CLIENT_ID);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [useEmailOtpMode, setUseEmailOtpMode] = useState(false);
@@ -147,9 +146,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setDispatchedEmailOtp(code);
       setEmailOtpSent(true);
       setEmailTimer(30);
-      setEmailOtpDigits(code.split("")); // Pre-fill for instant test convenience
+      setEmailOtpDigits(["", "", "", "", "", ""]);
       toast.success(`Security OTP sent to ${email}!`, {
-        description: `Your OTP is ${code}. Please enter it below to verify.`,
+        description: `Please enter the 6-digit verification code below.`,
       });
       setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } catch {
@@ -157,9 +156,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setDispatchedEmailOtp(fallbackCode);
       setEmailOtpSent(true);
       setEmailTimer(30);
-      setEmailOtpDigits(fallbackCode.split(""));
-      toast.success(`Security OTP sent to ${email}!`, {
-        description: `Your OTP is ${fallbackCode}.`,
+      setEmailOtpDigits(["", "", "", "", "", ""]);
+      toast.success(`Security OTP dispatched to ${email}!`, {
+        description: `Please enter the 6-digit verification code below.`,
       });
     } finally {
       setIsSendingEmailOtp(false);
@@ -276,47 +275,52 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       const tokenClient = googleObj.accounts.oauth2.initTokenClient({
         client_id: cId,
         scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
+        prompt: "select_account",
         callback: async (tokenResponse: any) => {
+          setIsGoogleSigningIn(false);
           if (tokenResponse?.error) {
             console.error("Google OAuth error:", tokenResponse);
-            if (String(tokenResponse.error).includes("origin") || tokenResponse.error === "idpiframe_initialization_failed") {
+            const errStr = String(tokenResponse.error || "");
+            if (errStr.includes("origin") || tokenResponse.error === "idpiframe_initialization_failed") {
               const currentOrigin = typeof window !== "undefined" ? window.location.origin : "current origin";
-              toast.error(`Google Origin Notice: Please add "${currentOrigin}" to Authorized JavaScript Origins in Google Cloud Console.`);
+              toast.error(`Google Origin Mismatch: Origin "${currentOrigin}" is not registered in Google Cloud Console.`, {
+                duration: 8000,
+              });
+              setShowGoogleOriginModal(true);
+            } else if (tokenResponse.error === "access_denied") {
+              toast.info("Google Sign-In was closed.");
             } else {
-              toast.error(`Google authentication was cancelled or encountered an error.`);
+              toast.error(`Google authentication error: ${tokenResponse.error_description || tokenResponse.error}`);
             }
-            setShowGoogleModal(true);
-            setIsGoogleSigningIn(false);
             return;
           }
+
           try {
             const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
               headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
             });
             const profile = await res.json();
-            finalizeLogin({
-              name: profile.name || "Google User",
-              emailOrPhone: profile.email || "user@gmail.com",
-              role: "Enterprise Admin",
-              provider: "Google Accounts",
-            });
-          } catch {
-            finalizeLogin({
-              name: "Google Verified User",
-              emailOrPhone: "user@gmail.com",
-              role: "Enterprise Admin",
-              provider: "Google Accounts",
-            });
-          } finally {
-            setIsGoogleSigningIn(false);
+            if (profile?.email) {
+              finalizeLogin({
+                name: profile.name || profile.given_name || "Google User",
+                emailOrPhone: profile.email,
+                role: "Enterprise Admin",
+                provider: "Google Accounts",
+              });
+            } else {
+              toast.error("Could not retrieve Google profile details. Please try again.");
+            }
+          } catch (err) {
+            console.error("Failed to fetch Google profile:", err);
+            toast.error("Failed to connect to Google API. Please check your network connection.");
           }
         },
       });
-      tokenClient.requestAccessToken();
-      // Auto-reset loading state after 12s if user closed Google popup or if Google blocked the origin
+
+      tokenClient.requestAccessToken({ prompt: "select_account" });
       setTimeout(() => {
         setIsGoogleSigningIn(false);
-      }, 12000);
+      }, 10000);
       return true;
     } catch (e) {
       console.warn("Failed to request Google access token:", e);
@@ -377,29 +381,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   const handleGoogleSignIn = () => {
     setIsGoogleSigningIn(true);
-
-    const isCodespaces = typeof window !== "undefined" && (
-      window.location.hostname.includes("github.dev") ||
-      window.location.hostname.includes("preview.app") ||
-      window.location.hostname.includes("localhost")
-    );
-
-    if (isCodespaces) {
-      // In Codespaces, Google Cloud blocks dynamic ephemeral domains with Error 400: origin_mismatch.
-      // Automatically authenticate the verified owner with full Enterprise Admin privileges:
-      setTimeout(() => {
-        setIsGoogleSigningIn(false);
-        finalizeLogin({
-          name: "Sumit Khomne",
-          emailOrPhone: "sumitkhomne123@gmail.com",
-          role: "Enterprise Admin",
-          provider: "Google Accounts",
-        });
-        toast.success("Welcome, Sumit Khomne! Authenticated via Google Accounts.");
-      }, 500);
-      return;
-    }
-
     const activeClientId =
       googleClientId ||
       (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
@@ -410,7 +391,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       if (launched) return;
     }
 
-    setShowGoogleModal(true);
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => {
+      if (activeClientId) {
+        launchGoogleOAuth(activeClientId);
+      } else {
+        setIsGoogleSigningIn(false);
+        toast.error("Google Client ID not configured.");
+      }
+    };
+    script.onerror = () => {
+      setIsGoogleSigningIn(false);
+      toast.error("Could not load Google Identity Services library.");
+    };
+    document.head.appendChild(script);
   };
 
   // ---------------------------------------------------------------------------
@@ -974,6 +970,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           )}
         </button>
 
+        {/* Google OAuth Origin Status */}
+        <div className="flex justify-center -mt-1">
+          <button
+            type="button"
+            onClick={() => setShowGoogleOriginModal(true)}
+            className="text-[11px] text-zinc-500 hover:text-zinc-300 transition flex items-center gap-1 cursor-pointer"
+          >
+            <Globe size={11} className="text-zinc-500" />
+            <span>Google OAuth Status & Origins</span>
+          </button>
+        </div>
+
         {/* Quick Demo Instant Access */}
         <button
           type="button"
@@ -1042,9 +1050,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 3: Authentic Google Sign-In & Verification                          */}
+      {/* MODAL 3: Google OAuth Origin Configuration Helper                         */}
       {/* ========================================================================= */}
-      {showGoogleModal && (
+      {showGoogleOriginModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-150">
           <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
             {/* Header */}
@@ -1071,213 +1079,74 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Google Sign-In</h3>
-                  <p className="text-[11px] text-zinc-400">Account verification & OAuth setup</p>
+                  <h3 className="text-sm font-bold text-white">Google OAuth Setup</h3>
+                  <p className="text-[11px] text-zinc-400">Authorized JavaScript Origins</p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setShowGoogleModal(false)}
+                onClick={() => setShowGoogleOriginModal(false)}
                 className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* Mode Switch Tabs */}
-            <div className="flex rounded-lg bg-zinc-900 p-1 border border-zinc-800 text-xs">
-              <button
-                type="button"
-                onClick={() => setGoogleModalTab("quick")}
-                className={`flex-1 py-1.5 rounded-md font-medium transition cursor-pointer ${
-                  googleModalTab === "quick"
-                    ? "bg-zinc-800 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                Verified Google Profiles
-              </button>
-              <button
-                type="button"
-                onClick={() => setGoogleModalTab("oauth")}
-                className={`flex-1 py-1.5 rounded-md font-medium transition cursor-pointer ${
-                  googleModalTab === "oauth"
-                    ? "bg-zinc-800 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                Google Cloud OAuth
-              </button>
-            </div>
-
-            {/* TAB 1: Verified Google Profiles */}
-            {googleModalTab === "quick" && (
-              <div className="space-y-3 animate-in fade-in duration-150">
-                <p className="text-[11px] text-zinc-400">
-                  Select your Google account to verify and sign in:
-                </p>
-
-                {/* Profile 1: Sumit Khomne */}
-                <div
-                  onClick={() => {
-                    finalizeLogin({
-                      name: "Sumit Khomne",
-                      emailOrPhone: "sumitkhomne123@gmail.com",
-                      role: "Enterprise Admin",
-                      provider: "Google Accounts",
-                    });
-                    setShowGoogleModal(false);
-                  }}
-                  className="p-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-blue-500/50 cursor-pointer transition flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow">
-                      S
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-white group-hover:text-blue-300 transition">
-                        Sumit Khomne
-                      </div>
-                      <div className="text-[11px] text-zinc-400 font-mono">
-                        sumitkhomne123@gmail.com
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-blue-400 bg-blue-950/40 border border-blue-800/40 px-2 py-0.5 rounded-full">
-                    Owner
-                  </span>
+            <div className="space-y-3.5 text-xs">
+              <div className="p-3 rounded-xl bg-violet-950/30 border border-violet-800/30 text-zinc-300 space-y-1.5">
+                <div className="font-semibold text-white flex items-center gap-1.5">
+                  <Globe size={14} className="text-violet-400" />
+                  Your Current Browser Origin
                 </div>
-
-                {/* Profile 2: Sagar Karale */}
-                <div
-                  onClick={() => {
-                    finalizeLogin({
-                      name: "Sagar Karale",
-                      emailOrPhone: "sagarkarale@gmail.com",
-                      role: "Enterprise Admin",
-                      provider: "Google Accounts",
-                    });
-                    setShowGoogleModal(false);
-                  }}
-                  className="p-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-violet-500/50 cursor-pointer transition flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow">
-                      S
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-white group-hover:text-violet-300 transition">
-                        Sagar Karale
-                      </div>
-                      <div className="text-[11px] text-zinc-400 font-mono">
-                        sagarkarale@gmail.com
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-violet-400 bg-violet-950/40 border border-violet-800/40 px-2 py-0.5 rounded-full">
-                    Admin
-                  </span>
-                </div>
-
-                {/* Profile 2: Enterprise Admin */}
-                <div
-                  onClick={() => {
-                    finalizeLogin({
-                      name: "Enterprise Admin",
-                      emailOrPhone: "admin@callforge.io",
-                      role: "Workspace Owner",
-                      provider: "Google Workspace",
-                    });
-                    setShowGoogleModal(false);
-                  }}
-                  className="p-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-violet-500/50 cursor-pointer transition flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow">
-                      E
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-white group-hover:text-violet-300 transition">
-                        Enterprise Admin
-                      </div>
-                      <div className="text-[11px] text-zinc-400 font-mono">
-                        admin@callforge.io
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded-full">
-                    Verified
-                  </span>
-                </div>
-
-                {/* Custom Gmail Form */}
-                <div className="pt-2 border-t border-zinc-800/60">
-                  <div className="text-[11px] font-medium text-zinc-300 mb-2">Or verify your custom Gmail:</div>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Your Full Name"
-                      value={customGoogleName}
-                      onChange={(e) => setCustomGoogleName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
-                    />
-                    <input
-                      type="email"
-                      placeholder="yourname@gmail.com"
-                      value={customGoogleEmail}
-                      onChange={(e) => setCustomGoogleEmail(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!customGoogleEmail || !customGoogleEmail.includes("@")) {
-                          toast.error("Please enter a valid Gmail address.");
-                          return;
-                        }
-                        finalizeLogin({
-                          name: customGoogleName || customGoogleEmail.split("@")[0],
-                          emailOrPhone: customGoogleEmail,
-                          role: "Google Verified User",
-                          provider: "Google Accounts",
-                        });
-                        setShowGoogleModal(false);
-                      }}
-                      className="w-full py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition cursor-pointer"
-                    >
-                      Verify & Sign In with this Account
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 2: Google Cloud OAuth Setup */}
-            {googleModalTab === "oauth" && (
-              <div className="space-y-3.5 animate-in fade-in duration-150">
-                <div className="p-3 rounded-xl bg-violet-950/30 border border-violet-800/30 text-xs text-violet-200 space-y-1.5">
-                  <div className="font-semibold text-white flex items-center gap-1.5">
-                    <Globe size={14} className="text-violet-400" />
-                    Live Google Cloud OAuth
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-zinc-300">
-                    To open Google&apos;s native accounts.google.com popup for any external user, provide your Google Cloud OAuth Client ID.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1">
-                    Google OAuth Client ID
-                  </label>
+                <div className="flex items-center gap-2 mt-2">
                   <input
                     type="text"
-                    value={clientIdInput}
-                    onChange={(e) => setClientIdInput(e.target.value)}
-                    placeholder="xxxx-yyyy.apps.googleusercontent.com"
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 font-mono"
+                    readOnly
+                    value={typeof window !== "undefined" ? window.location.origin : ""}
+                    className="flex-1 px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-violet-300 font-mono select-all focus:outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        navigator.clipboard.writeText(window.location.origin);
+                        setCopiedOrigin(true);
+                        toast.success("Origin copied to clipboard!");
+                        setTimeout(() => setCopiedOrigin(false), 2000);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs flex items-center gap-1 transition cursor-pointer shrink-0"
+                  >
+                    {copiedOrigin ? <Check size={13} /> : <Copy size={13} />}
+                    <span>{copiedOrigin ? "Copied" : "Copy"}</span>
+                  </button>
                 </div>
+              </div>
 
+              <div className="text-[11px] text-zinc-400 space-y-1.5 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/60">
+                <div className="font-medium text-zinc-200">How to authorize in Google Cloud Console:</div>
+                <ol className="list-decimal pl-4 space-y-1 text-zinc-400">
+                  <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-violet-400 underline hover:text-violet-300">Google Cloud Console &gt; Credentials</a></li>
+                  <li>Click to edit your <strong className="text-zinc-200">Web Application</strong> OAuth Client ID</li>
+                  <li>Under <strong className="text-zinc-200">Authorized JavaScript origins</strong>, paste the copied origin above (no trailing slash)</li>
+                  <li>Click <strong className="text-zinc-200">Save</strong> (Google takes 3-5 mins to propagate)</li>
+                </ol>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1">
+                  OAuth Client ID
+                </label>
+                <input
+                  type="text"
+                  value={clientIdInput}
+                  onChange={(e) => setClientIdInput(e.target.value)}
+                  placeholder="xxxx-yyyy.apps.googleusercontent.com"
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 font-mono"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -1288,28 +1157,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     }
                     localStorage.setItem("creatorai_google_client_id", clean);
                     setGoogleClientId(clean);
-                    setShowGoogleModal(false);
-                    toast.success("Google Client ID configured!");
+                    setShowGoogleOriginModal(false);
+                    toast.success("Google Client ID saved!");
                     setTimeout(() => {
                       launchGoogleOAuth(clean);
                     }, 200);
                   }}
-                  className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                  className="flex-1 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                 >
                   <Zap size={14} />
-                  Save & Launch Google Popup
+                  <span>Save & Test Google Popup</span>
                 </button>
-
-                <div className="text-[11px] text-zinc-400 space-y-1 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/60">
-                  <div className="font-medium text-zinc-300">Quick 3-step setup in Google Cloud:</div>
-                  <ol className="list-decimal pl-4 space-y-0.5 text-zinc-400">
-                    <li>Open <strong className="text-zinc-200">console.cloud.google.com</strong> &gt; Credentials</li>
-                    <li>Create OAuth 2.0 Client ID for <strong className="text-zinc-200">Web Application</strong></li>
-                    <li>Add authorized origin: <code className="text-violet-300 font-mono text-[10px] bg-zinc-950 px-1.5 py-0.5 rounded border border-zinc-800">{typeof window !== "undefined" ? window.location.origin : "https://smart-ai-dialer.vercel.app"}</code></li>
-                  </ol>
-                </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
