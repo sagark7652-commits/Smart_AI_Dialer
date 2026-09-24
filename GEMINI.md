@@ -1,9 +1,9 @@
 # Project Rules & Workflow Instructions
 
 ## Target Repository & Branch
-- **Permanent Repository**: `https://github.com/sagark7652-commits/Smart_AI_Dialer.git`
+- **Permanent Repository**: `https://github.com/sumitkhomne123-commits/Smart_AI_Dialer.git`
 - **Default Branch**: `main`
-- **Commits URL**: `https://github.com/sagark7652-commits/Smart_AI_Dialer/commits/main`
+- **Commits URL**: `https://github.com/sumitkhomne123-commits/Smart_AI_Dialer/commits/main`
 
 ## Team Collaboration & Auto Git Sync (Pull & Push)
 - Multiple team members work on this repository simultaneously.
