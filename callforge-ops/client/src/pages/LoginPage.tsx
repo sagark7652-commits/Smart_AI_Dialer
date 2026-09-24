@@ -343,8 +343,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
           googleObj.accounts.id.renderButton(googleBtnRef.current, {
             theme: "outline",
-            size: "large",
-            width: 380,
+            size: "medium",
+            width: 300,
             text: "continue_with",
             shape: "rectangular",
           });
@@ -588,7 +588,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Sumit Khomne"
+                      placeholder="Enter your name"
                       className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                     />
                   </div>
