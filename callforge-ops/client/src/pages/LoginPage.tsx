@@ -80,9 +80,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [useEmailOtpMode, setUseEmailOtpMode] = useState(false);
   const [registeredAccountName, setRegisteredAccountName] = useState<string>("Sumit Khomne");
 
-  // Modals & Dialogs
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
+  const hasRenderedGsiRef = useRef(false);
 
   const emailOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const phoneOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -151,14 +149,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         return;
       }
 
-      const code = data.otp || Math.floor(100000 + Math.random() * 900000).toString();
-      setDispatchedEmailOtp(code);
       setEmailOtpSent(true);
-      setEmailTimer(30);
+      setEmailTimer(45);
       setEmailOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`Password verified! Security OTP sent to ${email}`, {
-        description: `OTP Code: ${code} (Check your inbox or use code if SMTP delayed)`,
-        duration: 9000,
+      toast.success("Password verified!", {
+        description: `Security OTP sent to ${email}. Please check your email inbox.`,
+        duration: 7000,
       });
       setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } catch {
@@ -327,6 +323,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   useEffect(() => {
     const initGsi = () => {
+      if (hasRenderedGsiRef.current) return;
       const googleObj = typeof window !== "undefined" ? (window as any).google : null;
       if (googleObj?.accounts?.id && googleClientId && googleBtnRef.current) {
         try {
@@ -356,14 +353,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             },
           });
 
-          googleBtnRef.current.innerHTML = "";
           googleObj.accounts.id.renderButton(googleBtnRef.current, {
             theme: "outline",
             size: "large",
-            width: 350,
+            width: 380,
             text: "continue_with",
             shape: "rectangular",
           });
+          hasRenderedGsiRef.current = true;
         } catch (err) {
           console.warn("[Google Identity] Init error:", err);
         }
@@ -371,11 +368,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     };
 
     initGsi();
-    const t1 = setTimeout(initGsi, 500);
-    const t2 = setTimeout(initGsi, 1500);
+    const t1 = setTimeout(initGsi, 700);
     return () => {
       clearTimeout(t1);
-      clearTimeout(t2);
     };
   }, [googleClientId]);
 
@@ -613,17 +608,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
                 {/* Password */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="mb-1">
                     <label className="text-xs font-medium text-zinc-300">
                       Password
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowForgotPassword(true)}
-                      className="text-[11px] text-violet-400 hover:text-violet-300 transition cursor-pointer"
-                    >
-                      Forgot?
-                    </button>
                   </div>
                   <div className="relative">
                     <Lock
@@ -724,24 +712,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </span>
                 </div>
 
-                {/* Fallback Email OTP Notice Banner */}
-                {dispatchedEmailOtp && (
-                  <div className="p-2 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs">
-                    <span className="text-[11px] text-zinc-400">
-                      Email OTP: <strong className="text-violet-300 font-mono tracking-widest text-xs">{dispatchedEmailOtp}</strong>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEmailOtpDigits(dispatchedEmailOtp.split(""));
-                        toast.success("OTP filled!");
-                      }}
-                      className="text-[10px] text-violet-400 hover:text-violet-300 font-medium bg-violet-950/50 border border-violet-800/40 px-2 py-0.5 rounded cursor-pointer transition"
-                    >
-                      Fill Code
-                    </button>
-                  </div>
-                )}
+
 
                 {/* Verify & Enter Button */}
                 <button
@@ -886,14 +857,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </span>
                 </div>
 
-                {/* GetOTP Delivery Status Badge */}
-                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center gap-2 text-xs">
-                  <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
-                  <span className="text-[11px] text-zinc-300">
-                    6-digit verification SMS dispatched via <strong>GetOTP Gateway</strong>. Please enter the code from your handset.
-                  </span>
-                </div>
-
                 {/* Verify & Enter Button */}
                 <button
                   type="submit"
@@ -925,45 +888,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           </span>
         </div>
 
-        {/* Google Official GSI Button Container (Official Google popup) */}
-        <div ref={googleBtnRef} className="w-full flex justify-center empty:hidden" />
-
-        {/* Google OAuth (Full Width & Clean) */}
-        <button
-          type="button"
-          disabled={isGoogleSigningIn}
-          onClick={handleGoogleSignIn}
-          className="w-full py-2.5 px-4 rounded-lg border border-zinc-800 bg-white hover:bg-zinc-100 text-zinc-800 text-xs font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer shadow-sm active:scale-[0.99]"
-        >
-          {isGoogleSigningIn ? (
-            <>
-              <RefreshCw size={14} className="animate-spin text-[#4285F4]" />
-              <span>Connecting to Google...</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>Continue with Google</span>
-            </>
-          )}
-        </button>
+        {/* Google Official GSI Button Container (Single Clean Google Login) */}
+        <div ref={googleBtnRef} className="w-full flex justify-center min-h-[44px]" />
 
         {/* Google OAuth Origin Status */}
         <div className="flex justify-center -mt-1">
@@ -976,73 +902,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <span>Google OAuth Status & Origins</span>
           </button>
         </div>
-
-        {/* Quick Demo Instant Access */}
-        <button
-          type="button"
-          onClick={() => {
-            finalizeLogin({
-              name: "Super Admin",
-              emailOrPhone: "admin@callforge.io",
-              role: "Super Admin",
-              provider: "1-Click Direct Access",
-            });
-          }}
-          className="w-full py-2 px-3 rounded-lg border border-dashed border-violet-500/40 bg-violet-950/20 hover:bg-violet-950/40 text-violet-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
-        >
-          <Sparkles size={13} className="text-violet-400" />
-          <span>Quick 1-Click Demo Login</span>
-        </button>
       </div>
 
-      {/* ========================================================================= */}
-      {/* MODAL 2: Forgot Password Recovery                                         */}
-      {/* ========================================================================= */}
-      {showForgotPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-violet-600/20 text-violet-400 flex items-center justify-center">
-                <Lock size={18} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Reset Workspace Password</h3>
-                <p className="text-[11px] text-zinc-400">
-                  Enter your registered enterprise email for password recovery
-                </p>
-              </div>
-            </div>
 
-            <input
-              type="email"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              placeholder="name@company.com"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
-            />
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(false)}
-                className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  toast.success("Password reset instructions sent to your corporate email!");
-                  setShowForgotPassword(false);
-                }}
-                className="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition"
-              >
-                Send Recovery Link
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================================= */}
       {/* MODAL 3: Google OAuth Origin Configuration Helper                         */}

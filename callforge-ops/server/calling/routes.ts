@@ -1022,6 +1022,8 @@ const REGISTERED_ACCOUNTS_MAP: Record<string, { password: string; name: string; 
   "admin@callforge.io": { password: "Admin@123", name: "Sumit Khomne", role: "Enterprise Admin" },
   "sumit@callforge.io": { password: "Sumit@123", name: "Sumit Khomne", role: "Enterprise Admin" },
   "tatadialer7@gmail.com": { password: "Dialer@123", name: "Sumit Khomne", role: "Enterprise Admin" },
+  "sumitkhomne@gmail.com": { password: "Sumit@123", name: "Sumit Khomne", role: "Enterprise Admin" },
+  "sumitkhomne123@gmail.com": { password: "Sumit@123", name: "Sumit Khomne", role: "Enterprise Admin" },
   "superadmin@dialer.ai": { password: "Admin@123", name: "Sumit Khomne", role: "Enterprise Admin" },
 };
 
@@ -1037,24 +1039,21 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
 
   const normalizedEmail = email.trim().toLowerCase();
   
-  // Verify credentials
+  // Verify account is registered
   const registered = REGISTERED_ACCOUNTS_MAP[normalizedEmail];
-  if (registered) {
-    if (password !== registered.password && password !== "Admin@123" && password !== "Sumit@123") {
-      return res.status(401).json({
-        success: false,
-        error: "Incorrect password! Please check your credentials.",
-      });
-    }
-  } else {
-    // For other workspace emails, reject simple or known invalid passwords
-    const disallowed = ["123", "12345", "123456", "password", "wrong", "wrongpassword", "test", "demo", "admin", "000000", "111111"];
-    if (password.length < 6 || disallowed.includes(password.toLowerCase())) {
-      return res.status(401).json({
-        success: false,
-        error: "Incorrect password! Please check your credentials.",
-      });
-    }
+  if (!registered) {
+    return res.status(401).json({
+      success: false,
+      error: `Email "${normalizedEmail}" is not registered in the system. Please use a registered account.`,
+    });
+  }
+
+  // Strictly verify password matches this specific email account
+  if (password !== registered.password) {
+    return res.status(401).json({
+      success: false,
+      error: "Incorrect password! The password you entered does not match this email account.",
+    });
   }
 
   // Password correct: Generate 6-digit verification code
