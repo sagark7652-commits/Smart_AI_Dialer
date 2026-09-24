@@ -67,7 +67,8 @@ async function startServer() {
   const port = await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+    console.warn(`\n[PORT NOTICE] Port ${preferredPort} is busy, server started on port ${port}.`);
+    console.warn(`[PORT TIP] In GitHub Codespaces, to keep port 3000 consistent, run: pkill -f "node|tsx|vite"\n`);
   }
 
   server.listen(port, "0.0.0.0", () => {

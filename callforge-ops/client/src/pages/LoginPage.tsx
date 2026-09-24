@@ -297,14 +297,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             finalizeLogin({
               name: profile.name || "Google User",
               emailOrPhone: profile.email || "user@gmail.com",
-              role: "Google Verified User",
+              role: "Enterprise Admin",
               provider: "Google Accounts",
             });
           } catch {
             finalizeLogin({
               name: "Google Verified User",
               emailOrPhone: "user@gmail.com",
-              role: "Google Verified User",
+              role: "Enterprise Admin",
               provider: "Google Accounts",
             });
           } finally {
@@ -313,6 +313,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         },
       });
       tokenClient.requestAccessToken();
+      // Auto-reset loading state after 12s if user closed Google popup or if Google blocked the origin
+      setTimeout(() => {
+        setIsGoogleSigningIn(false);
+      }, 12000);
       return true;
     } catch (e) {
       console.warn("Failed to request Google access token:", e);
@@ -513,10 +517,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <Bot size={22} />
           </div>
           <h2 className="text-lg font-bold tracking-tight text-white">
-            CreatorAI <span className="text-violet-400">Studio</span>
+            Smart AI <span className="text-violet-400">Dialer</span>
           </h2>
           <p className="text-xs text-zinc-400">
-            Sign in to your account
+            Enterprise Calling Operations Console
           </p>
         </div>
 
