@@ -78,6 +78,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [clientIdInput, setClientIdInput] = useState(DEFAULT_GOOGLE_CLIENT_ID);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [useEmailOtpMode, setUseEmailOtpMode] = useState(false);
+  const [registeredAccountName, setRegisteredAccountName] = useState<string>("Sumit Khomne");
 
   // Modals & Dialogs
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -138,30 +139,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     setIsSendingEmailOtp(true);
     try {
-      const res = await fetch("/api/calling/auth/email/send-otp", {
+      const res = await fetch("/api/calling/auth/email/check-credentials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
+      if (!res.ok || !data.success) {
+        toast.error(data.error || "Incorrect password! Please check your credentials.");
+        setIsSendingEmailOtp(false);
+        return;
+      }
+
       const code = data.otp || Math.floor(100000 + Math.random() * 900000).toString();
       setDispatchedEmailOtp(code);
       setEmailOtpSent(true);
       setEmailTimer(30);
       setEmailOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`Security OTP sent to ${email}!`, {
-        description: `Please enter the 6-digit verification code below.`,
+      toast.success(`Password verified! Security OTP sent to ${email}`, {
+        description: `OTP Code: ${code} (Check your inbox or use code if SMTP delayed)`,
+        duration: 9000,
       });
       setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
     } catch {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setDispatchedEmailOtp(fallbackCode);
-      setEmailOtpSent(true);
-      setEmailTimer(30);
-      setEmailOtpDigits(["", "", "", "", "", ""]);
-      toast.success(`Security OTP dispatched to ${email}!`, {
-        description: `Please enter the 6-digit verification code below.`,
-      });
+      toast.error("Authentication error: Please check your network connection.");
     } finally {
       setIsSendingEmailOtp(false);
     }
@@ -242,27 +243,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   const handleDirectEmailLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !email.includes("@")) {
-      toast.error("Please enter a valid corporate email address.");
-      return;
-    }
-    if (!password || password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      return;
-    }
-
-    setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
-      const derivedName = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-      finalizeLogin({
-        name: derivedName,
-        emailOrPhone: email.toLowerCase().trim(),
-        role: "Enterprise Admin",
-        provider: "Email & Password",
-      });
-    }, 450);
+    handleRequestEmailOtp(e);
   };
 
   // ---------------------------------------------------------------------------
@@ -332,53 +313,57 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   useEffect(() => {
-    const googleObj = typeof window !== "undefined" ? (window as any).google : null;
-    if (googleObj?.accounts?.id && googleClientId) {
-      try {
-        googleObj.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: (response: any) => {
-            try {
-              const base64Url = response.credential.split(".")[1];
-              const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-              const jsonPayload = decodeURIComponent(
-                atob(base64)
-                  .split("")
-                  .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-                  .join("")
-              );
-              const data = JSON.parse(jsonPayload);
-              finalizeLogin({
-                name: data.name || "Google User",
-                emailOrPhone: data.email,
-                role: "Google Verified User",
-                provider: "Google Identity Services",
-              });
-            } catch {
-              finalizeLogin({
-                name: "Google Workspace Admin",
-                emailOrPhone: "admin@callforge.io",
-                role: "Google Verified User",
-                provider: "Google Identity Services",
-              });
-            }
-          },
-        });
+    const initGsi = () => {
+      const googleObj = typeof window !== "undefined" ? (window as any).google : null;
+      if (googleObj?.accounts?.id && googleClientId && googleBtnRef.current) {
+        try {
+          googleObj.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: (response: any) => {
+              try {
+                const base64Url = response.credential.split(".")[1];
+                const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+                const jsonPayload = decodeURIComponent(
+                  atob(base64)
+                    .split("")
+                    .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join("")
+                );
+                const data = JSON.parse(jsonPayload);
+                finalizeLogin({
+                  name: data.name || data.given_name || "Google User",
+                  emailOrPhone: data.email,
+                  role: "Enterprise Admin",
+                  provider: "Google Identity Services",
+                });
+              } catch (err) {
+                console.error("[Google Identity] Decode error:", err);
+                toast.error("Could not verify Google authentication token.");
+              }
+            },
+          });
 
-        if (googleBtnRef.current) {
           googleBtnRef.current.innerHTML = "";
           googleObj.accounts.id.renderButton(googleBtnRef.current, {
             theme: "outline",
             size: "large",
-            width: 320,
+            width: 350,
             text: "continue_with",
             shape: "rectangular",
           });
+        } catch (err) {
+          console.warn("[Google Identity] Init error:", err);
         }
-      } catch (err) {
-        console.warn("[Google Identity] Init error:", err);
       }
-    }
+    };
+
+    initGsi();
+    const t1 = setTimeout(initGsi, 500);
+    const t2 = setTimeout(initGsi, 1500);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [googleClientId]);
 
   const handleGoogleSignIn = () => {
@@ -430,6 +415,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         body: JSON.stringify({ phone: cleanPhone, countryCode }),
       });
       const data = await res.json();
+      if (data.accountName) {
+        setRegisteredAccountName(data.accountName);
+      }
       const code = data.otp || Math.floor(100000 + Math.random() * 900000).toString();
       setDispatchedPhoneOtp(code);
       setPhoneOtpSent(true);
@@ -442,6 +430,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setTimeout(() => phoneOtpInputRefs.current[0]?.focus(), 150);
     } catch {
       const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
+      if (cleanPhone === "8080562451" || cleanPhone.endsWith("8080562451")) {
+        setRegisteredAccountName("Sumit Khomne");
+      }
       setDispatchedPhoneOtp(fallbackCode);
       setPhoneOtpSent(true);
       setPhoneTimer(30);
@@ -501,9 +492,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       const data = await res.json();
       if (res.ok && data.success) {
         finalizeLogin({
-          name: data.user?.name || `Agent (+${cleanPhone.slice(-4)})`,
+          name: data.user?.name || registeredAccountName || "Sumit Khomne",
           emailOrPhone: `${countryCode} ${cleanPhone}`,
-          role: "Telephony Supervisor",
+          role: "Enterprise Admin",
           provider: "Phone SMS OTP",
         });
       } else {
@@ -512,9 +503,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     } catch {
       if (fullOtp === dispatchedPhoneOtp) {
         finalizeLogin({
-          name: `Agent (+${cleanPhone.slice(-4)})`,
+          name: registeredAccountName || "Sumit Khomne",
           emailOrPhone: `${countryCode} ${cleanPhone}`,
-          role: "Telephony Supervisor",
+          role: "Enterprise Admin",
           provider: "Phone SMS OTP",
         });
       } else {
@@ -589,7 +580,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <div className="space-y-3.5 animate-in fade-in duration-150">
             {!emailOtpSent ? (
               // Step 1: Email & Password Input
-              <form onSubmit={useEmailOtpMode ? handleRequestEmailOtp : handleDirectEmailLogin} className="space-y-3">
+              <form onSubmit={handleRequestEmailOtp} className="space-y-3">
                 {/* Email */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-300 mb-1">
@@ -648,49 +639,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
                 </div>
 
-                {/* Submit button: Sign In (Default) or Send Code (OTP Mode) */}
+                {/* Submit button: Verify Password & Send Security OTP */}
                 <button
                   type="submit"
-                  disabled={isVerifying || isSendingEmailOtp}
+                  disabled={isSendingEmailOtp}
                   className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs shadow-md shadow-violet-600/20 active:scale-[0.99] transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 mt-1"
                 >
-                  {isVerifying ? (
+                  {isSendingEmailOtp ? (
                     <>
                       <RefreshCw size={14} className="animate-spin" />
-                      <span>Signing in...</span>
+                      <span>Verifying & Sending OTP...</span>
                     </>
-                  ) : useEmailOtpMode ? (
-                    isSendingEmailOtp ? (
-                      <>
-                        <RefreshCw size={14} className="animate-spin" />
-                        <span>Sending Code...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Send Security OTP</span>
-                        <ArrowRight size={14} />
-                      </>
-                    )
                   ) : (
                     <>
                       <Lock size={14} />
-                      <span>Sign In</span>
+                      <span>Verify Password & Send OTP</span>
+                      <ArrowRight size={14} />
                     </>
                   )}
                 </button>
-
-                <div className="text-center pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUseEmailOtpMode(!useEmailOtpMode);
-                      setEmailOtpSent(false);
-                    }}
-                    className="text-[11px] text-zinc-400 hover:text-violet-300 transition cursor-pointer"
-                  >
-                    {useEmailOtpMode ? "← Sign in with password instead" : "Or sign in with email OTP code"}
-                  </button>
-                </div>
               </form>
             ) : (
               // Step 2: Email 6-Digit OTP Verification Form
@@ -746,17 +713,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       </button>
                     )}
                   </span>
+                </div>
 
-                  {dispatchedEmailOtp && (
+                {/* Fallback Email OTP Notice Banner */}
+                {dispatchedEmailOtp && (
+                  <div className="p-2 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-zinc-400">
+                      Email OTP: <strong className="text-violet-300 font-mono tracking-widest text-xs">{dispatchedEmailOtp}</strong>
+                    </span>
                     <button
                       type="button"
-                      onClick={() => setEmailOtpDigits(dispatchedEmailOtp.split(""))}
-                      className="text-[10px] text-zinc-400 hover:text-emerald-400 font-mono bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded cursor-pointer"
+                      onClick={() => {
+                        setEmailOtpDigits(dispatchedEmailOtp.split(""));
+                        toast.success("OTP filled!");
+                      }}
+                      className="text-[10px] text-violet-400 hover:text-violet-300 font-medium bg-violet-950/50 border border-violet-800/40 px-2 py-0.5 rounded cursor-pointer transition"
                     >
-                      Paste OTP ({dispatchedEmailOtp})
+                      Fill Code
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Verify & Enter Button */}
                 <button
@@ -844,20 +820,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             ) : (
               // Step 2: 6-Digit Phone OTP Verification Box
               <form onSubmit={handleVerifyPhoneOtp} className="space-y-3">
-                <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 truncate">
-                    <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
-                    <span className="text-emerald-300 truncate text-[11px] font-mono">
-                      Code sent to {countryCode} {phoneNumber}
-                    </span>
+                <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40 space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                      <span className="text-emerald-300 font-semibold text-xs truncate">
+                        Account: {registeredAccountName || "Sumit Khomne"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPhoneOtpSent(false)}
+                      className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                    >
+                      Edit
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setPhoneOtpSent(false)}
-                    className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer shrink-0 ml-2"
-                  >
-                    Edit
-                  </button>
+                  <div className="text-[11px] text-zinc-400 font-mono pl-5">
+                    SMS code dispatched to {countryCode} {phoneNumber}
+                  </div>
                 </div>
 
                 {/* 6 OTP Boxes */}
@@ -945,6 +926,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             or
           </span>
         </div>
+
+        {/* Google Official GSI Button Container (Official Google popup) */}
+        <div ref={googleBtnRef} className="w-full flex justify-center empty:hidden" />
 
         {/* Google OAuth (Full Width & Clean) */}
         <button
