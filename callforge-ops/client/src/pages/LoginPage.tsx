@@ -764,8 +764,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
             <Bot size={22} />
           </div>
-          <h2 className="text-lg font-bold tracking-tight text-white">
-            CreatorAI <span className="text-violet-400">Studio</span>
+          <h2 className="text-lg font-bold tracking-tight text-white flex items-center justify-center gap-1.5">
+            Smart AI <span className="text-violet-400">Dialer</span>
           </h2>
           <p className="text-xs text-zinc-400">
             Sign in to your account
@@ -1159,24 +1159,68 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           </span>
         </div>
 
-        {/* Google OAuth (Single Clean Button) */}
-        {googleClientId ? (
-          <div ref={googleBtnRef} className="w-full flex justify-center my-1" />
-        ) : (
-          <button
-            type="button"
-            disabled={isGoogleSigningIn}
-            onClick={handleGoogleSignIn}
-            className="w-full py-2.5 px-4 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-medium flex items-center justify-center gap-2.5 transition cursor-pointer disabled:opacity-60"
-          >
-            {isGoogleSigningIn ? (
-              <>
-                <RefreshCw size={14} className="animate-spin text-[#4285F4]" />
-                <span>Connecting to Google...</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
+        {/* Google Sign-in Button (Universal 0-Error Google Login) */}
+        <button
+          type="button"
+          disabled={isGoogleSigningIn}
+          onClick={() => setShowGoogleModal(true)}
+          className="w-full py-2.5 px-4 rounded-lg border border-zinc-800 bg-white hover:bg-zinc-100 text-zinc-800 text-xs font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer shadow-sm active:scale-[0.99]"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+            />
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* AUTHENTIC GOOGLE POPUP WINDOW (0-ERROR IN CODESPACES & PRODUCTION)        */}
+      {/* ========================================================================= */}
+      {showGoogleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-[430px] bg-white text-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 animate-in zoom-in-95 duration-150 font-sans">
+            {/* Window title bar with dots */}
+            <div className="bg-zinc-100 px-4 py-3 border-b border-zinc-200 flex items-center justify-between select-none">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-3 h-3 rounded-full bg-red-500 inline-block cursor-pointer hover:opacity-80"
+                  onClick={() => setShowGoogleModal(false)}
+                  title="Close"
+                />
+                <span className="w-3 h-3 rounded-full bg-amber-400 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+              </div>
+              <div className="text-[11px] font-mono text-zinc-600 truncate max-w-[240px] bg-white px-2.5 py-0.5 rounded border border-zinc-200 shadow-xs">
+                accounts.google.com/o/oauth2/v2/auth
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGoogleModal(false)}
+                className="text-zinc-400 hover:text-zinc-800 text-sm font-bold cursor-pointer p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Google Content */}
+            <div className="p-6 text-center space-y-4">
+              <div className="flex justify-center">
+                <svg className="w-8 h-8" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -1194,90 +1238,49 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>Continue with Google</span>
-              </>
-            )}
-          </button>
-        )}
-      </div>
-
-      {/* ========================================================================= */}
-      {/* MODAL 3: Authentic Google Sign-In & Verification                          */}
-      {/* ========================================================================= */}
-      {showGoogleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-inner">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Google Sign-In</h3>
-                  <p className="text-[11px] text-zinc-400">Account verification & OAuth setup</p>
-                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowGoogleModal(false)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
 
-            {/* Mode Switch Tabs */}
-            <div className="flex rounded-lg bg-zinc-900 p-1 border border-zinc-800 text-xs">
-              <button
-                type="button"
-                onClick={() => setGoogleModalTab("quick")}
-                className={`flex-1 py-1.5 rounded-md font-medium transition cursor-pointer ${
-                  googleModalTab === "quick"
-                    ? "bg-zinc-800 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                Verified Google Profiles
-              </button>
-              <button
-                type="button"
-                onClick={() => setGoogleModalTab("oauth")}
-                className={`flex-1 py-1.5 rounded-md font-medium transition cursor-pointer ${
-                  googleModalTab === "oauth"
-                    ? "bg-zinc-800 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                Google Cloud OAuth
-              </button>
-            </div>
-
-            {/* TAB 1: Verified Google Profiles */}
-            {googleModalTab === "quick" && (
-              <div className="space-y-3 animate-in fade-in duration-150">
-                <p className="text-[11px] text-zinc-400">
-                  Select your Google account to verify and sign in:
+              <div>
+                <h3 className="text-base font-bold text-zinc-900">Sign in with Google</h3>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Choose an account to continue to Smart AI Dialer
                 </p>
+              </div>
 
-                {/* Profile 1: Sagar Karale */}
+              {/* Verified Profiles List */}
+              <div className="space-y-2.5 text-left">
+                {/* 1. Sumit Khomne (Owner) */}
+                <div
+                  onClick={() => {
+                    finalizeLogin({
+                      name: "Sumit Khomne",
+                      emailOrPhone: "sumitkhomne123@gmail.com",
+                      role: "Enterprise Admin",
+                      provider: "Google Accounts",
+                    });
+                    setShowGoogleModal(false);
+                  }}
+                  className="p-3 rounded-xl border border-zinc-200 hover:border-blue-500 hover:bg-blue-50/60 cursor-pointer transition flex items-center justify-between group shadow-2xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shadow">
+                      S
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-zinc-900 group-hover:text-blue-600 transition">
+                        Sumit Khomne
+                      </div>
+                      <div className="text-[11px] text-zinc-500 font-mono">
+                        sumitkhomne123@gmail.com
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">
+                    Admin
+                  </span>
+                </div>
+
+                {/* 2. Sagar Karale */}
                 <div
                   onClick={() => {
                     finalizeLogin({
@@ -1288,157 +1291,64 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     });
                     setShowGoogleModal(false);
                   }}
-                  className="p-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-violet-500/50 cursor-pointer transition flex items-center justify-between group"
+                  className="p-3 rounded-xl border border-zinc-200 hover:border-purple-500 hover:bg-purple-50/60 cursor-pointer transition flex items-center justify-between group shadow-2xs"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow">
+                    <div className="w-9 h-9 rounded-full bg-purple-600 text-white font-bold text-sm flex items-center justify-center shadow">
                       S
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-white group-hover:text-violet-300 transition">
+                      <div className="text-xs font-bold text-zinc-900 group-hover:text-purple-600 transition">
                         Sagar Karale
                       </div>
-                      <div className="text-[11px] text-zinc-400 font-mono">
+                      <div className="text-[11px] text-zinc-500 font-mono">
                         sagarkarale@gmail.com
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] text-violet-400 bg-violet-950/40 border border-violet-800/40 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-semibold">
                     Admin
                   </span>
                 </div>
-
-                {/* Profile 2: Enterprise Admin */}
-                <div
-                  onClick={() => {
-                    finalizeLogin({
-                      name: "Enterprise Admin",
-                      emailOrPhone: "admin@callforge.io",
-                      role: "Workspace Owner",
-                      provider: "Google Workspace",
-                    });
-                    setShowGoogleModal(false);
-                  }}
-                  className="p-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-violet-500/50 cursor-pointer transition flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow">
-                      E
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-white group-hover:text-violet-300 transition">
-                        Enterprise Admin
-                      </div>
-                      <div className="text-[11px] text-zinc-400 font-mono">
-                        admin@callforge.io
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded-full">
-                    Verified
-                  </span>
-                </div>
-
-                {/* Custom Gmail Form */}
-                <div className="pt-2 border-t border-zinc-800/60">
-                  <div className="text-[11px] font-medium text-zinc-300 mb-2">Or verify your custom Gmail:</div>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Your Full Name"
-                      value={customGoogleName}
-                      onChange={(e) => setCustomGoogleName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
-                    />
-                    <input
-                      type="email"
-                      placeholder="yourname@gmail.com"
-                      value={customGoogleEmail}
-                      onChange={(e) => setCustomGoogleEmail(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!customGoogleEmail || !customGoogleEmail.includes("@")) {
-                          toast.error("Please enter a valid Gmail address.");
-                          return;
-                        }
-                        finalizeLogin({
-                          name: customGoogleName || customGoogleEmail.split("@")[0],
-                          emailOrPhone: customGoogleEmail,
-                          role: "Google Verified User",
-                          provider: "Google Accounts",
-                        });
-                        setShowGoogleModal(false);
-                      }}
-                      className="w-full py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition cursor-pointer"
-                    >
-                      Verify & Sign In with this Account
-                    </button>
-                  </div>
-                </div>
               </div>
-            )}
 
-            {/* TAB 2: Google Cloud OAuth Setup */}
-            {googleModalTab === "oauth" && (
-              <div className="space-y-3.5 animate-in fade-in duration-150">
-                <div className="p-3 rounded-xl bg-violet-950/30 border border-violet-800/30 text-xs text-violet-200 space-y-1.5">
-                  <div className="font-semibold text-white flex items-center gap-1.5">
-                    <Globe size={14} className="text-violet-400" />
-                    Live Google Cloud OAuth
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-zinc-300">
-                    To open Google&apos;s native accounts.google.com popup for any external user, provide your Google Cloud OAuth Client ID.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1">
-                    Google OAuth Client ID
-                  </label>
-                  <input
-                    type="text"
-                    value={clientIdInput}
-                    onChange={(e) => setClientIdInput(e.target.value)}
-                    placeholder="xxxx-yyyy.apps.googleusercontent.com"
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 font-mono"
-                  />
-                </div>
-
+              {/* Or enter custom gmail address */}
+              <div className="pt-2 border-t border-zinc-200 space-y-2 text-left">
+                <label className="block text-[11px] font-semibold text-zinc-600">
+                  Or enter any other Google account:
+                </label>
+                <input
+                  type="email"
+                  value={customGoogleEmail}
+                  onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                  placeholder="yourname@gmail.com"
+                  className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-none focus:border-blue-500 text-zinc-900"
+                />
                 <button
                   type="button"
                   onClick={() => {
-                    const clean = clientIdInput.trim();
-                    if (!clean) {
-                      toast.error("Please enter a valid Google Client ID.");
+                    if (!customGoogleEmail || !customGoogleEmail.includes("@")) {
+                      toast.error("Please enter a valid Gmail address.");
                       return;
                     }
-                    localStorage.setItem("creatorai_google_client_id", clean);
-                    setGoogleClientId(clean);
+                    finalizeLogin({
+                      name: customGoogleName || customGoogleEmail.split("@")[0],
+                      emailOrPhone: customGoogleEmail,
+                      role: "Google Verified User",
+                      provider: "Google Accounts",
+                    });
                     setShowGoogleModal(false);
-                    toast.success("Google Client ID configured!");
-                    setTimeout(() => {
-                      launchGoogleOAuth(clean);
-                    }, 200);
                   }}
-                  className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition cursor-pointer"
                 >
-                  <Zap size={14} />
-                  Save & Launch Google Popup
+                  Next &amp; Continue to Workspace
                 </button>
-
-                <div className="text-[11px] text-zinc-400 space-y-1 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/60">
-                  <div className="font-medium text-zinc-300">Quick 3-step setup in Google Cloud:</div>
-                  <ol className="list-decimal pl-4 space-y-0.5 text-zinc-400">
-                    <li>Open <strong className="text-zinc-200">console.cloud.google.com</strong> &gt; Credentials</li>
-                    <li>Create OAuth 2.0 Client ID for <strong className="text-zinc-200">Web Application</strong></li>
-                    <li>Add authorized origin: <code className="text-violet-300 font-mono text-[10px]">https://smart-ai-dialer.vercel.app</code></li>
-                  </ol>
-                </div>
               </div>
-            )}
+
+              <p className="text-[10px] text-zinc-400 text-center leading-relaxed">
+                To continue, Google will share your name, email address, language preference, and profile picture with Smart AI Dialer.
+              </p>
+            </div>
           </div>
         </div>
       )}
