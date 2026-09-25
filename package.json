@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm --prefix callforge-ops install && npm --prefix callforge-ops run build",
+    "build": "npm --prefix callforge-ops install --production=false && npm --prefix callforge-ops run build",
     "start": "npm --prefix callforge-ops run start",
     "dev": "npm --prefix callforge-ops run dev"
   },

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm --prefix callforge-ops install --include=dev && npm --prefix callforge-ops run build",
+  "buildCommand": "npm --prefix callforge-ops install --production=false && npm --prefix callforge-ops run build",
   "outputDirectory": "callforge-ops/dist/public",
   "rewrites": [
     {
