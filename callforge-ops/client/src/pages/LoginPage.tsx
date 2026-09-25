@@ -135,12 +135,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    const normEmail = email.trim().toLowerCase();
+    const enteredPass = password.trim();
+
+    // 1. Strict password validation: check if this email is already registered with a password
+    let storedCreds: Record<string, { password: string; name: string }> = {};
+    try {
+      const raw = localStorage.getItem("smart_dialer_credentials");
+      storedCreds = raw ? JSON.parse(raw) : {};
+    } catch {}
+
+    const seedCreds: Record<string, string> = {
+      "sumitkhomne123@gmail.com": "@Rashbaccha",
+      "testuser@example.com": "Password@123",
+      "test@example.com": "Passw0rd!",
+    };
+
+    const expectedPass = storedCreds[normEmail]?.password || seedCreds[normEmail];
+    if (expectedPass && expectedPass !== enteredPass) {
+      toast.error("Incorrect password! The password you entered does not match this email account.");
+      return;
+    }
+
     setIsSendingEmailOtp(true);
     try {
       const res = await fetch("/api/calling/auth/email/check-credentials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name: fullName.trim() }),
+        body: JSON.stringify({ email: normEmail, password: enteredPass, name: fullName.trim() }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -148,6 +170,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         setIsSendingEmailOtp(false);
         return;
       }
+
+      // Save/update valid credentials for this email
+      storedCreds[normEmail] = { password: enteredPass, name: fullName.trim() };
+      try {
+        localStorage.setItem("smart_dialer_credentials", JSON.stringify(storedCreds));
+      } catch {}
 
       setEmailOtpSent(true);
       setEmailTimer(45);

@@ -39,8 +39,14 @@ export default async function handler(req, res) {
   const enteredPassword = password.trim();
   const trimmedName = typeof name === "string" && name.trim().length > 0 ? name.trim() : "";
 
-  // Check existing credentials if already stored in this session
-  const existing = userCredStore.get(normalizedEmail);
+const SEED_CREDENTIALS = {
+  "sumitkhomne123@gmail.com": { password: "@Rashbaccha", name: "Sumit Khomne" },
+  "testuser@example.com": { password: "Password@123", name: "Testuser" },
+  "test@example.com": { password: "Passw0rd!", name: "Test User" },
+};
+
+  // Check existing credentials if already stored in this session or seed list
+  const existing = userCredStore.get(normalizedEmail) || SEED_CREDENTIALS[normalizedEmail];
   if (existing) {
     if (existing.password !== enteredPassword) {
       return res.status(401).json({
@@ -48,7 +54,10 @@ export default async function handler(req, res) {
         error: "Incorrect password! The password you entered does not match this email account.",
       });
     }
-    if (trimmedName) existing.name = trimmedName;
+    userCredStore.set(normalizedEmail, {
+      password: enteredPassword,
+      name: trimmedName || existing.name,
+    });
   } else {
     userCredStore.set(normalizedEmail, {
       password: enteredPassword,
