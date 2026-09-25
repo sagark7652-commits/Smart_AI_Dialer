@@ -61,6 +61,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   // Common verifying state
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
+
+  // Clean up any stale dummy/test credentials from earlier testing
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("smart_dialer_credentials");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        let modified = false;
+        for (const k of Object.keys(parsed)) {
+          if (
+            parsed[k]?.password === "@Rashbaccha" ||
+            parsed[k]?.password === "Password@123" ||
+            parsed[k]?.password === "Passw0rd!"
+          ) {
+            delete parsed[k];
+            modified = true;
+          }
+        }
+        if (modified) {
+          localStorage.setItem("smart_dialer_credentials", JSON.stringify(parsed));
+        }
+      }
+    } catch {}
+  }, []);
 
   // Google SSO State
   const DEFAULT_GOOGLE_CLIENT_ID = "456489309402-0dc3qkkt1dqvtsqh3rm3vk0thaom8h18.apps.googleusercontent.com";
@@ -138,7 +163,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const normEmail = email.trim().toLowerCase();
     const enteredPass = password.trim();
 
-    // Strict password validation: check if this email is already registered with a password
+    // Check locally registered credentials
     let storedCreds: Record<string, { password: string; name: string }> = {};
     try {
       const raw = localStorage.getItem("smart_dialer_credentials");
@@ -146,9 +171,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     } catch {}
 
     const registered = storedCreds[normEmail];
-    if (registered && registered.password) {
+    // If account is already registered locally and not in reset mode, verify password
+    if (!isResetMode && registered && registered.password) {
       if (registered.password !== enteredPass) {
-        toast.error("Incorrect password! The password you entered does not match this email account.");
+        toast.error("Incorrect password! The password you entered does not match this email account.", {
+          description: "If you forgot your password or wish to update it, click 'Forgot / Reset Password' below.",
+          duration: 6000,
+        });
         return;
       }
     }
@@ -158,11 +187,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       const res = await fetch("/api/calling/auth/email/check-credentials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normEmail, password: enteredPass, name: fullName.trim() }),
+        body: JSON.stringify({
+          email: normEmail,
+          password: enteredPass,
+          name: fullName.trim(),
+          isReset: isResetMode,
+        }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
+      // Check if Vercel deployment protection intercepted the request
+      if (data?.protection?.vercel_auth_enabled || data?.error?.message === "Protected deployment") {
+        toast.error("Vercel Deployment Protection is active!", {
+          description: "Please disable 'Vercel Authentication' in your Vercel Dashboard -> Settings -> Deployment Protection.",
+          duration: 10000,
+        });
+        setIsSendingEmailOtp(false);
+        return;
+      }
+
       if (!res.ok || !data.success) {
-        toast.error(data.error || "Incorrect password! Please check your credentials.");
+        const errMsg =
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.message || "Incorrect password! Please check your credentials.";
+        toast.error(errMsg);
         setIsSendingEmailOtp(false);
         return;
       }
@@ -176,7 +225,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setEmailOtpSent(true);
       setEmailTimer(45);
       setEmailOtpDigits(["", "", "", "", "", ""]);
-      toast.success("Password verified!", {
+      toast.success(isResetMode ? "Password Reset Code Sent!" : "Password verified!", {
         description: `Security OTP sent to ${email}. Please check your email inbox.`,
         duration: 7000,
       });
@@ -232,9 +281,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: enteredOtp }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
+      if (data?.protection?.vercel_auth_enabled || data?.error?.message === "Protected deployment") {
+        toast.error("Vercel Deployment Protection is active!", {
+          description: "Please disable 'Vercel Authentication' in your Vercel Dashboard -> Settings -> Deployment Protection.",
+          duration: 10000,
+        });
+        setIsVerifying(false);
+        return;
+      }
+
       if (res.ok && data.success) {
-        const derivedName = fullName.trim() || data.user?.name || email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        const derivedName =
+          fullName.trim() ||
+          data.user?.name ||
+          email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+        // Update local credentials with verified password
+        try {
+          const raw = localStorage.getItem("smart_dialer_credentials");
+          const creds = raw ? JSON.parse(raw) : {};
+          creds[email.trim().toLowerCase()] = { password: password.trim(), name: derivedName };
+          localStorage.setItem("smart_dialer_credentials", JSON.stringify(creds));
+        } catch {}
+
+        setIsResetMode(false);
         finalizeLogin({
           name: derivedName,
           emailOrPhone: email.toLowerCase().trim(),
@@ -242,7 +314,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           provider: "Email + OTP",
         });
       } else {
-        toast.error(data.error || "Invalid OTP code. Please check your email.");
+        const errMsg =
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.message || "Invalid OTP code. Please check your email.";
+        toast.error(errMsg);
       }
     } catch {
       toast.error("Network error: Please verify your internet connection and try again.");
@@ -641,10 +717,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
                 {/* Password */}
                 <div>
-                  <div className="mb-1">
+                  <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-medium text-zinc-300">
-                      Password
+                      {isResetMode ? "New Account Password" : "Password"}
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsResetMode(!isResetMode);
+                        if (!isResetMode) {
+                          toast.info("Password Reset Mode: Enter your new password and click Send OTP to verify.", {
+                            duration: 5000,
+                          });
+                        }
+                      }}
+                      className="text-[11px] text-violet-400 hover:text-violet-300 underline cursor-pointer"
+                    >
+                      {isResetMode ? "Back to Regular Login" : "Forgot / Reset Password?"}
+                    </button>
                   </div>
                   <div className="relative">
                     <Lock
@@ -656,7 +746,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter password"
+                      placeholder={isResetMode ? "Enter new password (min 6 chars)" : "Enter password"}
                       className="w-full pl-9 pr-9 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                     />
                     <button
@@ -667,6 +757,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
+                  {isResetMode && (
+                    <p className="text-[10px] text-zinc-400 mt-1">
+                      An OTP code will be sent to your email to verify account ownership and save this new password.
+                    </p>
+                  )}
                 </div>
 
                 {/* Submit button: Verify Password & Send Security OTP */}
@@ -678,12 +773,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   {isSendingEmailOtp ? (
                     <>
                       <RefreshCw size={14} className="animate-spin" />
-                      <span>Verifying & Sending OTP...</span>
+                      <span>{isResetMode ? "Sending Reset OTP..." : "Verifying & Sending OTP..."}</span>
                     </>
                   ) : (
                     <>
                       <Lock size={14} />
-                      <span>Verify Password & Send OTP</span>
+                      <span>{isResetMode ? "Send OTP to Reset Password" : "Verify Password & Send OTP"}</span>
                       <ArrowRight size={14} />
                     </>
                   )}

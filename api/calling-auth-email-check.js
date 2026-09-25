@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     }
   }
 
-  const { email, password, name } = body || {};
+  const { email, password, name, isReset } = body || {};
   if (!email || typeof email !== "string" || !email.includes("@")) {
     return res.status(400).json({ error: "Please enter a valid corporate email address." });
   }
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 
   // Check existing credentials if already stored in this session
   const existing = userCredStore.get(normalizedEmail);
-  if (existing) {
+  if (existing && !isReset) {
     if (existing.password !== enteredPassword) {
       return res.status(401).json({
         success: false,
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
   } else {
     userCredStore.set(normalizedEmail, {
       password: enteredPassword,
-      name: trimmedName,
+      name: trimmedName || existing?.name || "",
     });
   }
 

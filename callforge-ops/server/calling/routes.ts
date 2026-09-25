@@ -1023,7 +1023,7 @@ const emailTransporter = nodemailer.createTransport({
 
 // POST /api/calling/auth/email/check-credentials
 callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Response) => {
-  const { email, password, name } = req.body;
+  const { email, password, name, isReset } = req.body;
   if (!email || typeof email !== "string" || !email.includes("@")) {
     return res.status(400).json({ error: "Please enter a valid corporate email address." });
   }
@@ -1045,8 +1045,8 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
   // Look up credentials for this specific email from persistent store
   const existing = persistentStore.getUserCredential(normalizedEmail);
 
-  if (existing) {
-    // If account already exists, strictly verify that the entered password matches this email!
+  if (existing && !isReset) {
+    // If account already exists and not in reset mode, strictly verify that the entered password matches this email!
     if (existing.passwordPlain !== enteredPassword && existing.passwordHash !== enteredPassword) {
       return res.status(401).json({
         success: false,
@@ -1058,8 +1058,8 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
       persistentStore.setUserCredential(normalizedEmail, enteredPassword, trimmedName, existing.role);
     }
   } else {
-    // Register password and name for this email account
-    persistentStore.setUserCredential(normalizedEmail, enteredPassword, trimmedName);
+    // Register or reset password and name for this email account
+    persistentStore.setUserCredential(normalizedEmail, enteredPassword, trimmedName, existing?.role);
   }
 
   // Password confirmed for this email: Generate 6-digit verification code
