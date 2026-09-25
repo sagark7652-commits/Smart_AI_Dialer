@@ -28,17 +28,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const DEFAULT_USER_CREDENTIALS: Record<string, { password: string; name: string }> = {
-  "sumitkhomne123@gmail.com": {
-    password: "@Rashbaccha",
-    name: "Sumit Khomne",
-  },
-  "testuser@example.com": {
-    password: "Password@123",
-    name: "Test User",
-  },
-};
-
 interface LoginPageProps {
   onLoginSuccess?: (user: { name: string; emailOrPhone: string; role: string; provider?: string }) => void;
 }
@@ -86,7 +75,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [useEmailOtpMode, setUseEmailOtpMode] = useState(false);
-  const [registeredAccountName, setRegisteredAccountName] = useState<string>("Sumit Khomne");
+  const [registeredAccountName, setRegisteredAccountName] = useState<string>("");
 
   const hasRenderedGsiRef = useRef(false);
 
@@ -157,19 +146,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       storedCreds = raw ? JSON.parse(raw) : {};
     } catch {}
 
-    const registered = storedCreds[normEmail] || DEFAULT_USER_CREDENTIALS[normEmail];
-    // If not in reset mode, STRICTLY verify password:
-    if (!isResetMode) {
-      if (!registered) {
-        toast.error("This email is not registered in the system.", {
-          description: "Please check your email address or use 'Forgot / Reset Password' to register.",
-          duration: 6000,
-        });
-        return;
-      }
+    const registered = storedCreds[normEmail];
+    // If not in reset mode and account already has a registered password, strictly verify:
+    if (!isResetMode && registered && registered.password) {
       if (registered.password !== enteredPass) {
         toast.error("Incorrect password! The password you entered does not match this email account.", {
-          description: "Please enter the correct password for this email.",
+          description: "Please enter the correct password for this email or click 'Forgot / Reset Password'.",
           duration: 6000,
         });
         return; // STOP! DO NOT PROCEED!

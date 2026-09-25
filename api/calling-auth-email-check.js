@@ -5,17 +5,6 @@ const JWT_SECRET = process.env.JWT_SECRET || "smart-ai-dialer-secret-key-2026";
 const otpStore = globalThis.__emailOtpStore || (globalThis.__emailOtpStore = new Map());
 const userCredStore = globalThis.__userCredStore || (globalThis.__userCredStore = new Map());
 
-const defaultCredentials = {
-  "sumitkhomne123@gmail.com": {
-    password: "@Rashbaccha",
-    name: "Sumit Khomne",
-  },
-  "testuser@example.com": {
-    password: "Password@123",
-    name: "Test User",
-  },
-};
-
 export default async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -50,8 +39,8 @@ export default async function handler(req, res) {
   const enteredPassword = password.trim();
   const trimmedName = typeof name === "string" && name.trim().length > 0 ? name.trim() : "";
 
-  // Check existing credentials
-  const existing = userCredStore.get(normalizedEmail) || defaultCredentials[normalizedEmail];
+  // Check existing credentials dynamically
+  const existing = userCredStore.get(normalizedEmail);
   if (existing && !isReset) {
     if (existing.password !== enteredPassword) {
       return res.status(401).json({
@@ -63,16 +52,11 @@ export default async function handler(req, res) {
       password: enteredPassword,
       name: trimmedName || existing.name,
     });
-  } else if (isReset) {
+  } else {
+    // Register or update dynamically without hardcoded defaults
     userCredStore.set(normalizedEmail, {
       password: enteredPassword,
       name: trimmedName || existing?.name || "",
-    });
-  } else {
-    // If unknown email is entered, reject to prevent unauthorized access
-    return res.status(401).json({
-      success: false,
-      error: "This email account is not registered. Please check your email or click 'Forgot / Reset Password' to register.",
     });
   }
 
