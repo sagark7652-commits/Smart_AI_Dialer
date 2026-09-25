@@ -1,7 +1,23 @@
 {
-  "buildCommand": "npm --prefix callforge-ops install && npm --prefix callforge-ops run build",
+  "buildCommand": "npm --prefix callforge-ops install --include=dev && npm --prefix callforge-ops run build",
   "outputDirectory": "callforge-ops/dist/public",
   "rewrites": [
+    {
+      "source": "/api/calling/auth/email/check-credentials",
+      "destination": "/api/calling-auth-email-check"
+    },
+    {
+      "source": "/api/calling/auth/email/verify-otp",
+      "destination": "/api/calling-auth-email-verify"
+    },
+    {
+      "source": "/api/calling/auth/phone/send-otp",
+      "destination": "/api/send-phone-otp"
+    },
+    {
+      "source": "/api/calling/auth/phone/verify-otp",
+      "destination": "/api/verify-phone-otp"
+    },
     {
       "source": "/api/send-email-otp",
       "destination": "/api/send-email-otp"
@@ -9,6 +25,10 @@
     {
       "source": "/api/send-phone-otp",
       "destination": "/api/send-phone-otp"
+    },
+    {
+      "source": "/api/verify-phone-otp",
+      "destination": "/api/verify-phone-otp"
     },
     {
       "source": "/(.*)",
