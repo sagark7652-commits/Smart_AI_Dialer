@@ -29,7 +29,81 @@ export interface CDRRecord {
   transcript?: Array<{ speaker: string; text: string; time: string }>;
 }
 
-export const SAMPLE_CDR_DATA: CDRRecord[] = [];
+export const SAMPLE_CDR_DATA: CDRRecord[] = [
+  {
+    id: "CDR-1001",
+    time: "10:14 AM",
+    customerName: "Rahul Sharma",
+    customerPhone: "+91 98201 12345",
+    agentName: "Aarti AI",
+    campaign: "EMI Reminder",
+    duration: "1m 45s",
+    disposition: "PTP (Promise to Pay)",
+    cost: "₹1.40",
+    qaScore: 94,
+    hasRecording: true,
+    recordingUrl: "https://example.com/recordings/cdr-1001.mp3",
+    transcript: [
+      { speaker: "AI", text: "Namaste Rahul ji, main CallForge AI assistant hoon.", time: "00:01" },
+      { speaker: "Customer", text: "Haan boliye, mera loan balance kitna hai?", time: "00:05" },
+    ],
+  },
+  {
+    id: "CDR-1002",
+    time: "10:28 AM",
+    customerName: "Priya Nair",
+    customerPhone: "+91 98450 67890",
+    agentName: "Rohan AI",
+    campaign: "KYC Verification",
+    duration: "2m 10s",
+    disposition: "Completed",
+    cost: "₹2.10",
+    qaScore: 98,
+    hasRecording: true,
+    transcript: [
+      { speaker: "AI", text: "Namaste Priya ji, KYC update call.", time: "00:01" },
+    ],
+  },
+  {
+    id: "CDR-1003",
+    time: "11:05 AM",
+    customerName: "Amitabh Verma",
+    customerPhone: "+91 98110 54321",
+    agentName: "Aarti AI",
+    campaign: "EMI Reminder",
+    duration: "0m 42s",
+    disposition: "Callback Requested",
+    cost: "₹0.80",
+    qaScore: 88,
+    hasRecording: false,
+  },
+  {
+    id: "CDR-1004",
+    time: "11:30 AM",
+    customerName: "Deepak Patel",
+    customerPhone: "+91 97240 11223",
+    agentName: "Kavya AI",
+    campaign: "Credit Card Upgrade",
+    duration: "3m 15s",
+    disposition: "Interested",
+    cost: "₹3.20",
+    qaScore: 92,
+    hasRecording: true,
+  },
+  {
+    id: "CDR-1005",
+    time: "12:15 PM",
+    customerName: "Ananya Iyer",
+    customerPhone: "+91 94440 99887",
+    agentName: "Rohan AI",
+    campaign: "Home Loan Inquiry",
+    duration: "1m 12s",
+    disposition: "DNC Requested",
+    cost: "₹1.10",
+    qaScore: 90,
+    hasRecording: true,
+  },
+];
 
 interface CDRDataTableProps {
   onSelectCallForAudio?: (record: CDRRecord) => void;

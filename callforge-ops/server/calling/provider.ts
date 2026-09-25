@@ -235,12 +235,16 @@ export class TwilioProvider implements TelephonyProvider {
         const params = new URLSearchParams();
         params.append("To", toNumber);
         params.append("From", fromNumber);
-        params.append(
-          "Twiml",
-          `<Response><Say voice="Polly.Aditi" language="hi-IN">${
-            payload.script || "Namaste, CreatorAI calling assistant me aapka swagat hai."
-          }</Say></Response>`
-        );
+        const publicUrl = process.env.PUBLIC_APP_URL || payload.webhookUrl || "";
+        const wsUrl = publicUrl.replace(/^http/, "ws") + "/media-stream";
+
+        const twiml = publicUrl
+          ? `<Response><Connect><Stream url="${wsUrl}" /></Connect></Response>`
+          : `<Response><Say voice="Polly.Aditi" language="hi-IN">${
+              payload.script || "Namaste, CallForge AI assistant me aapka swagat hai."
+            }</Say></Response>`;
+
+        params.append("Twiml", twiml);
 
         const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`, {
           method: "POST",

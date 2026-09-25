@@ -982,14 +982,18 @@ callingRouter.get("/automation/whatsapp/logs", (_req: Request, res: Response) =>
   res.json({ logs: persistentStore.getWhatsAppLogs() });
 });
 
-// POST /api/calling/webhooks/voice/twiml (Twilio Programmable Voice SIP Inbound)
+// POST /api/calling/webhooks/voice/twiml (Twilio Programmable Voice SIP Inbound & Media Stream)
 callingRouter.post("/webhooks/voice/twiml", (req: Request, res: Response) => {
-  const caller = req.body.From || "+91-Unknown";
+  const host = req.headers.host || "localhost:3000";
+  const wsProtocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "wss" : "ws";
+  const streamUrl = `${wsProtocol}://${host}/media-stream`;
+
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Aditi" language="hi-IN">Namaste! Welcome to CallForge AI Telephony Suite. Your call is being bridged to an autonomous agent.</Say>
-  <Pause length="1"/>
-  <Say voice="Polly.Aditi" language="hi-IN">Connecting now.</Say>
+  <Say voice="Polly.Aditi" language="hi-IN">Namaste! Welcome to CallForge AI Telephony Suite. Connecting your real-time AI assistant now.</Say>
+  <Connect>
+    <Stream url="${streamUrl}" />
+  </Connect>
 </Response>`;
   res.type("text/xml").send(twiml);
 });
