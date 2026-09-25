@@ -28,6 +28,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+const DEFAULT_USER_CREDENTIALS: Record<string, { password: string; name: string }> = {
+  "sumitkhomne123@gmail.com": {
+    password: "@Rashbaccha",
+    name: "Sumit Khomne",
+  },
+  "testuser@example.com": {
+    password: "Password@123",
+    name: "Test User",
+  },
+};
+
 interface LoginPageProps {
   onLoginSuccess?: (user: { name: string; emailOrPhone: string; role: string; provider?: string }) => void;
 }
@@ -62,30 +73,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Common verifying state
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
-
-  // Clean up any stale dummy/test credentials from earlier testing
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("smart_dialer_credentials");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        let modified = false;
-        for (const k of Object.keys(parsed)) {
-          if (
-            parsed[k]?.password === "@Rashbaccha" ||
-            parsed[k]?.password === "Password@123" ||
-            parsed[k]?.password === "Passw0rd!"
-          ) {
-            delete parsed[k];
-            modified = true;
-          }
-        }
-        if (modified) {
-          localStorage.setItem("smart_dialer_credentials", JSON.stringify(parsed));
-        }
-      }
-    } catch {}
-  }, []);
 
   // Google SSO State
   const DEFAULT_GOOGLE_CLIENT_ID = "456489309402-0dc3qkkt1dqvtsqh3rm3vk0thaom8h18.apps.googleusercontent.com";
@@ -170,15 +157,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       storedCreds = raw ? JSON.parse(raw) : {};
     } catch {}
 
-    const registered = storedCreds[normEmail];
-    // If account is already registered locally and not in reset mode, verify password
-    if (!isResetMode && registered && registered.password) {
-      if (registered.password !== enteredPass) {
-        toast.error("Incorrect password! The password you entered does not match this email account.", {
-          description: "If you forgot your password or wish to update it, click 'Forgot / Reset Password' below.",
+    const registered = storedCreds[normEmail] || DEFAULT_USER_CREDENTIALS[normEmail];
+    // If not in reset mode, STRICTLY verify password:
+    if (!isResetMode) {
+      if (!registered) {
+        toast.error("This email is not registered in the system.", {
+          description: "Please check your email address or use 'Forgot / Reset Password' to register.",
           duration: 6000,
         });
         return;
+      }
+      if (registered.password !== enteredPass) {
+        toast.error("Incorrect password! The password you entered does not match this email account.", {
+          description: "Please enter the correct password for this email.",
+          duration: 6000,
+        });
+        return; // STOP! DO NOT PROCEED!
       }
     }
 

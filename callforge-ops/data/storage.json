@@ -97,5 +97,22 @@
   "teamMembers": [],
   "auditLogs": [],
   "whatsappLogs": [],
-  "userCredentials": {}
+  "userCredentials": {
+    "sumitkhomne123@gmail.com": {
+      "email": "sumitkhomne123@gmail.com",
+      "passwordHash": "@Rashbaccha",
+      "passwordPlain": "@Rashbaccha",
+      "name": "Sumit Khomne",
+      "role": "Enterprise Admin",
+      "updatedAt": "2026-09-26T01:15:00.000Z"
+    },
+    "testuser@example.com": {
+      "email": "testuser@example.com",
+      "passwordHash": "Password@123",
+      "passwordPlain": "Password@123",
+      "name": "Test User",
+      "role": "Enterprise Admin",
+      "updatedAt": "2026-09-26T01:15:00.000Z"
+    }
+  }
 }
