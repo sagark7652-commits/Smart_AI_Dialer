@@ -138,23 +138,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const normEmail = email.trim().toLowerCase();
     const enteredPass = password.trim();
 
-    // 1. Strict password validation: check if this email is already registered with a password
+    // Strict password validation: check if this email is already registered with a password
     let storedCreds: Record<string, { password: string; name: string }> = {};
     try {
       const raw = localStorage.getItem("smart_dialer_credentials");
       storedCreds = raw ? JSON.parse(raw) : {};
     } catch {}
 
-    const seedCreds: Record<string, string> = {
-      "sumitkhomne123@gmail.com": "@Rashbaccha",
-      "testuser@example.com": "Password@123",
-      "test@example.com": "Passw0rd!",
-    };
-
-    const expectedPass = storedCreds[normEmail]?.password || seedCreds[normEmail];
-    if (expectedPass && expectedPass !== enteredPass) {
-      toast.error("Incorrect password! The password you entered does not match this email account.");
-      return;
+    const registered = storedCreds[normEmail];
+    if (registered && registered.password) {
+      if (registered.password !== enteredPass) {
+        toast.error("Incorrect password! The password you entered does not match this email account.");
+        return;
+      }
     }
 
     setIsSendingEmailOtp(true);
