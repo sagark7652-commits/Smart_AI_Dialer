@@ -5,7 +5,9 @@
   "scripts": {
     "build": "npm --prefix callforge-ops install --production=false && npm --prefix callforge-ops run build",
     "start": "npm --prefix callforge-ops run start",
-    "dev": "npm --prefix callforge-ops run dev"
+    "dev": "npm --prefix callforge-ops run dev",
+    "deploy:vercel": "node -e \"fetch('https://api.vercel.com/v1/integrations/deploy/prj_achNYYSGPCG7xlKWCORJNMivgtmh/JSwjsxAPan', { method: 'POST' }).then(() => console.log('Vercel Redeploy Triggered!'))\"",
+    "push": "git add . && git commit -m \"team update\" && git pull --rebase origin main && git push origin main && npm run deploy:vercel"
   },
   "dependencies": {
     "nodemailer": "^6.9.16"
