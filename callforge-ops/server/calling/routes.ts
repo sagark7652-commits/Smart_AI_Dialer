@@ -1014,10 +1014,15 @@ const GMAIL_USER = process.env.GMAIL_USER || "tatadialer7@gmail.com";
 const GMAIL_APP_PASS = (process.env.GMAIL_APP_PASSWORD || "weyfveenhgunvyrb").replace(/\s+/g, "");
 
 const emailTransporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: GMAIL_USER,
     pass: GMAIL_APP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
@@ -1106,6 +1111,7 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
       : `Password verified! Security OTP generated for ${normalizedEmail}.`,
     email: normalizedEmail,
     sentReal,
+    code,
   });
 });
 
