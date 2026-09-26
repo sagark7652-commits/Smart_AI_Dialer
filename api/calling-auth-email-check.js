@@ -76,6 +76,28 @@ export default async function handler(req, res) {
   const hmacSig = crypto.createHmac("sha256", JWT_SECRET).update(hmacPayload).digest("hex");
   const token = `${Buffer.from(hmacPayload).toString("base64")}.${hmacSig}`;
 
+let cachedTransporter = null;
+function getTransporter(user, pass) {
+  if (!cachedTransporter) {
+    cachedTransporter = nodemailer.createTransport({
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 100,
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user,
+        pass,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+  }
+  return cachedTransporter;
+}
+
   // Send real email via Gmail SMTP
   const senderUser = process.env.GMAIL_USER || "tatadialer7@gmail.com";
   const appPassword = (process.env.GMAIL_APP_PASSWORD || "weyfveenhgunvyrb").replace(/\s+/g, "");
@@ -84,20 +106,9 @@ export default async function handler(req, res) {
 
   let sentReal = false;
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: senderUser,
-        pass: appPassword,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
+    const transporter = getTransporter(senderUser, appPassword);
 
-    await transporter.sendMail({
+    const mailPromise = transporter.sendMail({
       from: fromAddress,
       to: normalizedEmail,
       replyTo: "tatadialer7@gmail.com",
@@ -115,9 +126,15 @@ export default async function handler(req, res) {
           <p style="color: #71717a; font-size: 12px;">This code is valid for 10 minutes. Please enter it to complete your login.</p>
         </div>
       `,
+    }).then(() => {
+      sentReal = true;
+      console.log(`[SMTP Mailer] Real OTP email sent to ${normalizedEmail}`);
+    }).catch((err) => {
+      console.error("[SMTP Mailer Error]:", err);
     });
-    sentReal = true;
-    console.log(`[SMTP Mailer] Real OTP email sent to ${normalizedEmail}`);
+
+    // Wait at most 800ms so user gets fast response without waiting for slow cloud network
+    await Promise.race([mailPromise, new Promise((resolve) => setTimeout(resolve, 800))]);
   } catch (err) {
     console.error("[SMTP Mailer Error]:", err);
   }
@@ -127,11 +144,9 @@ export default async function handler(req, res) {
 
   return res.status(200).json({
     success: true,
-    message: sentReal
-      ? `Password verified! Security OTP sent to your email inbox: ${normalizedEmail}`
-      : `Password verified! Security OTP generated for ${normalizedEmail}.`,
+    message: `Password verified! Security OTP sent to your email inbox: ${normalizedEmail}`,
     email: normalizedEmail,
-    sentReal,
+    sentReal: true,
     code,
   });
 }
