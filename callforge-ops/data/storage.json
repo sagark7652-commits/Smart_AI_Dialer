@@ -1,36 +1,5 @@
 {
-  "leads": [
-    {
-      "id": "lead_FB6qahVR",
-      "name": "Rohit Deshmukh",
-      "phone": "+91 99887 76655",
-      "company": "Deshmukh Tech",
-      "source": "Outbound Blast",
-      "stage": "Opted-Out",
-      "score": 40,
-      "last": "10 mins ago",
-      "isDnc": true,
-      "notes": [
-        "[Statutory NDNC] Opted out by customer during AI voice call on 4/11/2026."
-      ],
-      "createdAt": "2026-11-04T15:42:01.414Z"
-    },
-    {
-      "id": "lead_rRxZ1DbJ",
-      "name": "Vikram Malhotra",
-      "phone": "+91 98111 22334",
-      "company": "Malhotra Enterprises",
-      "source": "Inbound Call",
-      "stage": "Qualified",
-      "score": 85,
-      "last": "Just now",
-      "isDnc": false,
-      "notes": [
-        "[Voice AI Agent] Balance queried: ₹50,000"
-      ],
-      "createdAt": "2026-11-04T15:42:01.378Z"
-    }
-  ],
+  "leads": [],
   "cdrLogs": [],
   "carrierConfig": {
     "provider": "mock",
@@ -40,7 +9,7 @@
     "exotelApiKey": "",
     "exotelApiToken": "",
     "exotelSid": "",
-    "updatedAt": "2026-11-04T15:42:01.000Z"
+    "updatedAt": "2026-11-04T15:53:42.612Z"
   },
   "subscription": {
     "planId": "plan_starter",
@@ -48,7 +17,7 @@
     "price": 0,
     "status": "active",
     "callingMinutesRemaining": 0,
-    "renewalDate": "2026-12-04T15:42:01.000Z"
+    "renewalDate": "2026-12-04T15:53:42.612Z"
   },
   "autoRecharge": {
     "enabled": true,
@@ -56,7 +25,7 @@
     "rechargeAmount": 25000,
     "paymentMethod": "upi_autopay",
     "gstin": "27AABCC1234F1Z8",
-    "updatedAt": "2026-11-04T15:42:00.966Z"
+    "updatedAt": "2026-11-04T15:53:42.608Z"
   },
   "ivrNodes": [
     {
@@ -163,7 +132,7 @@
         "override_qa": false
       }
     },
-    "updatedAt": "2026-11-04T15:42:00.968Z"
+    "updatedAt": "2026-11-04T15:53:42.609Z"
   },
   "abSplitConfig": {
     "splitPercentA": 50,
@@ -171,35 +140,122 @@
     "scriptA": "Namaste {lead_name} ji. We are offering an exclusive 20% discount on festive calling agent packs. Would you like to schedule a 10-minute demo with our team?",
     "scriptB": "Namaste {lead_name} ji! Most retail businesses in {city} are saving 4 hours daily using CallForge AI calling. Can we demonstrate how it handles your festive inbound rush?",
     "winnerVariant": "B",
-    "updatedAt": "2026-11-04T15:42:00.968Z"
+    "updatedAt": "2026-11-04T15:53:42.609Z"
   },
   "walletBalance": 0,
   "transactions": [],
   "invoices": [],
   "teamMembers": [],
-
   "auditLogs": [
     {
-      "id": "log_lgSfuM86",
-      "action": "WhatsApp Follow-up Sent",
-      "user": "Arjun Mehta (Automated)",
+      "id": "log_OiUNOXuy",
+      "action": "Plan Activation Requested",
+      "user": "SwiftTel AI Agent",
       "ip": "10.107.157.9",
-      "timestamp": "2026-11-04T15:42:01.429Z",
-      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "timestamp": "2026-11-04T15:57:04.187Z",
+      "details": "Plan activation initiated for Customer (+91 98201 55432) - Plan: swifttel_annual_1999",
+      "category": "system"
+    },
+    {
+      "id": "log_DBxb38v8",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T15:57:02.134Z",
+      "details": "Scheduled autonomous follow-up call to Customer (+91 98201 55432) for 6/11/2026, 9:27:02 pm.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_oMRbuA2y",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T15:56:58.042Z",
+      "details": "Scheduled autonomous follow-up call to Customer (+91 98201 55432) for 6/11/2026, 9:26:58 pm.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_zCIF1Z8n",
+      "action": "Plan Activation Requested",
+      "user": "SwiftTel AI Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T15:56:55.996Z",
+      "details": "Plan activation initiated for Customer (+91 98201 55432) - Plan: swifttel_annual_1999",
+      "category": "system"
+    },
+    {
+      "id": "log_cAME1WXn",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T15:56:53.956Z",
+      "details": "Scheduled autonomous follow-up call to Customer (+91 98201 55432) for 6/11/2026, 9:26:53 pm.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_NE_WcXil",
+      "action": "Plan Activation Requested",
+      "user": "SwiftTel AI Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T15:55:34.233Z",
+      "details": "Plan activation initiated for Customer (+91 98201 55432) - Plan: swifttel_annual_1999",
+      "category": "system"
+    },
+    {
+      "id": "log_zQIxHxey",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T15:55:34.171Z",
+      "details": "Scheduled autonomous follow-up call to Customer (+91 98201 55432) for 6/11/2026, 9:25:34 pm.",
       "category": "campaign"
     }
   ],
-  "whatsappLogs": [
+  "whatsappLogs": [],
+  "scheduledCallbacks": [
     {
-      "id": "wa_VaX1yAP2",
-      "recipientName": "Anjali Gupta",
-      "recipientPhone": "+91 98200 11223",
-      "templateName": "Tata Smartflo UPI Payment Dispatch",
-      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793806921428",
-      "status": "delivered",
-      "timestamp": "2026-11-04T15:42:01.429Z",
-      "disposition": "Interested"
+      "id": "cb_8V0rUsbd",
+      "customerName": "Customer",
+      "customerPhone": "+91 98201 55432",
+      "scheduledAt": "2026-11-06T15:57:02.134Z",
+      "reason": "Customer requested callback in 2 days",
+      "requestedBy": "customer",
+      "notes": "Automated callback scheduled by AI Voice Assistant for Customer.",
+      "status": "pending",
+      "createdAt": "2026-11-04T15:57:02.134Z"
+    },
+    {
+      "id": "cb_njU6Z6gG",
+      "customerName": "Customer",
+      "customerPhone": "+91 98201 55432",
+      "scheduledAt": "2026-11-06T15:56:58.042Z",
+      "reason": "Customer requested callback in 2 days",
+      "requestedBy": "customer",
+      "notes": "Automated callback scheduled by AI Voice Assistant for Customer.",
+      "status": "pending",
+      "createdAt": "2026-11-04T15:56:58.042Z"
+    },
+    {
+      "id": "cb_812DhRQh",
+      "customerName": "Customer",
+      "customerPhone": "+91 98201 55432",
+      "scheduledAt": "2026-11-06T15:56:53.956Z",
+      "reason": "Customer requested callback in 2 days",
+      "requestedBy": "customer",
+      "notes": "Automated callback scheduled by AI Voice Assistant for Customer.",
+      "status": "pending",
+      "createdAt": "2026-11-04T15:56:53.956Z"
+    },
+    {
+      "id": "cb_DBp7k3al",
+      "customerName": "Customer",
+      "customerPhone": "+91 98201 55432",
+      "scheduledAt": "2026-11-06T15:55:34.168Z",
+      "reason": "Customer requested callback in 2 days",
+      "requestedBy": "customer",
+      "notes": "Automated callback scheduled by AI Voice Assistant for Customer.",
+      "status": "pending",
+      "createdAt": "2026-11-04T15:55:34.168Z"
     }
   ]
-  "userCredentials": {}
 }
