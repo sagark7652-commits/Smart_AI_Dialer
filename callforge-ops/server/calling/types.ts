@@ -54,7 +54,7 @@ export interface ActiveCall {
   customerName: string;
   agentId?: string;
   agentName?: string;
-  provider: "exotel" | "bolna" | "twilio" | "mock" | "tata" | "tata_smartflo";
+  provider: "exotel" | "twilio" | "mock" | "tata" | "tata_smartflo" | "openai";
   status: CallStatus;
   startedAt: string;
   endedAt?: string;

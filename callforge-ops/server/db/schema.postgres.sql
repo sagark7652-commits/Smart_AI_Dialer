@@ -371,9 +371,9 @@ CREATE INDEX idx_campaign_leads_priority
 CREATE TABLE calls (
     id BIGSERIAL PRIMARY KEY,
 
-    campaign_id BIGINT NOT NULL,
+    campaign_id BIGINT NULL,
 
-    lead_id BIGINT NOT NULL,
+    lead_id BIGINT NULL,
 
     agent_id BIGINT,
 
@@ -408,6 +408,12 @@ CREATE TABLE calls (
 
     transcript TEXT,
 
+    summary TEXT,
+
+    customer_feedback TEXT,
+
+    extracted_data JSONB,
+
     disposition VARCHAR(100),
 
     sentiment VARCHAR(20)
@@ -436,13 +442,13 @@ CREATE TABLE calls (
         FOREIGN KEY (campaign_id)
         REFERENCES campaigns(id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+        ON DELETE SET NULL,
 
     CONSTRAINT fk_call_lead
         FOREIGN KEY (lead_id)
         REFERENCES leads(id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+        ON DELETE SET NULL,
 
     CONSTRAINT fk_call_agent
         FOREIGN KEY (agent_id)

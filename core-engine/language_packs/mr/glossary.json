@@ -1,0 +1,79 @@
+{
+  "common": {
+    "hello": "नमस्कार",
+    "thank_you": "धन्यवाद",
+    "please": "कृपया",
+    "welcome": "आपले स्वागत आहे",
+    "okay": "ठीक आहे",
+    "understood": "बरं, समजलं",
+    "certainly": "नक्कीच",
+    "sorry": "क्षमस्व",
+    "no_problem": "काही हरकत नाही",
+    "goodbye": "आपला दिवस चांगला जावो"
+  },
+  "sales": {
+    "offer": "खास ऑफर",
+    "discount": "सवलत / डिस्काउंट",
+    "plan": "प्लॅन",
+    "subscription": "सबस्क्रिप्शन",
+    "validity": "व्हॅलिडिटी / मुदत",
+    "recharge": "रिचार्ज",
+    "benefits": "फायदे",
+    "cost": "किंमत / शुल्क",
+    "annual_plan": "वार्षिक प्लॅन",
+    "activation": "सुरू करणे / ॲक्टिव्हेशन"
+  },
+  "lead_qualification": {
+    "company": "कंपनी / संस्था",
+    "team_size": "टीमची संख्या",
+    "requirement": "गरज / आवश्यकता",
+    "budget": "बजेट / अंदाजित खर्च",
+    "timeline": "वेळापत्रक",
+    "decision_maker": "निर्णय घेणारे अधिकारी",
+    "brief_call": "थोडक्यात चर्चा / कॉल",
+    "demo": "डेमो / प्रत्यक्ष सादरीकरण",
+    "cloud_migration": "क्लाउड मायग्रेशन"
+  },
+  "appointment": {
+    "booking": "अपॉइंटमेंट बुकिंग",
+    "doctor": "डॉक्टर",
+    "consultation": "तपासणी / सल्ला",
+    "clinic": "क्लिनिक / दवाखाना",
+    "slot": "वेळ / स्लॉट",
+    "timing": "वेळ",
+    "reschedule": "वेळ बदलणे / री-शेड्युल",
+    "cancel": "रद्द करणे",
+    "fee": "तपासणी फी / शुल्क",
+    "confirmation": "निश्चिती / कन्फर्मेशन"
+  },
+  "reminder_collection": {
+    "emi": "ईएमआय (EMI)",
+    "due_date": "शेवटची तारीख / देय दिनांक",
+    "amount_due": "बाकी रक्कम",
+    "overdue": "मुदत संपलेली रक्कम",
+    "payment_link": "पेमेंट लिंक",
+    "receipt": "पावती / रिसीट",
+    "grace_period": "सवलतीची मुदत",
+    "penalty": "दंड / लेट फी",
+    "cibil_score": "सिबिल स्कोअर"
+  },
+  "support": {
+    "issue": "तक्रार / अडचण",
+    "resolution": "तोडगा / निराकरण",
+    "ticket_number": "तक्रार क्रमांक / तिकीट नंबर",
+    "account": "खाते / अकाउंट",
+    "technical_team": "तांत्रिक विभाग",
+    "follow_up": "पाठपुरावा / फॉलो-अप",
+    "connectivity": "कनेक्शन / रेंज",
+    "verification": "पडताळणी / व्हेरिफिकेशन"
+  },
+  "survey": {
+    "feedback": "अभिप्राय / फीडबॅक",
+    "rating": "मानांकन / रेटिंग",
+    "satisfaction": "समाधान",
+    "experience": "अनुभव",
+    "scale_1_to_5": "१ ते ५ मधील गुण",
+    "recommendation": "इतरांना शिफारस",
+    "valuable_time": "आपला मौल्यवान वेळ"
+  }
+}

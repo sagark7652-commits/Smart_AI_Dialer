@@ -1,0 +1,13 @@
+Language,Candidate_Label,Audio_File,Naturalness (1-5),Accent_Correctness (1-5),Clarity (1-5),Smoothness_No_Breaks (1-5),Emotional_Fit (1-5),Notes
+en,A,audition_en_A.wav,,,,,,
+en,B,audition_en_B.wav,,,,,,
+en,C,audition_en_C.wav,,,,,,
+en,D,audition_en_D.wav,,,,,,
+hi,A,audition_hi_A.wav,,,,,,
+hi,B,audition_hi_B.wav,,,,,,
+hi,C,audition_hi_C.wav,,,,,,
+hi,D,audition_hi_D.wav,,,,,,
+mr,A,audition_mr_A.wav,,,,,,
+mr,B,audition_mr_B.wav,,,,,,
+mr,C,audition_mr_C.wav,,,,,,
+mr,D,audition_mr_D.wav,,,,,,

@@ -1,0 +1,65 @@
+[
+  {
+    "language": "mr",
+    "candidate": "A",
+    "provider": "Sarvam AI",
+    "audio_file": "voice_audition\\audition_mr_A.wav",
+    "measured_ttfa_ms": 23.67
+  },
+  {
+    "language": "mr",
+    "candidate": "B",
+    "provider": "Cartesia",
+    "audio_file": "voice_audition\\audition_mr_B.wav",
+    "measured_ttfa_ms": 6.7
+  },
+  {
+    "language": "mr",
+    "candidate": "C",
+    "provider": "Sarvam AI",
+    "audio_file": "voice_audition\\audition_mr_C.wav",
+    "measured_ttfa_ms": 6.59
+  },
+  {
+    "language": "en",
+    "candidate": "A",
+    "provider": "Cartesia",
+    "audio_file": "voice_audition\\audition_en_A.wav",
+    "measured_ttfa_ms": 5.01
+  },
+  {
+    "language": "en",
+    "candidate": "B",
+    "provider": "Sarvam AI",
+    "audio_file": "voice_audition\\audition_en_B.wav",
+    "measured_ttfa_ms": 3.85
+  },
+  {
+    "language": "en",
+    "candidate": "C",
+    "provider": "Cartesia",
+    "audio_file": "voice_audition\\audition_en_C.wav",
+    "measured_ttfa_ms": 4.78
+  },
+  {
+    "language": "hi",
+    "candidate": "A",
+    "provider": "Sarvam AI",
+    "audio_file": "voice_audition\\audition_hi_A.wav",
+    "measured_ttfa_ms": 3.38
+  },
+  {
+    "language": "hi",
+    "candidate": "B",
+    "provider": "Cartesia",
+    "audio_file": "voice_audition\\audition_hi_B.wav",
+    "measured_ttfa_ms": 5.4
+  },
+  {
+    "language": "hi",
+    "candidate": "C",
+    "provider": "Sarvam AI",
+    "audio_file": "voice_audition\\audition_hi_C.wav",
+    "measured_ttfa_ms": 5.74
+  }
+]

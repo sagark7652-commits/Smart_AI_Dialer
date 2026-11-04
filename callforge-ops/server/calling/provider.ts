@@ -95,64 +95,6 @@ export class ExotelProvider implements TelephonyProvider {
   }
 }
 
-export class BolnaProvider implements TelephonyProvider {
-  name = "bolna";
-  private apiKey: string;
-
-  constructor() {
-    this.apiKey = process.env.BOLNA_API_KEY || "";
-  }
-
-  async makeCall(payload: TelephonyCallPayload): Promise<TelephonyCallResult> {
-    const callId = `bolna_${nanoid(12)}`;
-    if (this.apiKey) {
-      try {
-        const res = await fetch("https://api.bolna.dev/call", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            recipient_phone_number: payload.to,
-            agent_id: payload.metadata?.agentId || "bolna-agent-default",
-            user_data: payload.metadata,
-          }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          return {
-            callId: json.call_id || callId,
-            provider: this.name,
-            status: "ringing",
-            rawResponse: json,
-          };
-        }
-      } catch (err) {
-        console.warn("[Bolna] API error, using simulation fallback", err);
-      }
-    }
-
-    return {
-      callId,
-      provider: this.name,
-      status: "ringing",
-      rawResponse: { simulated: true, note: "Bolna Voice Agent Connected" },
-    };
-  }
-
-  async terminateCall(callId: string) {
-    return { success: true, message: `Bolna agent call ${callId} ended.` };
-  }
-
-  async callAction(callId: string, action: SupervisorActionType, supervisorId: string) {
-    return { success: true, mode: action };
-  }
-
-  async getCallStatus(callId: string) {
-    return { callId, status: "in_progress" as CallStatus, durationSeconds: 32 };
-  }
-}
 
 export class MockTelephonyProvider implements TelephonyProvider {
   name = "mock";
@@ -380,16 +322,15 @@ export class TataDialerProvider implements TelephonyProvider {
 }
 
 const exotel = new ExotelProvider();
-const bolna = new BolnaProvider();
 const twilio = new TwilioProvider();
 const tata = new TataDialerProvider();
 const mock = new MockTelephonyProvider();
 
 export function getTelephonyProvider(name?: string): TelephonyProvider {
-  const p = (name || process.env.DEFAULT_TELEPHONY_PROVIDER || "").toLowerCase();
-  if (p === "tata" || p === "tata_smartflo" || p === "tata_dialer" || (process.env.TATA_SMARTFLO_API_KEY && process.env.TATA_SMARTFLO_TOKEN)) return tata;
+  const p = (name || process.env.DEFAULT_TELEPHONY_PROVIDER || "tata_smartflo").toLowerCase();
+  if (p === "tata" || p === "tata_smartflo" || p === "tata_dialer" || !p || p === "default") return tata;
   if (p === "twilio" || (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)) return twilio;
   if (p === "exotel" || (process.env.EXOTEL_API_KEY && process.env.EXOTEL_API_TOKEN)) return exotel;
-  if (p === "bolna" || process.env.BOLNA_API_KEY) return bolna;
-  return mock;
+  if (p === "mock") return mock;
+  return tata;
 }

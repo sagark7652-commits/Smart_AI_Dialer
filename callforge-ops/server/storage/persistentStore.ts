@@ -19,6 +19,8 @@ export interface StoredLead {
 
 export interface StoredCDR {
   id: string;
+  callId?: string;
+  provider?: string;
   customerName: string;
   customerPhone: string;
   agentName: string;
@@ -29,6 +31,10 @@ export interface StoredCDR {
   sentiment: "Positive" | "Neutral" | "Negative";
   qaScore: number;
   recordingUrl?: string;
+  transcript?: string;
+  summary?: string;
+  customerFeedback?: string;
+  extractedData?: Record<string, any>;
   supervisorNotes?: string;
   isManualOverride?: boolean;
   criteria?: any[];
@@ -36,7 +42,7 @@ export interface StoredCDR {
 }
 
 export interface StoredCarrierConfig {
-  provider: "mock" | "twilio" | "exotel" | "bolna" | "tata" | "tata_smartflo";
+  provider: "mock" | "twilio" | "exotel" | "tata" | "tata_smartflo";
   twilioAccountSid?: string;
   twilioAuthToken?: string;
   twilioCallerId?: string;
@@ -171,6 +177,21 @@ export interface StoredConsentRecord {
   status: "Verified Opt-in" | "DNC Scrub Blocked";
 }
 
+export interface StoredScheduledCallback {
+  id: string;
+  leadId?: string;
+  customerName: string;
+  customerPhone: string;
+  company?: string;
+  scheduledAt: string; // ISO date string when callback is due
+  reason?: string;
+  requestedBy: "customer" | "agent";
+  status: "pending" | "completed" | "cancelled";
+  createdAt: string;
+  campaignId?: string;
+  notes?: string;
+}
+
 export interface StoredAppSettings {
   workspaceName?: string;
   callerId?: string;
@@ -202,6 +223,7 @@ interface DatabaseStructure {
   whatsappLogs: StoredWhatsAppMessage[];
   supportTickets?: StoredSupportTicket[];
   consentRecords?: StoredConsentRecord[];
+  scheduledCallbacks?: StoredScheduledCallback[];
   appSettings?: StoredAppSettings;
   userCredentials?: Record<string, StoredUserCredential>;
 }
@@ -498,11 +520,27 @@ class PersistentStorage {
     return this.data.cdrLogs;
   }
 
-  addCDRLog(cdr: Omit<StoredCDR, "id" | "createdAt">): StoredCDR {
+  addCDRLog(cdr: Partial<StoredCDR> & { customerName: string; customerPhone: string }): StoredCDR {
     const newCDR: StoredCDR = {
-      id: `call_${nanoid(8)}`,
-      ...cdr,
-      createdAt: new Date().toISOString(),
+      id: cdr.id || `call_${nanoid(8)}`,
+      callId: cdr.callId || cdr.id || `call_${nanoid(8)}`,
+      provider: cdr.provider || "tata_smartflo",
+      customerName: cdr.customerName,
+      customerPhone: cdr.customerPhone,
+      agentName: cdr.agentName || "AI Voice Agent",
+      campaign: cdr.campaign || "Inbound/Outbound AI Dial",
+      duration: cdr.duration || `${Math.floor((cdr.durationSeconds || 0) / 60)}m ${(cdr.durationSeconds || 0) % 60}s`,
+      durationSeconds: cdr.durationSeconds || 0,
+      status: (cdr.status as any) || "Completed",
+      sentiment: (cdr.sentiment as any) || "Neutral",
+      qaScore: cdr.qaScore ?? 90,
+      recordingUrl: cdr.recordingUrl,
+      transcript: cdr.transcript,
+      summary: cdr.summary,
+      customerFeedback: cdr.customerFeedback,
+      extractedData: cdr.extractedData,
+      supervisorNotes: cdr.supervisorNotes,
+      createdAt: cdr.createdAt || new Date().toISOString(),
     };
     this.data.cdrLogs.unshift(newCDR);
     this.save(this.data);
@@ -964,6 +1002,84 @@ class PersistentStorage {
     this.data.userCredentials[norm] = entry;
     this.save(this.data);
     return entry;
+  }
+
+  // --- Automated Callback Reminder Operations ---
+  getScheduledCallbacks(): StoredScheduledCallback[] {
+    return this.data.scheduledCallbacks || [];
+  }
+
+  getDueCallbacks(now: Date = new Date()): StoredScheduledCallback[] {
+    const list = this.data.scheduledCallbacks || [];
+    const currentTime = now.getTime();
+    return list.filter((cb) => cb.status === "pending" && new Date(cb.scheduledAt).getTime() <= currentTime);
+  }
+
+  addScheduledCallback(
+    cb: Omit<StoredScheduledCallback, "id" | "createdAt" | "status">
+  ): StoredScheduledCallback {
+    if (!this.data.scheduledCallbacks) {
+      this.data.scheduledCallbacks = [];
+    }
+
+    const newCallback: StoredScheduledCallback = {
+      id: `cb_${nanoid(8)}`,
+      ...cb,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    };
+
+    this.data.scheduledCallbacks.unshift(newCallback);
+
+    // Update matching lead record if exists
+    const cleanPhone = (cb.customerPhone || "").replace(/\D/g, "").slice(-10);
+    const lead = cleanPhone ? this.data.leads.find((l) => (l.phone || "").replace(/\D/g, "").slice(-10) === cleanPhone) : undefined;
+    if (lead) {
+      lead.stage = "Callback";
+      lead.last = `Callback scheduled for ${new Date(cb.scheduledAt).toLocaleString("en-IN")}`;
+      lead.notes.push(
+        `[Automated AI Reminder] Customer requested callback: ${cb.reason || "Follow-up"} scheduled for ${new Date(
+          cb.scheduledAt
+        ).toLocaleString("en-IN")}`
+      );
+    }
+
+    this.addAuditLog(
+      "Callback Scheduled",
+      "AI Calling Agent",
+      `Scheduled autonomous follow-up call to ${cb.customerName} (${cb.customerPhone}) for ${new Date(
+        cb.scheduledAt
+      ).toLocaleString("en-IN")}.`,
+      "campaign"
+    );
+
+    this.save(this.data);
+    return newCallback;
+  }
+
+  markCallbackCompleted(id: string, notes?: string): StoredScheduledCallback | null {
+    if (!this.data.scheduledCallbacks) return null;
+    const idx = this.data.scheduledCallbacks.findIndex((c) => c.id === id);
+    if (idx === -1) return null;
+
+    const cb = this.data.scheduledCallbacks[idx];
+    cb.status = "completed";
+    if (notes) {
+      cb.notes = (cb.notes ? cb.notes + " | " : "") + notes;
+    }
+    this.save(this.data);
+    return cb;
+  }
+
+  cancelScheduledCallback(id: string): StoredScheduledCallback | null {
+    if (!this.data.scheduledCallbacks) return null;
+    const idx = this.data.scheduledCallbacks.findIndex((c) => c.id === id);
+    if (idx === -1) return null;
+
+    const cb = this.data.scheduledCallbacks[idx];
+    cb.status = "cancelled";
+    this.save(this.data);
+    return cb;
   }
 }
 

@@ -1,0 +1,144 @@
+agent:
+  name: Priya
+  role: Front Desk Assistant for Aarogya Dental Care
+  personality: Warm, polite, natural, and crisp conversational voice assistant
+  default_language: hi
+  language_policy: strict
+  fillers: false
+  speculative_llm: false
+  agent_gender: female
+  ai_disclosure: false
+  greeting_delay_ms: 0
+  pickup_wait_ms: 0
+  barge_in_grace_window_ms: 1500
+  greeting: Namaste! Welcome to Aarogya Dental Care. Main Priya baat kar rahi hoon.
+    Main aapki kya madad kar sakti hoon?
+  rules:
+  - 'Respond directly in whatever language the caller uses: Hindi, English, or natural
+    conversational Hinglish.'
+  - Keep every response strictly between 1 to 2 short sentences suitable for a phone
+    call.
+  - Never use markdown, bullet points, asterisks, bold text, or emojis because this
+    output is converted directly to voice audio.
+  - Answer questions only using the provided Business Information or retrieved knowledge
+    base.
+  - If information is missing, say you do not know and offer to connect to our clinic
+    reception.
+  voice_loop:
+    silence_ms: 600
+    extra_wait_ms: 350
+    vad_threshold: 350.0
+    barge_in_min_speech_ms: 250
+    headset_mode: true
+    silence_timeout_sec: 8.0
+    second_silence_timeout_sec: 8.0
+    fallback_messages:
+      hi: एक सेकंड, मुझे आपकी आवाज़ साफ़ नहीं आई। कृपया फिर से बोलिए।
+      en: One moment, I couldn't hear that clearly. Could you please say that again?
+    phone:
+      silence_ms: 700
+      extra_wait_ms: 400
+      vad_threshold: 450.0
+      barge_in_min_speech_ms: 280
+      headset_mode: false
+      ignore_backchannels: true
+      backchannel_words:
+      - haan
+      - hmm
+      - ok
+      - acha
+      - ha
+      - 'yes'
+      - yeah
+      - ho
+      - हाँ
+      - हूँ
+      - हो
+      max_call_duration_sec: 3600
+  recording:
+    enabled: true
+    consent_messages:
+      en: This call is recorded for quality assurance.
+      hi: Kripya dhyan dein, yeh call quality aur training ke liye record ki ja rahi
+        hai.
+  amd:
+    enabled: true
+    policy: hangup
+    leave_message_text: Namaste! Aarogya Dental Care se call tha. Kripya humein +91
+      98765 43210 par wapas call karein. Dhanyavaad!
+  transfer:
+    human_operator_number: '+919876543210'
+    sentiment_threshold_negative: 2
+  tools:
+    enabled:
+    - book_appointment
+    - check_availability
+    - transfer_call
+    - trigger_webhook
+    send_sms:
+      enabled: false
+      dlt_entity_id: ''
+      dlt_template_id: ''
+      sender_header: ''
+  rag:
+    enabled: true
+    top_k: 2
+  voices:
+    lock_voice_per_call: true
+    english:
+      male: ember
+      female: sol
+      status: locked
+      chosen_label: A
+      provider: cartesia
+      voice_identifier: a1e4199c-8c88-4608-8491-33da880e63b8
+      model: sonic-3.6
+      settings:
+        speed: 1.0
+        pace: 1.0
+        pitch: 0.0
+        sample_rate: 24000
+        pause_ms: 100
+      locked: true
+    hindi:
+      male: neer
+      female: leher
+      status: locked
+      chosen_label: A
+      provider: sarvam ai
+      voice_identifier: leher
+      model: bulbul:v3
+      settings:
+        speed: 1.0
+        pace: 1.0
+        pitch: 0.0
+        sample_rate: 24000
+        pause_ms: 120
+      locked: true
+    marathi:
+      status: locked
+      chosen_label: C
+      provider: sarvam ai
+      voice_identifier: meera
+      model: bulbul:v3
+      settings:
+        speed: 1.0
+        pace: 1.05
+        pitch: 0
+        sample_rate: 24000
+        pause_ms: 120
+      locked: true
+  huggingface:
+    enabled: true
+    llm:
+      model: meta-llama/Llama-3.1-8B-Instruct
+      temperature: 0.3
+      max_tokens: 150
+    tts:
+      english_model: facebook/mms-tts-eng
+      hindi_model: facebook/mms-tts-hin
+    sentiment:
+      model: distilbert/distilbert-base-uncased-finetuned-sst-2-english
+      escalation_threshold: 0.75
+    rag_embeddings:
+      model: sentence-transformers/all-MiniLM-L6-v2

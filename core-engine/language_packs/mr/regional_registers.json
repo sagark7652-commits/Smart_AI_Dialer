@@ -1,0 +1,26 @@
+{
+  "active_register": "standard",
+  "registers": {
+    "standard": {
+      "name": "Standard Conversational Marathi (प्रमाण संवाद)",
+      "description": "Clean, universally understood polite register across Maharashtra. Balanced loanwords, courteous formal honorifics.",
+      "status": "production_ready",
+      "honorific": "आपण / तुम्ही",
+      "particles": ["ठीक आहे", "बरं", "होय", "नक्कीच"]
+    },
+    "pune_mumbai": {
+      "name": "Pune & Mumbai Urban Modern (पुणे-मुंबई शहरी लबक)",
+      "description": "Fast-paced urban cadence, higher frequency of English tech and lifestyle loanwords (appointment, schedule, client).",
+      "status": "production_ready",
+      "honorific": "तुम्ही",
+      "particles": ["बरं", "ओके", "नक्कीच", "डन"]
+    },
+    "solapur_kolhapur_style": {
+      "name": "Western Maharashtra / Solapur-Kolhapur Register (पश्चिम महाराष्ट्र लबक)",
+      "description": "Lively rhythmic cadence, warm local colloquialisms (बगा, सांगा की, व्हय).",
+      "status": "needs_native_review",
+      "honorific": "तुम्ही",
+      "particles": ["बरं बगा", "व्हय", "सांगा की"]
+    }
+  }
+}

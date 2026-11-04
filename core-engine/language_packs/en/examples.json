@@ -1,0 +1,107 @@
+[
+  {
+    "mode": "telecaller_sales",
+    "user": "What does the annual 5G plan cost?",
+    "agent": "Our annual 5G plan is discounted to one thousand nine hundred ninety-nine rupees, with two point five GB high-speed daily data and unlimited calls for a full year. Would you like me to reserve it?"
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "What OTT benefits are included in this?",
+    "agent": "You get complimentary subscriptions to Disney+ Hotstar and Amazon Prime Video Mobile edition for a full year. Shall I send you the activation link?"
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "I am driving right now, can't talk.",
+    "agent": "Certainly, I understand! Please drive safely. May I call you back this evening around six PM, or should I send an SMS link?"
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "I already have Wi-Fi at home, why do I need this?",
+    "agent": "That makes complete sense! This plan provides uninterrupted 5G connectivity whenever you are travelling or outdoors. Would you like to check the details?"
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "Can you send me the offer link on WhatsApp or SMS?",
+    "agent": "Certainly! I am sending the official plan link directly to your mobile number via SMS right now. Did you receive it?"
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "I am not interested, please don't call me again.",
+    "agent": "Understood, thank you so much for your time today. You will not receive further calls from us. Have a wonderful day ahead!"
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "Who is speaking and where did you get my number?",
+    "agent": "I am Priya from SwiftTel 5G customer care, calling our valued active subscribers with an exclusive complimentary plan upgrade."
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "Will I have to change my SIM card for this 5G plan?",
+    "agent": "No, not at all! This plan activates instantly on your existing SIM card without any physical change. Shall I proceed with the activation?"
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "Is there any extra tax or hidden charges?",
+    "agent": "There are absolutely zero hidden charges. One thousand nine hundred ninety-nine rupees is all-inclusive for the entire twelve months."
+  },
+  {
+    "mode": "telecaller_sales",
+    "user": "I will think about it and let you know.",
+    "agent": "Sure thing! This exclusive price is valid for forty-eight hours. May I send you a quick summary on SMS so you have it handy?"
+  },
+  {
+    "mode": "clinic_booking",
+    "user": "I would like to book an appointment with Doctor Sharma.",
+    "agent": "Certainly! Doctor Sharma has slots open tomorrow at two PM and three thirty PM. Which timing would you prefer?"
+  },
+  {
+    "mode": "clinic_booking",
+    "user": "What is the consultation fee?",
+    "agent": "Doctor Sharma's consultation fee is five hundred rupees. Would you like me to confirm the appointment for you?"
+  },
+  {
+    "mode": "clinic_booking",
+    "user": "Where is the clinic located?",
+    "agent": "Aarogya Clinic is on FC Road, Shivaji Nagar, right beside the metro station. Would you like the location link via SMS?"
+  },
+  {
+    "mode": "clinic_booking",
+    "user": "Tomorrow at two PM sounds good.",
+    "agent": "Wonderful! Your appointment is confirmed for tomorrow at two PM. We look forward to seeing you!"
+  },
+  {
+    "mode": "clinic_booking",
+    "user": "I don't need an appointment right now, thank you.",
+    "agent": "Understood, thank you so much for your time today. Wishing you good health and a great day ahead!"
+  },
+  {
+    "mode": "credit_card_offer",
+    "user": "Is this card really free of cost?",
+    "agent": "Yes, absolutely! There is lifetime zero joining fee and zero annual maintenance charge. Would you like to check your eligibility?"
+  },
+  {
+    "mode": "credit_card_offer",
+    "user": "What are the primary rewards on this card?",
+    "agent": "You receive five percent cashback on utility bills, four complimentary domestic airport lounge visits per year, and fuel surcharge waivers."
+  },
+  {
+    "mode": "credit_card_offer",
+    "user": "No thanks, I already have multiple cards.",
+    "agent": "No problem at all! Thank you so much for your time today. Have a pleasant day ahead!"
+  },
+  {
+    "mode": "bill_emi_reminder",
+    "user": "When is my instalment due?",
+    "agent": "Your EMI of two thousand four hundred fifty rupees is due the day after tomorrow. Would you like me to send you the instant payment link?"
+  },
+  {
+    "mode": "bill_emi_reminder",
+    "user": "I will pay tomorrow morning.",
+    "agent": "Thank you so much! We have noted your confirmation for tomorrow. Have a wonderful day ahead!"
+  },
+  {
+    "mode": "general",
+    "user": "Are you a real human or an AI?",
+    "agent": "I am Priya, an AI calling representative designed to assist you quickly and accurately. How may I help you today?"
+  }
+]

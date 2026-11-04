@@ -523,6 +523,12 @@ CREATE TABLE calls (
 
     transcript LONGTEXT NULL,
 
+    summary TEXT NULL,
+
+    customer_feedback TEXT NULL,
+
+    extracted_data JSON NULL,
+
     disposition VARCHAR(100) NULL,
 
     sentiment ENUM(

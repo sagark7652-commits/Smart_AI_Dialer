@@ -1,0 +1,139 @@
+{
+  "mr_A": {
+    "language": "mr",
+    "label": "A",
+    "provider": "Sarvam AI",
+    "model": "bulbul:v3",
+    "voice_id": null,
+    "speaker": "leher",
+    "settings": {
+      "pace": 1.0,
+      "pitch": 0,
+      "sample_rate": 24000
+    },
+    "description": "Sarvam Bulbul v3 'leher' - Natural conversational Marathi female voice",
+    "audio_file": "audition_mr_A.wav",
+    "measured_ttfa_ms": 23.67
+  },
+  "mr_B": {
+    "language": "mr",
+    "label": "B",
+    "provider": "Cartesia",
+    "model": "sonic-3.6",
+    "voice_id": "cartesia-marathi-priya-warm",
+    "speaker": null,
+    "settings": {
+      "speed": 1.0,
+      "sample_rate": 24000
+    },
+    "description": "Cartesia Sonic 3.6 - Low-latency streaming Marathi female voice",
+    "audio_file": "audition_mr_B.wav",
+    "measured_ttfa_ms": 6.7
+  },
+  "mr_C": {
+    "language": "mr",
+    "label": "C",
+    "provider": "Sarvam AI",
+    "model": "bulbul:v3",
+    "voice_id": null,
+    "speaker": "meera",
+    "settings": {
+      "pace": 0.95,
+      "pitch": 0,
+      "sample_rate": 24000
+    },
+    "description": "Sarvam Bulbul v3 'meera' - Gentle patient care Marathi persona",
+    "audio_file": "audition_mr_C.wav",
+    "measured_ttfa_ms": 6.59
+  },
+  "en_A": {
+    "language": "en",
+    "label": "A",
+    "provider": "Cartesia",
+    "model": "sonic-3.6",
+    "voice_id": "cartesia-indian-english-female",
+    "speaker": null,
+    "settings": {
+      "speed": 1.0,
+      "sample_rate": 24000
+    },
+    "description": "Cartesia Sonic 3.6 - Indian English natural conversational",
+    "audio_file": "audition_en_A.wav",
+    "measured_ttfa_ms": 5.01
+  },
+  "en_B": {
+    "language": "en",
+    "label": "B",
+    "provider": "Sarvam AI",
+    "model": "bulbul:v3",
+    "voice_id": null,
+    "speaker": "leher",
+    "settings": {
+      "pace": 1.0,
+      "sample_rate": 24000
+    },
+    "description": "Sarvam Bulbul v3 'leher' - Indian English accented female",
+    "audio_file": "audition_en_B.wav",
+    "measured_ttfa_ms": 3.85
+  },
+  "en_C": {
+    "language": "en",
+    "label": "C",
+    "provider": "Cartesia",
+    "model": "sonic-3.6",
+    "voice_id": "cartesia-indian-english-professional",
+    "speaker": null,
+    "settings": {
+      "speed": 0.98,
+      "sample_rate": 24000
+    },
+    "description": "Cartesia Sonic 3.6 - High-clarity Indian English persona",
+    "audio_file": "audition_en_C.wav",
+    "measured_ttfa_ms": 4.78
+  },
+  "hi_A": {
+    "language": "hi",
+    "label": "A",
+    "provider": "Sarvam AI",
+    "model": "bulbul:v3",
+    "voice_id": null,
+    "speaker": "leher",
+    "settings": {
+      "pace": 1.0,
+      "sample_rate": 24000
+    },
+    "description": "Sarvam Bulbul v3 'leher' - Polite warm Hindi female voice",
+    "audio_file": "audition_hi_A.wav",
+    "measured_ttfa_ms": 3.38
+  },
+  "hi_B": {
+    "language": "hi",
+    "label": "B",
+    "provider": "Cartesia",
+    "model": "sonic-3.6",
+    "voice_id": "cartesia-hindi-priya-warm",
+    "speaker": null,
+    "settings": {
+      "speed": 1.0,
+      "sample_rate": 24000
+    },
+    "description": "Cartesia Sonic 3.6 - Expressive Hindi female voice",
+    "audio_file": "audition_hi_B.wav",
+    "measured_ttfa_ms": 5.4
+  },
+  "hi_C": {
+    "language": "hi",
+    "label": "C",
+    "provider": "Sarvam AI",
+    "model": "bulbul:v3",
+    "voice_id": null,
+    "speaker": "meera",
+    "settings": {
+      "pace": 0.98,
+      "sample_rate": 24000
+    },
+    "description": "Sarvam Bulbul v3 'meera' - Healthcare reception Hindi persona",
+    "audio_file": "audition_hi_C.wav",
+    "measured_ttfa_ms": 5.74
+  }
+}

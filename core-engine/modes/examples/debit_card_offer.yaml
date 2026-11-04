@@ -1,0 +1,31 @@
+agent_id: agent_platinum_debit_card
+name: Rahul
+company:
+  name: Apex National Bank
+  description: Premier retail banking and financial services institution.
+mode: telecaller_sales
+product:
+  name: Platinum Contactless International Debit Card Upgrade
+  price: Complimentary upgrade for existing savings account holders
+  benefits:
+    - Daily ATM withdrawal limit increased to ₹1,00,000
+    - Daily online purchase limit ₹3,00,000
+    - Free air accidental insurance coverage of ₹25 Lakhs
+    - 2 reward points on every ₹100 spent
+  validity: Valid until the end of this month
+  how_to_claim: Confirm delivery address on call; new card is dispatched by secure courier.
+faqs:
+  - q: What happens to my old debit card?
+    a: Your old card continues working until you activate the new Platinum card in mobile banking.
+  - q: Do I need to provide my existing card number or CVV?
+    a: Absolutely not! We never ask for existing card numbers, CVV, or PINs.
+calling_languages: [hi, en]
+default_language: hi
+allowed_tools:
+  - capture_lead
+  - schedule_callback
+  - mark_outcome
+  - transfer_call
+variables:
+  customer_name: Account Holder
+  account_last4: "8821"

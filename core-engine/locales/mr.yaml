@@ -1,0 +1,75 @@
+# Marathi (mr-IN) Localized Lines
+language: mr
+name: Marathi (मराठी)
+
+gender_forms:
+  female:
+    speaking_verb: "बोलतेय"
+    can_verb: "शकते"
+    polite_verb: "करते"
+  male:
+    speaking_verb: "बोलतोय"
+    can_verb: "शकतो"
+    polite_verb: "करतो"
+
+honorifics:
+  default: "साहेब"
+  female: "ताई"
+  formal: "मॅडम"
+  male: "सर"
+
+call_types:
+  outbound:
+    variants:
+      - personalized: "नमस्कार {name}! मी {company} मधून {agent_name} {speaking_verb}. आपल्यासाठी एक महत्त्वाची माहिती होती, मी आपल्याशी एक मिनिट बोलू {can_verb} का?"
+        neutral: "नमस्कार! मी {company} मधून {agent_name} {speaking_verb}. आपल्यासाठी एक महत्त्वाची माहिती होती, मी आपल्याशी एक मिनिट बोलू {can_verb} का?"
+      - personalized: "नमस्कार {name}! {company} कडून {agent_name} {speaking_verb}. आपल्यासाठी एक विशेष प्लॅन उपलब्ध आहे, यावर आपण थोडी चर्चा करू {can_verb} का?"
+        neutral: "नमस्कार! {company} कडून {agent_name} {speaking_verb}. आपल्यासाठी एक विशेष प्लॅन उपलब्ध आहे, यावर आपण थोडी चर्चा करू {can_verb} का?"
+      - personalized: "नमस्कार {name}! {company} मधून {agent_name} {speaking_verb}. आपल्या खात्याबाबत एक आनंदाची बातमी होती, आपण ऐकू इच्छिता का?"
+        neutral: "नमस्कार! {company} मधून {agent_name} {speaking_verb}. आमच्या सेवांबाबत एक आनंदाची बातमी होती, आपण ऐकू इच्छिता का?"
+
+  inbound:
+    variants:
+      - "नमस्कार! {company} मध्ये आपले मनापासून स्वागत आहे. मी {agent_name} {speaking_verb}, मी आपली काय मदत करू {can_verb}?"
+      - "नमस्कार! {company} शी संपर्क केल्याबद्दल धन्यवाद. मी {agent_name} {speaking_verb}, आज मी आपल्याला कशी मदत करू {can_verb}?"
+      - "नमस्कार! {company} मध्ये आपले स्वागत आहे. मी {agent_name} {speaking_verb}, आज आपल्याला कशाविषयी माहिती हवी आहे?"
+
+  reminder:
+    variants:
+      - personalized: "नमस्कार {name}! मी {company} मधून {agent_name} {speaking_verb}. हा आपल्या आगामी पेमेंट संदर्भातील एक रिमाइंड कॉल आहे, आपण ऐकू शकता का?"
+        neutral: "नमस्कार! मी {company} मधून {agent_name} {speaking_verb}. हा आपल्या आगामी पेमेंट संदर्भातील एक रिमाइंड कॉल आहे, आपण ऐकू शकता का?"
+      - personalized: "नमस्कार {name}! {company} कडून {agent_name} {speaking_verb}. आपल्या देय तारखेबाबत एक छोटी आठवण करून द्यायची होती, मी माहिती सांगू {can_verb} का?"
+        neutral: "नमस्कार! {company} कडून {agent_name} {speaking_verb}. आपल्या देय तारखेबाबत एक छोटी आठवण करून द्यायची होती, मी माहिती सांगू {can_verb} का?"
+      - personalized: "नमस्कार {name}! मी {company} मधून {agent_name} {speaking_verb}. आपल्या खात्यातील ईएमआय देय दिनांकाविषयी बोलायचे होते, दोन मिनिटे वेळ मिळेल का?"
+        neutral: "नमस्कार! मी {company} मधून {agent_name} {speaking_verb}. आपल्या खात्यातील ईएमआय देय दिनांकाविषयी बोलायचे होते, दोन मिनिटे वेळ मिळेल का?"
+
+  support:
+    variants:
+      - "नमस्कार! {company} कस्टमर केअर मध्ये आपले स्वागत आहे. मी {agent_name} {speaking_verb}, आपल्या अडचणीचे निवारण कसे करू {can_verb}?"
+      - "नमस्कार! {company} हेल्पलाईनवर आपले स्वागत. मी {agent_name} {speaking_verb}, आज आपल्याला कोणत्या सेवेबाबत अडचण येत आहे?"
+      - "नमस्कार! {company} सपोर्ट मध्ये आपले स्वागत आहे. मी {agent_name} {speaking_verb}, आज आपली काय सेवा करू {can_verb}?"
+
+  survey:
+    variants:
+      - personalized: "नमस्कार {name}! मी {company} मधून {agent_name} {speaking_verb}. काल मिळालेल्या सेवेचा अनुभव जाणून घेण्यासाठी हा कॉल आहे, आपण दोन मिनिटे वेळ द्याल का?"
+        neutral: "नमस्कार! मी {company} मधून {agent_name} {speaking_verb}. काल मिळालेल्या सेवेचा अनुभव जाणून घेण्यासाठी हा कॉल आहे, आपण दोन मिनिटे वेळ द्याल का?"
+      - personalized: "नमस्कार {name}! {company} कडून {agent_name} {speaking_verb}. आपल्या समाधानाविषयी थोडा अभिप्राय हवा होता, मी एक छोटा प्रश्न विचारू {can_verb} का?"
+        neutral: "नमस्कार! {company} कडून {agent_name} {speaking_verb}. आपल्या समाधानाविषयी थोडा अभिप्राय हवा होता, मी एक छोटा प्रश्न विचारू {can_verb} का?"
+      - personalized: "नमस्कार {name}! मी {company} मधून {agent_name} {speaking_verb}. आमच्या सेवेबद्दल आपले मत जाणून घ्यायचे होते, आपण सांगू शकाल का?"
+        neutral: "नमस्कार! मी {company} मधून {agent_name} {speaking_verb}. आमच्या सेवेबद्दल आपले मत जाणून घ्यायचे होते, आपण सांगू शकाल का?"
+
+ai_disclosure: ""
+
+greeting: "नमस्कार! आरोग्य डेंटल केअर मध्ये आपले स्वागत आहे. मी प्रिया बोलतेय, मी आपली काय मदत करू शकते?"
+consent: "कृपया नोंद घ्या, हा कॉल गुणवत्ता आणि प्रशिक्षणासाठी रेकॉर्ड केला जात आहे."
+are_you_there: "हॅलो, आपण तिथे आहात का? मी ऐकत आहे, काही विचारायचे असल्यास विचारू शकता."
+silence_farewell: "आपण व्यस्त आहात असे दिसते. कॉल केल्याबद्दल धन्यवाद, काळजी घ्या!"
+goodbye: "काही हरकत नाही, आपला वेळ दिल्याबद्दल धन्यवाद. आपला दिवस चांगला जावो!"
+not_interested: "काही हरकत नाही, आपला वेळ दिल्याबद्दल धन्यवाद. काळजी घ्या!"
+transfer: "नक्कीच, मी आपला कॉल आमच्या वरिष्ठ अधिकाऱ्यांकडे वर्ग करत आहे. कृपया एक क्षण थांबा."
+error_fallback: "एक क्षण, मला आपला आवाज स्पष्ट आला नाही. कृपया पुन्हा सांगाल का?"
+callback_offer: "मी आपल्या सोयीनुसार पुन्हा कॉल करू शकेन का? कृपया आपल्याला सोयीची वेळ सांगा."
+not_understood: "माफ करा, मला समजले नाही. आपण पुन्हा सांगू शकाल का?"
+hold: "कृपया एक क्षण थांबा, मी तपासत आहे."
+dnc_confirmed: "आपला नंबर डू-नॉट-कॉल यादीत जोडला गेला आहे. भविष्यात आपणास कोणताही कॉल येणार नाही. धन्यवाद!"
+offer_language_switch: "आपण मराठीत बोलू इच्छिता का? मी मराठीमध्ये मदत करू शकते."

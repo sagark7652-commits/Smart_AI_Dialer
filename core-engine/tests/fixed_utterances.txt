@@ -1,0 +1,38 @@
+# Fixed 20-Sentence Test Script for Voice Calling Agent Real-Mic Testing
+# Read each sentence aloud in order with natural conversational speed.
+
+# ==============================================================================
+# HINDI (7 Sentences)
+# ==============================================================================
+1. नमस्ते, मेरा नाम राहुल शर्मा है और मुझे कल दोपहर दो बजे डॉक्टर से मिलना है।
+2. क्या डॉक्टर वर्मा पंद्रह नवंबर को क्लिनिक में उपलब्ध रहेंगे?
+3. मेरे दाढ़ में बहुत तेज दर्द है और सूजन भी आ गई है, क्या आज शाम का कोई स्लॉट खाली है?
+4. रूट कैनाल ट्रीटमेंट का कुल खर्चा कितना होगा और क्या इसमें एक्सरे शामिल है?
+5. क्लिनिक का पूरा पता क्या है और सबसे पास वाला मेट्रो स्टेशन कौन सा पड़ेगा?
+6. मेरा फोन नंबर 98765 43210 है, कृपया अपॉइंटमेंट कन्फर्मेशन मैसेज भेज दीजिए।
+7. क्या आप रविवार को सुबह दस बजे से दोपहर दो बजे तक क्लिनिक खुला रखते हैं?
+
+# ==============================================================================
+# ENGLISH (6 Sentences)
+# ==============================================================================
+8. Hello, my name is Priya Desai and I would like to schedule a dental checkup for tomorrow.
+9. Is Dr. Sharma available on Friday, October 30th at 11:30 AM?
+10. I am experiencing severe sensitivity in my upper left molar when drinking cold water.
+11. How much do you charge for professional teeth cleaning and polishing?
+12. Could you please give me the contact number and location of your clinic?
+13. Please note down my mobile number: 98123 45678, for the confirmation message.
+
+# ==============================================================================
+# MARATHI (4 Sentences)
+# ==============================================================================
+14. नमस्कार, माझं नाव आनंद पाटील आहे आणि मला उद्या संध्याकाळी पाच वाजता डॉक्टरांची भेट हवी आहे.
+15. दातदुखीसाठी तात्काळ तपासणी फी किती आहे आणि रूट कॅनलसाठी किती खर्च येईल?
+16. तुमचा दवाखाना शनिवार आणि रविवारी किती वाजेपर्यंत सुरू असतो?
+17. माझा मोबाईल नंबर 99887 76655 आहे, मला अपॉइंटमेंटची वेळ एसएमएसने कळवा.
+
+# ==============================================================================
+# HINGLISH (3 Sentences)
+# ==============================================================================
+18. Hello, mujhe Dr. Sharma ke saath kal afternoon 3:30 PM ka appointment book karna hai.
+19. Root canal treatment ke charges kitne honge and credit card payment accept hota hai kya?
+20. Mera number 98220 12345 par confirmation bhej do, aur emergency receptionist se connect karo.

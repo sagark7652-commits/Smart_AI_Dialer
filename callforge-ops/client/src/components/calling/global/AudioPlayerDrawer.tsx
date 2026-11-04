@@ -149,38 +149,60 @@ export const AudioPlayerDrawer: React.FC<AudioPlayerDrawerProps> = ({
     return `${String(mins).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  const transcript = record.transcript || [
-    {
-      speaker: record.agentName,
-      text: "Namaste. This is an automated voice assistant calling from CallForge on a recorded line for quality and compliance. May I speak with you for 2 minutes regarding your recent enquiry?",
-      time: "00:02",
-    },
-    {
-      speaker: record.customerName,
-      text: "Haan, boliyen. Main festive season ke calling packages check kar raha tha.",
-      time: "00:15",
-    },
-    {
-      speaker: record.agentName,
-      text: "Bilkul sahi samay par call kiya gaya hai. Hamare paas 40 concurrent AI agent lines par 20% discount offer chal raha hai with TRAI DLT registration support.",
-      time: "00:26",
-    },
-    {
-      speaker: record.customerName,
-      text: "Achha, kya isme live call monitoring aur supervisor whisper facility bhi shamil hai?",
-      time: "00:48",
-    },
-    {
-      speaker: record.agentName,
-      text: "Ji haan, complete web-based supervisor wallboard, live whisper, aur auto-QA scorecard sabhi shamil hain. Kal subah 11 baje ek walkthrough schedule kar lein?",
-      time: "01:05",
-    },
-    {
-      speaker: record.customerName,
-      text: "Haan, perfect. Kal subah 11 baje connect karte hain.",
-      time: "01:22",
-    },
-  ];
+  const transcript: Array<{ speaker: string; text: string; time: string }> =
+    Array.isArray(record.transcript) && record.transcript.length > 0
+      ? record.transcript
+      : typeof record.transcript === "string" && record.transcript.trim()
+      ? record.transcript
+          .split("\n")
+          .filter((line) => line.trim().length > 0)
+          .map((line, idx) => {
+            const colonIdx = line.indexOf(":");
+            if (colonIdx > 0) {
+              return {
+                speaker: line.substring(0, colonIdx).trim(),
+                text: line.substring(colonIdx + 1).trim(),
+                time: `00:${Math.min(idx * 8, 59).toString().padStart(2, "0")}`,
+              };
+            }
+            return {
+              speaker: idx % 2 === 0 ? record.agentName : record.customerName,
+              text: line.trim(),
+              time: `00:${Math.min(idx * 8, 59).toString().padStart(2, "0")}`,
+            };
+          })
+      : [
+          {
+            speaker: record.agentName,
+            text: "Namaste. This is an automated voice assistant calling from CallForge on a recorded line for quality and compliance. May I speak with you for 2 minutes regarding your recent enquiry?",
+            time: "00:02",
+          },
+          {
+            speaker: record.customerName,
+            text: "Haan, boliyen. Main festive season ke calling packages check kar raha tha.",
+            time: "00:15",
+          },
+          {
+            speaker: record.agentName,
+            text: "Bilkul sahi samay par call kiya gaya hai. Hamare paas 40 concurrent AI agent lines par 20% discount offer chal raha hai with TRAI DLT registration support.",
+            time: "00:26",
+          },
+          {
+            speaker: record.customerName,
+            text: "Achha, kya isme live call monitoring aur supervisor whisper facility bhi shamil hai?",
+            time: "00:48",
+          },
+          {
+            speaker: record.agentName,
+            text: "Ji haan, complete web-based supervisor wallboard, live whisper, aur auto-QA scorecard sabhi shamil hain. Kal subah 11 baje ek walkthrough schedule kar lein?",
+            time: "01:05",
+          },
+          {
+            speaker: record.customerName,
+            text: "Haan, perfect. Kal subah 11 baje connect karte hain.",
+            time: "01:22",
+          },
+        ];
 
   const handleSeekTo = (timeStr: string) => {
     const parts = timeStr.split(":");
@@ -291,6 +313,22 @@ export const AudioPlayerDrawer: React.FC<AudioPlayerDrawerProps> = ({
 
         {/* WhatsApp-Style Chat-Bubble Dialogue Transcript (Lower Half) */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-950/40">
+          {record.summary && (
+            <div className="p-3 bg-violet-950/40 border border-violet-800/40 rounded-xl space-y-1.5 shadow-sm">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-violet-300">
+                <Sparkles size={13} className="text-violet-400" /> AI Call Summary & Customer Response
+              </div>
+              <p className="text-xs text-zinc-200 leading-relaxed italic">
+                "{record.summary}"
+              </p>
+              {record.customerFeedback && (
+                <div className="text-[11px] text-zinc-400 pt-1 border-t border-violet-900/30">
+                  <span className="font-semibold text-zinc-300">Extracted Customer Feedback:</span> {record.customerFeedback}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
             <span className="text-[11px] uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
               <Sparkles size={13} className="text-violet-400" />

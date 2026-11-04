@@ -1,4 +1,22 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Automatically locate and load the unified .env file regardless of current working directory
+const candidateEnvFiles = [
+  path.resolve(__dirname, "../../.env"),
+  path.resolve(__dirname, "../../../.env"),
+  path.resolve(process.cwd(), ".env"),
+];
+for (const envPath of candidateEnvFiles) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  }
+}
 
 if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = "development";
@@ -15,6 +33,8 @@ import { serveStatic, setupVite } from "./vite";
 import { callingRouter } from "../calling/routes";
 import { dialerWorker } from "../calling/queue";
 import { realtimeVoiceEngine } from "../calling/realtimeVoiceStream";
+
+import { spawn, ChildProcess } from "child_process";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -34,6 +54,58 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   }
   throw new Error(`No available port found starting from ${startPort}`);
 }
+
+let coreEngineProcess: ChildProcess | null = null;
+
+async function ensureCoreEngineRunning() {
+  try {
+    const isPort8000Up = !(await isPortAvailable(8000));
+    if (isPort8000Up) {
+      console.log("[Core Engine] Python voice agent engine active (Internal Port 8000).");
+      return;
+    }
+
+    const candidateDirs = [
+      path.resolve(process.cwd(), "../core-engine"),
+      path.resolve(process.cwd(), "core-engine"),
+      path.resolve(__dirname, "../../../core-engine"),
+      path.resolve(__dirname, "../../core-engine"),
+    ];
+    const coreDir = candidateDirs.find((d) => fs.existsSync(d) && fs.existsSync(path.join(d, "server.py")));
+    if (coreDir) {
+      console.log(`[Core Engine] Starting internal voice engine as unified background service from ${coreDir}...`);
+      coreEngineProcess = spawn("python", ["server.py"], {
+        cwd: coreDir,
+        stdio: "ignore",
+        windowsHide: true,
+      });
+
+      coreEngineProcess.on("error", (err) => {
+        console.warn("[Core Engine] Internal engine notice:", err.message);
+      });
+    }
+  } catch (err: any) {
+    console.warn("[Core Engine] Internal engine notice:", err.message);
+  }
+}
+
+// Clean shutdown hook
+const cleanupCoreEngine = () => {
+  if (coreEngineProcess && !coreEngineProcess.killed) {
+    try {
+      coreEngineProcess.kill();
+    } catch {}
+  }
+};
+process.on("exit", cleanupCoreEngine);
+process.on("SIGINT", () => {
+  cleanupCoreEngine();
+  process.exit();
+});
+process.on("SIGTERM", () => {
+  cleanupCoreEngine();
+  process.exit();
+});
 
 async function startServer() {
   const app = express();
@@ -73,10 +145,13 @@ async function startServer() {
     console.warn(`[PORT TIP] In GitHub Codespaces, to keep port 3000 consistent, run: pkill -f "node|tsx|vite"\n`);
   }
 
+  await ensureCoreEngineRunning();
+
   server.listen(port, "0.0.0.0", () => {
-    console.log(`Server running on:`);
-    console.log(`  > Local:   http://localhost:${port}/`);
-    console.log(`  > Network: http://10.107.157.9:${port}/`);
+    console.log(`\n=============================================================`);
+    console.log(`CallForge Smart AI Calling Platform — Unified System`);
+    console.log(`  > Dashboard Console: http://localhost:${port}/`);
+    console.log(`=============================================================\n`);
     dialerWorker.start();
   });
 }

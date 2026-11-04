@@ -1,0 +1,15 @@
+{
+  "banned_phrases": [
+    "accha",
+    "theek hai",
+    "haan",
+    "batao",
+    "arre",
+    "karo",
+    "ji",
+    "sahab",
+    "dhanyavaad",
+    "namaste"
+  ],
+  "reason": "Hinglish code-mixing is strictly banned in Indian English lock mode. Use natural English equivalents."
+}

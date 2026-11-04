@@ -85,7 +85,7 @@ describe("CallForge Backend: 4 Core Architecture Pillars", () => {
   // ===========================================================================
   // PILLAR 3: Telephony Provider Abstraction Layer
   // ===========================================================================
-  describe("Pillar 3: Provider Abstraction Layer (Exotel, Bolna, Mock)", () => {
+  describe("Pillar 3: Provider Abstraction Layer (Exotel, Tata, Mock)", () => {
     it("returns correct provider instance via factory", () => {
       const mock = getTelephonyProvider("mock");
       expect(mock).toBeInstanceOf(MockTelephonyProvider);

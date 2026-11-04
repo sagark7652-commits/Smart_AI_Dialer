@@ -86,6 +86,16 @@ export const VOICES: VoiceOption[] = [
     badge: "Retail Dialect",
   },
   {
+    id: "v-priya-aarogya",
+    name: "Priya (Aarogya Dental)",
+    gender: "Female",
+    provider: "OpenAI Neural",
+    languages: "Hindi + English + Marathi (Bilingual)",
+    tone: "Warm, polite, natural conversational front desk clinic assistant",
+    samplePhrase: "Namaste! Welcome to Aarogya Dental Care. Main Priya bol rahi hoon, bataiye main aapki kya help kar sakti hoon?",
+    badge: "Integrated Agent",
+  },
+  {
     id: "v-priya",
     name: "Priya",
     gender: "Female",

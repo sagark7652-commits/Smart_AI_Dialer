@@ -1,60 +1,141 @@
 {
-  "leads": [],
-  "cdrLogs": [
+  "leads": [
     {
-      "id": "call_4_X5r2gu",
-      "customerName": "Aarav Mehta",
-      "customerPhone": "+91 99887 11002",
-      "agentName": "Asha (AI Voice)",
-      "campaign": "Festive season follow-up",
-      "duration": "01:10",
-      "durationSeconds": 70,
-      "status": "Completed",
-      "sentiment": "Positive",
-      "qaScore": 94,
-      "createdAt": "2026-09-19T17:06:14.081Z"
+      "id": "lead_FB6qahVR",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Opted-Out",
+      "score": 40,
+      "last": "10 mins ago",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 4/11/2026."
+      ],
+      "createdAt": "2026-11-04T15:42:01.414Z"
     },
     {
-      "id": "call_sOh_D-Oe",
-      "customerName": "Rajesh Varma",
-      "customerPhone": "+91 98201 55432",
-      "agentName": "Asha (Hindi/English)",
-      "campaign": "Sandbox Voice Test",
-      "duration": "00:11",
-      "durationSeconds": 11,
-      "status": "Completed",
-      "sentiment": "Positive",
-      "qaScore": 92,
-      "createdAt": "2026-09-19T17:04:26.086Z"
+      "id": "lead_rRxZ1DbJ",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-04T15:42:01.378Z"
     }
   ],
+  "cdrLogs": [],
   "carrierConfig": {
     "provider": "mock",
     "twilioAccountSid": "",
     "twilioAuthToken": "",
-    "twilioCallerId": "",
+    "twilioCallerId": "+18005550199",
     "exotelApiKey": "",
     "exotelApiToken": "",
     "exotelSid": "",
-    "updatedAt": "2026-09-19T21:50:00.000Z"
+    "updatedAt": "2026-11-04T15:42:01.000Z"
   },
   "subscription": {
     "planId": "plan_starter",
-    "planName": "Free Starter",
+    "planName": "Starter Tier",
     "price": 0,
     "status": "active",
     "callingMinutesRemaining": 0,
-    "renewalDate": "2026-10-19T21:50:00.000Z"
+    "renewalDate": "2026-12-04T15:42:01.000Z"
   },
   "autoRecharge": {
-    "enabled": false,
-    "threshold": 0,
-    "rechargeAmount": 0,
+    "enabled": true,
+    "threshold": 5000,
+    "rechargeAmount": 25000,
     "paymentMethod": "upi_autopay",
-    "gstin": "",
-    "updatedAt": "2026-09-19T21:50:00.000Z"
+    "gstin": "27AABCC1234F1Z8",
+    "updatedAt": "2026-11-04T15:42:00.966Z"
   },
-  "ivrNodes": [],
+  "ivrNodes": [
+    {
+      "id": "node-1",
+      "type": "greeting",
+      "title": "1. Welcome Greeting",
+      "description": "Plays bilingual TRAI audio greeting and compliance disclosure.",
+      "config": {
+        "audioPrompt": "Welcome to CallForge Solutions. Calls are recorded for quality assurance.",
+        "voice": "Asha (Hindi/English)"
+      },
+      "next": [
+        "node-2"
+      ]
+    },
+    {
+      "id": "node-2",
+      "type": "menu",
+      "title": "2. DTMF Keypress Menu",
+      "description": "Press 1 for Autonomous AI qualifier, Press 2 for Enterprise Sales.",
+      "config": {
+        "options": [
+          {
+            "key": "1",
+            "target": "node-3",
+            "label": "Connect with AI Agent"
+          },
+          {
+            "key": "2",
+            "target": "node-4",
+            "label": "Connect with Live Specialist"
+          }
+        ],
+        "timeoutSeconds": 5
+      },
+      "next": [
+        "node-3",
+        "node-4"
+      ]
+    },
+    {
+      "id": "node-3",
+      "type": "ai_agent",
+      "title": "3. Asha AI Qualifier",
+      "description": "Answers queries, captures lead requirements, schedules calendar appointments.",
+      "config": {
+        "agent": "Asha · Retail Qualifier",
+        "model": "Claude 3.5 Sonnet Telephony",
+        "language": "Hinglish"
+      },
+      "next": [
+        "node-5"
+      ]
+    },
+    {
+      "id": "node-4",
+      "type": "human_queue",
+      "title": "4. Senior Agent Queue",
+      "description": "Routes call to available human supervisor with round-robin strategy.",
+      "config": {
+        "queueName": "Enterprise Tier 1",
+        "maxWaitSeconds": 45,
+        "fallback": "node-5"
+      },
+      "next": [
+        "node-5"
+      ]
+    },
+    {
+      "id": "node-5",
+      "type": "voicemail",
+      "title": "5. Voicemail & SMS Confirmation",
+      "description": "If busy or after-hours, records audio voicemail and dispatches WhatsApp alert.",
+      "config": {
+        "sendSms": true,
+        "whatsappTemplate": "callforge_enquiry_ack"
+      }
+    }
+  ],
   "rolesMatrix": {
     "roles": {
       "admin": {
@@ -66,7 +147,7 @@
         "override_qa": true
       },
       "supervisor": {
-        "view_billing": true,
+        "view_billing": false,
         "start_campaigns": true,
         "barge_whisper": true,
         "export_cdr": true,
@@ -75,27 +156,50 @@
       },
       "agent": {
         "view_billing": false,
-        "start_campaigns": true,
+        "start_campaigns": false,
         "barge_whisper": false,
         "export_cdr": false,
         "edit_script": false,
         "override_qa": false
       }
     },
-    "updatedAt": "2026-09-19T21:50:00.000Z"
+    "updatedAt": "2026-11-04T15:42:00.968Z"
   },
   "abSplitConfig": {
     "splitPercentA": 50,
     "splitPercentB": 50,
-    "scriptA": "",
-    "scriptB": "",
-    "updatedAt": "2026-09-19T21:50:00.000Z"
+    "scriptA": "Namaste {lead_name} ji. We are offering an exclusive 20% discount on festive calling agent packs. Would you like to schedule a 10-minute demo with our team?",
+    "scriptB": "Namaste {lead_name} ji! Most retail businesses in {city} are saving 4 hours daily using CallForge AI calling. Can we demonstrate how it handles your festive inbound rush?",
+    "winnerVariant": "B",
+    "updatedAt": "2026-11-04T15:42:00.968Z"
   },
   "walletBalance": 0,
   "transactions": [],
   "invoices": [],
   "teamMembers": [],
-  "auditLogs": [],
-  "whatsappLogs": [],
+
+  "auditLogs": [
+    {
+      "id": "log_lgSfuM86",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T15:42:01.429Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "category": "campaign"
+    }
+  ],
+  "whatsappLogs": [
+    {
+      "id": "wa_VaX1yAP2",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793806921428",
+      "status": "delivered",
+      "timestamp": "2026-11-04T15:42:01.429Z",
+      "disposition": "Interested"
+    }
+  ]
   "userCredentials": {}
 }

@@ -1,0 +1,75 @@
+# Hindi (hi-IN) Localized Lines
+language: hi
+name: Hindi (हिन्दी)
+
+gender_forms:
+  female:
+    speaking_verb: "बोल रही हूँ"
+    can_verb: "सकती हूँ"
+    polite_verb: "करती हूँ"
+  male:
+    speaking_verb: "बोल रहा हूँ"
+    can_verb: "सकता हूँ"
+    polite_verb: "करता हूँ"
+
+honorifics:
+  default: "जी"
+  formal: "साहब"
+  female: "मैडम"
+  male: "सर"
+
+call_types:
+  outbound:
+    variants:
+      - personalized: "नमस्ते {name}! मैं {company} से {agent_name} {speaking_verb}। आपके लिए एक ज़रूरी जानकारी थी, क्या मैं आपसे एक मिनट बात कर {can_verb}?"
+        neutral: "नमस्ते! मैं {company} से {agent_name} {speaking_verb}। आपके लिए एक ज़रूरी जानकारी थी, क्या मैं आपसे एक मिनट बात कर {can_verb}?"
+      - personalized: "नमस्ते {name}! {company} की तरफ़ से {agent_name} {speaking_verb}। आपके नंबर के लिए एक ख़ास प्लान उपलब्ध है, क्या हम इस पर थोड़ी चर्चा कर सकते हैं?"
+        neutral: "नमस्ते! {company} की तरफ़ से {agent_name} {speaking_verb}। आपके नंबर के लिए एक ख़ास प्लान उपलब्ध है, क्या हम इस पर थोड़ी चर्चा कर सकते हैं?"
+      - personalized: "नमस्ते {name}! {company} से {agent_name} {speaking_verb}। आपके अकाउंट के संदर्भ में एक अच्छी ख़बर थी, क्या आप सुनना चाहेंगे?"
+        neutral: "नमस्ते! {company} से {agent_name} {speaking_verb}। हमारी सेवाओं के संदर्भ में एक अच्छी ख़बर थी, क्या आप सुनना चाहेंगे?"
+
+  inbound:
+    variants:
+      - "नमस्ते! {company} में आपका हार्दिक स्वागत है। मैं {agent_name} {speaking_verb}, मैं आपकी क्या सहायता कर {can_verb}?"
+      - "नमस्ते! {company} से संपर्क करने के लिए धन्यवाद। मैं {agent_name} {speaking_verb}, आज मैं आपकी कैसे मदद कर {can_verb}?"
+      - "नमस्ते! {company} में आपका स्वागत है। मैं {agent_name} {speaking_verb}, आज आप किस सेवा के बारे में जानना चाहते हैं?"
+
+  reminder:
+    variants:
+      - personalized: "नमस्ते {name}! मैं {company} से {agent_name} {speaking_verb}। यह आपके आगामी भुगतान के संबंध में एक शिष्टता कॉल है, क्या आप सुन सकते हैं?"
+        neutral: "नमस्ते! मैं {company} से {agent_name} {speaking_verb}। यह आपके आगामी भुगतान के संबंध में एक शिष्टता कॉल है, क्या आप सुन सकते हैं?"
+      - personalized: "नमस्ते {name}! {company} की तरफ़ से {agent_name} {speaking_verb}। आपकी देय तारीख़ के बारे में याद दिलाना था, क्या मैं विवरण बता {can_verb}?"
+        neutral: "नमस्ते! {company} की तरफ़ से {agent_name} {speaking_verb}। आपकी देय तारीख़ के बारे में याद दिलाना था, क्या मैं विवरण बता {can_verb}?"
+      - personalized: "नमस्ते {name}! मैं {company} से {agent_name} {speaking_verb}। आपके खाते की ईएमआई ड्यू डेट को लेकर बात करनी थी, क्या दो मिनट का समय मिलेगा?"
+        neutral: "नमस्ते! मैं {company} से {agent_name} {speaking_verb}। आपके खाते की ईएमआई ड्यू डेट को लेकर बात करनी थी, क्या दो मिनट का समय मिलेगा?"
+
+  support:
+    variants:
+      - "नमस्ते! {company} कस्टमर केयर में आपका स्वागत है। मैं {agent_name} {speaking_verb}, आपकी परेशानी का समाधान कैसे कर {can_verb}?"
+      - "नमस्ते! {company} हेल्पलाइन पर आपका स्वागत है। मैं {agent_name} {speaking_verb}, आज आपको किस सेवा में दिक़्क़त आ रही है?"
+      - "नमस्ते! {company} सपोर्ट में आपका स्वागत है। मैं {agent_name} {speaking_verb}, आज आपकी क्या सेवा कर {can_verb}?"
+
+  survey:
+    variants:
+      - personalized: "नमस्ते {name}! मैं {company} से {agent_name} {speaking_verb}। कल मिली सेवा के अनुभव को जानने के लिए कॉल किया है, क्या आप दो मिनट का समय देंगे?"
+        neutral: "नमस्ते! मैं {company} से {agent_name} {speaking_verb}। कल मिली सेवा के अनुभव को जानने के लिए कॉल किया है, क्या आप दो मिनट का समय देंगे?"
+      - personalized: "नमस्ते {name}! {company} की तरफ़ से {agent_name} {speaking_verb}। आपकी संतुष्टि के बारे में थोड़ा फ़ीडबैक चाहिए था, क्या मैं एक छोटा सा सवाल पूछ {can_verb}?"
+        neutral: "नमस्ते! {company} की तरफ़ से {agent_name} {speaking_verb}। आपकी संतुष्टि के बारे में थोड़ा फ़ीडबैक चाहिए था, क्या मैं एक छोटा सा सवाल पूछ {can_verb}?"
+      - personalized: "नमस्ते {name}! मैं {company} से {agent_name} {speaking_verb}। हमारी सेवा के बारे में आपकी राय जाननी थी, क्या आप बताना चाहेंगे?"
+        neutral: "नमस्ते! मैं {company} से {agent_name} {speaking_verb}। हमारी सेवा के बारे में आपकी राय जाननी थी, क्या आप बताना चाहेंगे?"
+
+ai_disclosure: ""
+
+greeting: "नमस्ते! आरोग्य डेंटल केयर में आपका स्वागत है। मैं प्रिया बोल रही हूँ, मैं आपकी क्या सहायता कर सकती हूँ?"
+consent: "कृपया ध्यान दें, यह कॉल गुणवत्ता और प्रशिक्षण के लिए रिकॉर्ड की जा रही है।"
+are_you_there: "क्या आप वहां हैं? मैं सुन रही हूँ, अगर आप कुछ पूछना चाहते हैं तो बता सकते हैं।"
+silence_farewell: "लगता है आप व्यस्त हैं। कॉल करने के लिए धन्यवाद, आपका दिन शुभ हो!"
+goodbye: "जी कोई बात नहीं, अपना समय देने के लिए धन्यवाद। आपका दिन शुभ हो!"
+not_interested: "जी कोई बात नहीं, अपना समय देने के लिए धन्यवाद। आपका दिन शुभ हो!"
+transfer: "ज़रूर, मैं आपकी कॉल हमारे प्रतिनिधि को ट्रांसफर कर रही हूँ। कृपया लाइन पर बने रहें।"
+error_fallback: "एक सेकंड, मुझे आपकी आवाज़ साफ़ नहीं आई। कृपया फिर से बोलिए।"
+callback_offer: "क्या मैं आपको किसी और समय कॉल करूँ? कृपया अपनी सुविधा का समय बता दीजिए।"
+not_understood: "माफ़ कीजिए, मैं समझ नहीं पाई। क्या आप दोबारा कह सकते हैं?"
+hold: "कृपया एक क्षण रुकिए, मैं जानकारी देख रही हूँ।"
+dnc_confirmed: "आपका नंबर Do-Not-Call लिस्ट में जोड़ दिया गया है। भविष्य में आपको कोई कॉल नहीं आएगा। धन्यवाद!"
+offer_language_switch: "क्या आप हिन्दी में बात करना चाहते हैं? मैं हिन्दी में आपकी पूरी सहायता कर सकती हूँ।"

@@ -1,0 +1,302 @@
+[
+  {
+    "language": "mr",
+    "sample_id": 1,
+    "text": "नमस्कार! आरोग्य डेंटल केअर मध्ये आपले मनापासून स्वागत आहे.",
+    "local_24k_path": "voice_reel\\mr\\sample_01_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_01_phone_8k.wav",
+    "duration_sec": 0.72,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 2,
+    "text": "डॉ. शर्मा यांची पहिली तपासणी फी पाचशे रुपये असून क्लिनिक सकाळी नऊ ते रात्री आठ चालू असते.",
+    "local_24k_path": "voice_reel\\mr\\sample_02_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_02_phone_8k.wav",
+    "duration_sec": 1.36,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 3,
+    "text": "पुढील आठवड्यात येत्या मंगळवारी दुपारी साडेतीन वाजता आपल्यासाठी वेळ उपलब्ध आहे.",
+    "local_24k_path": "voice_reel\\mr\\sample_03_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_03_phone_8k.wav",
+    "duration_sec": 0.88,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 4,
+    "text": "आपला एकूण ईएमआय दोन हजार चारशे पन्नास रुपये परवा देय आहे.",
+    "local_24k_path": "voice_reel\\mr\\sample_04_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_04_phone_8k.wav",
+    "duration_sec": 0.88,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 5,
+    "text": "आमचा अधिकृत संपर्क नंबर नऊ आठ सात सहा पाच, चार तीन दोन एक शून्य असा आहे.",
+    "local_24k_path": "voice_reel\\mr\\sample_05_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_05_phone_8k.wav",
+    "duration_sec": 1.28,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 6,
+    "text": "आपल्याला फोनवर थोडा वेळ थांबावे लागले याबद्दल मी मनापासून क्षमस्व आहे.",
+    "local_24k_path": "voice_reel\\mr\\sample_06_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_06_phone_8k.wav",
+    "duration_sec": 0.88,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 7,
+    "text": "आपली भीती मी पूर्णपणे समजू शकते; परंतु आमचे सर्व उपचार पूर्णपणे वेदनारहित आणि सुरक्षित असतात.",
+    "local_24k_path": "voice_reel\\mr\\sample_07_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_07_phone_8k.wav",
+    "duration_sec": 1.2,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 8,
+    "text": "होय, मी एक एआय व्हॉईस असिस्टंट आहे, मी आपल्याला जलद आणि अचूक माहिती देण्यासाठी काम करते.",
+    "local_24k_path": "voice_reel\\mr\\sample_08_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_08_phone_8k.wav",
+    "duration_sec": 1.28,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 9,
+    "text": "मी लगेच आपल्या नोंदणीकृत मोबाईल नंबरवर सुरक्षित पेमेंट लिंक आणि पत्ता पाठवत आहे.",
+    "local_24k_path": "voice_reel\\mr\\sample_09_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_09_phone_8k.wav",
+    "duration_sec": 1.04,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "mr",
+    "sample_id": 10,
+    "text": "आरोग्य डेंटल केअरला वेळ दिल्याबद्दल खूप खूप धन्यवाद, आपला दिवस अत्यंत शुभ जावो!",
+    "local_24k_path": "voice_reel\\mr\\sample_10_local_24k.wav",
+    "phone_8k_path": "voice_reel\\mr\\sample_10_phone_8k.wav",
+    "duration_sec": 1.04,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 1,
+    "text": "नमस्ते! आरोग्य डेंटल केयर में आपका स्वागत है।",
+    "local_24k_path": "voice_reel\\hi\\sample_01_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_01_phone_8k.wav",
+    "duration_sec": 0.64,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 2,
+    "text": "डॉक्टर शर्मा की पहली परामर्श फ़ीस पाँच सौ रुपये है और क्लिनिक सुबह नौ से रात आठ बजे तक खुला रहता है।",
+    "local_24k_path": "voice_reel\\hi\\sample_02_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_02_phone_8k.wav",
+    "duration_sec": 1.76,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 3,
+    "text": "आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।",
+    "local_24k_path": "voice_reel\\hi\\sample_03_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_03_phone_8k.wav",
+    "duration_sec": 1.12,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 4,
+    "text": "आपकी दो हज़ार चार सौ पचास रुपये की ईएमआय परसों देय है।",
+    "local_24k_path": "voice_reel\\hi\\sample_04_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_04_phone_8k.wav",
+    "duration_sec": 0.96,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 5,
+    "text": "हमारा आधिकारिक हेल्पलाइन नंबर नौ आठ सात छह पाँच, चार तीन दो एक शून्य है।",
+    "local_24k_path": "voice_reel\\hi\\sample_05_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_05_phone_8k.wav",
+    "duration_sec": 1.2,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 6,
+    "text": "कॉल पर थोड़ा इंतज़ार करने के लिए मैं माफ़ी चाहती हूँ।",
+    "local_24k_path": "voice_reel\\hi\\sample_06_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_06_phone_8k.wav",
+    "duration_sec": 0.88,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 7,
+    "text": "मैं आपकी परेशानी समझ सकती हूँ; हमारे यहाँ आधुनिक और दर्द-रहित तकनीक से इलाज किया जाता है।",
+    "local_24k_path": "voice_reel\\hi\\sample_07_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_07_phone_8k.wav",
+    "duration_sec": 1.36,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 8,
+    "text": "जी हाँ, मैं एक एआई वॉइस असिस्टेंट हूँ। मैं आपकी तुरंत और सही सहायता के लिए यहाँ हूँ।",
+    "local_24k_path": "voice_reel\\hi\\sample_08_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_08_phone_8k.wav",
+    "duration_sec": 1.44,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 9,
+    "text": "मैंने आपके नंबर पर क्लिनिक का पता और अपॉइंटमेंट कन्फर्मेशन मैसेज भेज दिया है।",
+    "local_24k_path": "voice_reel\\hi\\sample_09_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_09_phone_8k.wav",
+    "duration_sec": 1.12,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "hi",
+    "sample_id": 10,
+    "text": "समय देने के लिए बहुत-बहुत धन्यवाद, आपका दिन शुभ हो!",
+    "local_24k_path": "voice_reel\\hi\\sample_10_local_24k.wav",
+    "phone_8k_path": "voice_reel\\hi\\sample_10_phone_8k.wav",
+    "duration_sec": 0.8,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 1,
+    "text": "Hello and welcome to Aarogya Dental Care! My name is Priya.",
+    "local_24k_path": "voice_reel\\en\\sample_01_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_01_phone_8k.wav",
+    "duration_sec": 0.88,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 2,
+    "text": "Dr. Sharma's consultation fee is 500 rupees, and our clinic is open Monday through Saturday.",
+    "local_24k_path": "voice_reel\\en\\sample_02_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_02_phone_8k.wav",
+    "duration_sec": 1.2,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 3,
+    "text": "We have an appointment slot available next Tuesday at 3:30 PM.",
+    "local_24k_path": "voice_reel\\en\\sample_03_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_03_phone_8k.wav",
+    "duration_sec": 0.88,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 4,
+    "text": "Your payment of 2,450 rupees is due day after tomorrow.",
+    "local_24k_path": "voice_reel\\en\\sample_04_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_04_phone_8k.wav",
+    "duration_sec": 0.8,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 5,
+    "text": "Our direct helpline number is 9 8 7 6 5, 4 3 2 1 0.",
+    "local_24k_path": "voice_reel\\en\\sample_05_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_05_phone_8k.wav",
+    "duration_sec": 1.2,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 6,
+    "text": "I sincerely apologize for the brief hold while connecting your call.",
+    "local_24k_path": "voice_reel\\en\\sample_06_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_06_phone_8k.wav",
+    "duration_sec": 0.88,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 7,
+    "text": "I completely understand your apprehension, but our gentle care protocols make every visit virtually painless.",
+    "local_24k_path": "voice_reel\\en\\sample_07_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_07_phone_8k.wav",
+    "duration_sec": 1.2,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 8,
+    "text": "Yes, I am an AI voice assistant designed to assist you quickly and accurately.",
+    "local_24k_path": "voice_reel\\en\\sample_08_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_08_phone_8k.wav",
+    "duration_sec": 1.12,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 9,
+    "text": "I have sent the clinic address and appointment details directly to your mobile number.",
+    "local_24k_path": "voice_reel\\en\\sample_09_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_09_phone_8k.wav",
+    "duration_sec": 1.12,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  },
+  {
+    "language": "en",
+    "sample_id": 10,
+    "text": "Thank you so much for contacting Aarogya Dental Care, have a wonderful and healthy day ahead!",
+    "local_24k_path": "voice_reel\\en\\sample_10_local_24k.wav",
+    "phone_8k_path": "voice_reel\\en\\sample_10_phone_8k.wav",
+    "duration_sec": 1.28,
+    "peak_amplitude": 799,
+    "rms_energy": 565
+  }
+]

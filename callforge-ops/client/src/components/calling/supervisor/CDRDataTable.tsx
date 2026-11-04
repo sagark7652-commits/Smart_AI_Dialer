@@ -26,7 +26,9 @@ export interface CDRRecord {
   qaScore: number;
   hasRecording: boolean;
   recordingUrl?: string;
-  transcript?: Array<{ speaker: string; text: string; time: string }>;
+  summary?: string;
+  customerFeedback?: string;
+  transcript?: any;
 }
 
 export const SAMPLE_CDR_DATA: CDRRecord[] = [
@@ -142,9 +144,9 @@ export const CDRDataTable: React.FC<CDRDataTableProps> = ({
               qaScore: c.qaScore || 90,
               hasRecording: !!c.recordingUrl,
               recordingUrl: c.recordingUrl,
-              transcript: c.transcript
-                ? [{ speaker: "System", text: c.transcript, time: "00:01" }]
-                : undefined,
+              summary: c.summary,
+              customerFeedback: c.customerFeedback,
+              transcript: c.transcript,
             }))
           );
         }
@@ -284,6 +286,12 @@ export const CDRDataTable: React.FC<CDRDataTableProps> = ({
                   <td className="p-3">
                     <strong className="text-zinc-100 font-semibold block">{item.customerName}</strong>
                     <span className="text-[11px] text-zinc-400 font-mono">{item.customerPhone}</span>
+                    {item.summary && (
+                      <p className="text-[11px] text-zinc-300 mt-1 line-clamp-1 italic bg-zinc-900/80 px-1.5 py-0.5 rounded border border-zinc-800/80">
+                        <span className="text-violet-400 not-italic font-semibold mr-1">Summary:</span>
+                        {item.summary}
+                      </p>
+                    )}
                   </td>
                   <td className="p-3">
                     <span className="text-zinc-200 block">{item.agentName}</span>

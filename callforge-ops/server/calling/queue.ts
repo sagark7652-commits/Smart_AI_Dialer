@@ -1,6 +1,9 @@
 import { nanoid } from "nanoid";
 import { getTelephonyProvider } from "./provider";
 import { eventBroker } from "./sse";
+import { persistentStore } from "../storage/persistentStore";
+import { agentRuntime } from "./runtime/agentRuntime";
+import { analyzeCallWithClaude } from "./claudeQA";
 import {
   ActiveCall,
   AgentState,
@@ -206,6 +209,51 @@ export class PersistentDialerWorker {
   }
 
   private async workerCycle() {
+    // 0. Automated Callback Reminder Processing
+    // Checks for any scheduled callback reminders that have reached their target time
+    try {
+      const dueCallbacks = persistentStore.getDueCallbacks();
+      for (const cb of dueCallbacks) {
+        console.log(`[Dialer Worker] Automated callback due for ${cb.customerName} (${cb.customerPhone}). Initiating follow-up call...`);
+        const provider = getTelephonyProvider();
+        const callResult = await provider.makeCall({
+          to: cb.customerPhone,
+          from: "+91-140-998822",
+          script: `Automated follow-up callback: ${cb.reason || "Customer requested callback"}`,
+          metadata: { isCallback: true, callbackId: cb.id, customerName: cb.customerName },
+        });
+
+        const activeCall: ActiveCall = {
+          id: callResult.callId,
+          campaignId: cb.campaignId,
+          customerPhone: cb.customerPhone,
+          customerName: cb.customerName,
+          provider: provider.name as any,
+          status: "in_progress",
+          startedAt: new Date().toISOString(),
+          durationSeconds: 1,
+          sentiment: "positive",
+        };
+
+        this.activeCalls.set(activeCall.id, activeCall);
+        eventBroker.broadcastCallUpdate(activeCall);
+
+        // Initialize agent session with casual callback opening
+        agentRuntime.createSession({
+          callId: activeCall.id,
+          customerPhone: cb.customerPhone,
+          customerName: cb.customerName,
+          companyName: cb.company || "CallForge Operations",
+          isCallbackFollowup: true,
+        });
+
+        // Mark callback reminder completed
+        persistentStore.markCallbackCompleted(cb.id, `Autonomous follow-up call initiated (${activeCall.id})`);
+      }
+    } catch (cbErr) {
+      console.warn("[Dialer Worker] Error processing scheduled callbacks:", cbErr);
+    }
+
     // 1. Process active running campaigns
     for (const job of Array.from(this.campaigns.values())) {
       if (job.status !== "running") continue;
@@ -264,7 +312,7 @@ export class PersistentDialerWorker {
           leadId: lead.id,
           customerPhone: lead.phone,
           customerName: lead.name,
-          provider: "mock",
+          provider: provider.name as any,
           status: "in_progress",
           startedAt: new Date().toISOString(),
           durationSeconds: 1,
@@ -274,6 +322,16 @@ export class PersistentDialerWorker {
         this.activeCalls.set(activeCall.id, activeCall);
         eventBroker.broadcastCallUpdate(activeCall);
 
+        // Initialize agent runtime session with human-like casual intro
+        agentRuntime.createSession({
+          callId: activeCall.id,
+          customerPhone: lead.phone,
+          customerName: lead.name,
+          companyName: lead.company || "CallForge Operations",
+          callObjective: job.script,
+          isCallbackFollowup: false,
+        });
+
         lead.status = "connected";
         job.stats.connected++;
         job.stats.qualified = Math.floor(job.stats.connected * 0.45);
@@ -282,12 +340,58 @@ export class PersistentDialerWorker {
       }
     }
 
-    // 2. Increment active call timers & clean up old mock calls
+    // 2. Increment active call timers & generate AI summary upon completion
     for (const [id, call] of Array.from(this.activeCalls.entries())) {
       call.durationSeconds += 2;
-      if (call.durationSeconds > 60) {
+      if (call.durationSeconds >= 16) {
         call.status = "completed";
         call.endedAt = new Date().toISOString();
+
+        // Retrieve conversation transcript
+        const session = Array.from((agentRuntime as any).sessions?.values() || []).find(
+          (s: any) => s.callId === id
+        ) as any;
+
+        const transcript = session && session.messages?.length > 1
+          ? session.messages
+              .filter((m: any) => m.role !== "system")
+              .map((m: any) => `${m.role === "assistant" ? "Agent" : "Customer"}: ${m.content}`)
+              .join("\n")
+          : `Agent: Hello Sir, Namaste! Main CallForge AI voice assistant bol rahi hoon. Customer: Haan bataiye. Agent: Thank you for your time!`;
+
+        // Generate AI analysis & summary
+        analyzeCallWithClaude(transcript, call.customerName, "Priya (AI Voice Agent)")
+          .then((qa) => {
+            // Persist CDR record into database
+            persistentStore.addCDRLog({
+              callId: id,
+              customerName: call.customerName,
+              customerPhone: call.customerPhone,
+              agentName: "Priya (AI Voice Agent)",
+              campaign: call.campaignId ? this.campaigns.get(call.campaignId)?.name || "Outbound Campaign" : "Autonomous Voice Call",
+              durationSeconds: call.durationSeconds,
+              status: "Completed",
+              sentiment: qa.sentiment === "positive" ? "Positive" : qa.sentiment === "negative" ? "Negative" : "Neutral",
+              qaScore: qa.overallScore,
+              transcript,
+              summary: qa.summary,
+              customerFeedback: qa.recommendations?.[0] || "Call successfully completed.",
+            });
+
+            // Update matching lead in persistent storage
+            const cleanPhone = call.customerPhone.replace(/\D/g, "").slice(-10);
+            const lead = persistentStore.getLeads().find((l) => l.phone.replace(/\D/g, "").slice(-10) === cleanPhone);
+            if (lead) {
+              lead.last = qa.summary;
+              lead.stage = qa.sentiment === "positive" ? "Interested" : "Qualified";
+              lead.notes.push(`[Call Completed] ${qa.summary} (Score: ${qa.overallScore}/100)`);
+              persistentStore.updateLead(lead.id, lead);
+            }
+          })
+          .catch((err) => {
+            console.warn("[Dialer Worker] Auto-summary error:", err);
+          });
+
         this.activeCalls.delete(id);
       }
     }

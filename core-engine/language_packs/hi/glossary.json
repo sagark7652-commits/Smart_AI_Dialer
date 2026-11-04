@@ -1,0 +1,79 @@
+{
+  "common": {
+    "hello": "नमस्ते / नमस्कार",
+    "thank_you": "धन्यवाद / शुक्रिया",
+    "please": "कृपया",
+    "welcome": "आपका स्वागत है",
+    "okay": "ठीक है",
+    "understood": "जी, समझ गई",
+    "certainly": "बिल्कुल / ज़रूर",
+    "sorry": "माफ़ कीजिए",
+    "no_problem": "कोई बात नहीं",
+    "goodbye": "आपका दिन शुभ हो"
+  },
+  "sales": {
+    "offer": "ऑफ़र",
+    "discount": "छूट / डिस्काउंट",
+    "plan": "प्लान",
+    "subscription": "सबस्क्रिप्शन",
+    "validity": "वैधता / वैलिडिटी",
+    "recharge": "रिचार्ज",
+    "benefits": "फ़ायदे",
+    "cost": "कीमत / चार्ज",
+    "annual_plan": "सालाना प्लान",
+    "activation": "चालू करना / एक्टिवेशन"
+  },
+  "lead_qualification": {
+    "company": "कंपनी",
+    "team_size": "टीम की संख्या",
+    "requirement": "ज़रूरत / आवश्यकता",
+    "budget": "बजट",
+    "timeline": "समय सीमा / टाइमलाइन",
+    "decision_maker": "निर्णय लेने वाले अधिकारी",
+    "brief_call": "छोटी सी बातचीत / कॉल",
+    "demo": "डेमो",
+    "cloud_migration": "क्लाउड माइग्रेशन"
+  },
+  "appointment": {
+    "booking": "अपॉइंटमेंट बुकिंग",
+    "doctor": "डॉक्टर साहब",
+    "consultation": "परामर्श / जाँच",
+    "clinic": "क्लिनिक / अस्पताल",
+    "slot": "समय / स्लॉट",
+    "timing": "टाइमिंग",
+    "reschedule": "समय बदलना / रीशेड्यूल",
+    "cancel": "कैंसिल / रद्द करना",
+    "fee": "फ़ीस",
+    "confirmation": "पुष्टि / कन्फर्मेशन"
+  },
+  "reminder_collection": {
+    "emi": "ईएमआई (EMI)",
+    "due_date": "अंतिम तारीख / ड्यू डेट",
+    "amount_due": "बाकी राशि",
+    "overdue": "ड्यू राशि",
+    "payment_link": "पेमेंट लिंक",
+    "receipt": "रसीद",
+    "grace_period": "अतिरिक्त समय",
+    "penalty": "लेट फ़ीस / पेनाल्टी",
+    "cibil_score": "सिबिल स्कोर"
+  },
+  "support": {
+    "issue": "समस्या / दिक़्क़त",
+    "resolution": "समाधान",
+    "ticket_number": "शिकायत संख्या / टिकट नंबर",
+    "account": "अकाउंट",
+    "technical_team": "तकनीकी टीम",
+    "follow_up": "फ़ॉलो-अप",
+    "connectivity": "कनेक्शन / नेटवर्क",
+    "verification": "सत्यापन / वेरिफिकेशन"
+  },
+  "survey": {
+    "feedback": "फ़ीडबैक / राय",
+    "rating": "रेटिंग",
+    "satisfaction": "संतुष्टि",
+    "experience": "अनुभव",
+    "scale_1_to_5": "१ से ५ के बीच अंक",
+    "recommendation": "सिफ़ारिश",
+    "valuable_time": "कीमती समय"
+  }
+}

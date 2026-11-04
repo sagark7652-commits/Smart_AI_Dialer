@@ -1,0 +1,30 @@
+{
+  "domains": {
+    "telecaller_sales": {
+      "recharge": "recharge",
+      "offer": "exclusive offer",
+      "plan": "annual 5G plan",
+      "validity": "validity",
+      "data": "high-speed 5G data",
+      "calling": "unlimited voice calling"
+    },
+    "clinic_booking": {
+      "appointment": "consultation appointment",
+      "doctor": "Doctor Sharma",
+      "timing": "available time slot",
+      "fees": "consultation fee",
+      "clinic": "clinic location"
+    },
+    "credit_card": {
+      "credit_card": "credit card",
+      "pre_approved": "pre-approved",
+      "lifetime_free": "lifetime free with zero annual fees",
+      "cashback": "cashback on all transactions"
+    },
+    "debt_collection_reminder": {
+      "emi": "monthly instalment",
+      "due_date": "due date",
+      "payment_link": "instant payment link"
+    }
+  }
+}

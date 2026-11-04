@@ -9,6 +9,10 @@ import { eventBroker } from "./sse";
 import { CDRRecord, SupervisorActionType } from "./types";
 import { persistentStore } from "../storage/persistentStore";
 import { nvidiaVoicePipeline } from "./nvidiaVoicePipeline";
+import { agentRuntime, DEFAULT_AGENT_PERSONA, AVAILABLE_PERSONAS } from "./runtime/agentRuntime";
+import { localKnowledgeBase } from "./runtime/rag/localKnowledgeBase";
+import { BUILTIN_BANKING_TOOLS } from "./runtime/tools/bankingTools";
+import { saveCallToPostgres, getCallSummariesFromPostgres } from "../db/postgres";
 
 export const callingRouter = Router();
 
@@ -300,9 +304,9 @@ callingRouter.post("/agent/disposition", (req: Request, res: Response) => {
 // POST /api/calling/webhook/:provider
 // Post-call webhook: Decoupled, non-blocking ingestion of call events
 callingRouter.post("/webhook/:provider", async (req: Request, res: Response) => {
-  const provider = req.params.provider;
-  const payload = req.body;
+  const provider = (req.params.provider || "").toLowerCase();
 
+  const payload = req.body || {};
   const callId = payload.CallSid || payload.call_id || payload.callId || `call_${nanoid(8)}`;
   const duration = parseInt(payload.DialCallDuration || payload.duration || "90", 10);
   const transcript = payload.transcript || "Agent: Namaste, calling from CreatorAI regarding your inquiry.\nCustomer: Yes, I wanted to understand the automated dialing features.\nAgent: Sure, our system dials with full TRAI compliance.";
@@ -336,13 +340,56 @@ callingRouter.post("/webhook/:provider", async (req: Request, res: Response) => 
 
       cdrStore.unshift(newCDR);
 
-      // Broadcast update to live supervisors via SSE!
+      // 1. Persist to PostgreSQL in Text Format
+      await saveCallToPostgres({
+        externalCallId: callId,
+        provider,
+        phone: customerPhone,
+        customerName,
+        status: "completed",
+        durationSeconds: duration,
+        recordingUrl: newCDR.recordingUrl,
+        transcript,
+        summary: qaResult.summary,
+        disposition: newCDR.disposition,
+        sentiment: qaResult.sentiment,
+        qaScore: qaResult.overallScore,
+      });
+
+      // 2. Persist to storage.json
+      persistentStore.addCDRLog({
+        id: callId,
+        callId,
+        provider,
+        customerName,
+        customerPhone,
+        agentName: "AI Voice Agent",
+        campaign: "Inbound/Outbound Webhook",
+        duration: `${Math.floor(duration / 60)}m ${duration % 60}s`,
+        durationSeconds: duration,
+        status: "Completed",
+        sentiment: qaResult.sentiment === "positive" ? "Positive" : qaResult.sentiment === "negative" ? "Negative" : "Neutral",
+        qaScore: qaResult.overallScore,
+        recordingUrl: newCDR.recordingUrl,
+        transcript,
+        summary: qaResult.summary,
+      });
+
+      // 3. Broadcast update to live supervisors via SSE!
       eventBroker.broadcast("call_completed", newCDR);
-      console.log(`[Webhook] Processed ${provider} call ${callId} with Auto-QA score ${qaResult.overallScore}%`);
+      console.log(`[Webhook] Processed ${provider} call ${callId} with Auto-QA score ${qaResult.overallScore}% and saved summary to PostgreSQL.`);
     } catch (err) {
       console.error(`[Webhook] Error in async post-processing for call ${callId}`, err);
     }
   });
+});
+
+// GET /api/calling/summaries/postgres
+// Retrieves call summaries stored directly in the PostgreSQL database
+callingRouter.get("/summaries/postgres", async (req: Request, res: Response) => {
+  const limit = parseInt(req.query.limit as string, 10) || 50;
+  const summaries = await getCallSummariesFromPostgres(limit);
+  res.json({ success: true, count: summaries.length, summaries });
 });
 
 // =============================================================================
@@ -356,7 +403,7 @@ callingRouter.get("/cdrs", (_req: Request, res: Response) => {
   const merged = [
     ...persistentCdrs.map((c) => ({
       id: c.id,
-      callId: c.id,
+      callId: c.callId || c.id,
       customerPhone: c.customerPhone,
       customerName: c.customerName,
       agentName: c.agentName,
@@ -364,8 +411,9 @@ callingRouter.get("/cdrs", (_req: Request, res: Response) => {
       durationSeconds: c.durationSeconds,
       costInr: Math.round((c.durationSeconds / 60) * 0.60 * 100) / 100,
       recordingUrl: c.recordingUrl || "https://assets.mixkit.co/active_storage/sfx/2874/2874-preview.mp3",
-      transcript: `Call with ${c.customerName} regarding campaign ${c.campaign}. Status: ${c.status}.`,
-      summary: `Automated call summary for ${c.customerName}. AI QA evaluation score ${c.qaScore}%.`,
+      transcript: c.transcript || `Call with ${c.customerName} regarding campaign ${c.campaign}. Status: ${c.status}.`,
+      summary: c.summary || `Automated call summary for ${c.customerName}. AI QA evaluation score ${c.qaScore}%.`,
+      customerFeedback: c.customerFeedback || "",
       qaScore: c.qaScore,
       createdAt: c.createdAt,
     })),
@@ -721,6 +769,105 @@ callingRouter.post("/nvidia-pipeline/simulate", async (req: Request, res: Respon
 });
 
 // =============================================================================
+// 7B. SELF-CONTROLLED AGENT RUNTIME ENDPOINTS
+// =============================================================================
+
+// GET /api/calling/runtime/config
+callingRouter.get("/runtime/config", (_req: Request, res: Response) => {
+  res.json({
+    status: "active",
+    runtime: "Self-Controlled Voice AI Agent Runtime",
+    architecture: "Telephony (Tata Smartflo) -> VAD (Silero) -> STT (Whisper/Faster-Whisper) -> Agent Runtime (Local LLM + Tools + RAG + Memory) -> TTS (Kokoro/Piper/Riva)",
+    defaultPersona: DEFAULT_AGENT_PERSONA,
+  });
+});
+
+// POST /api/calling/runtime/turn (Execute conversational turn with full Multi-turn Memory + RAG + LLM + Tool Execution)
+callingRouter.post("/runtime/turn", async (req: Request, res: Response) => {
+  const { sessionId, userMessage, query, language, dtmfDigit, customerPhone, customerName, agentId, rawAudioBase64 } = req.body;
+
+  try {
+    const effectiveSessionId = sessionId || `sess_${nanoid(12)}`;
+
+    // If raw audio base64 is passed
+    if (rawAudioBase64) {
+      const buffer = Buffer.from(rawAudioBase64, "base64");
+      const result = await agentRuntime.processAudioTurn(effectiveSessionId, buffer);
+      return res.json({
+        success: true,
+        sessionId: effectiveSessionId,
+        userTranscript: result.userTranscript,
+        replyText: result.aiResponseText,
+        audioOutput: result.audioOutput.toString("base64"),
+        toolsExecuted: result.toolsExecuted,
+        ragSnippetsUsed: result.ragSnippetsUsed,
+        sessionStatus: result.sessionStatus,
+        latencyBreakdown: result.latencyBreakdown,
+      });
+    }
+
+    // Process real-time conversational AI turn
+    const effectiveMsg = userMessage || query || "";
+    const result = await agentRuntime.processTextTurn(effectiveSessionId, effectiveMsg, {
+      language,
+      dtmfDigit,
+      customerPhone,
+      customerName,
+      agentId,
+    });
+
+    return res.json({
+      success: true,
+      sessionId: effectiveSessionId,
+      userTranscript: result.userTranscript,
+      replyText: result.aiResponseText,
+      toolsExecuted: result.toolsExecuted,
+      ragSnippetsUsed: result.ragSnippetsUsed,
+      intent: result.intent,
+      sessionStatus: result.sessionStatus,
+      shouldEndCall: result.shouldEndCall,
+      language: result.language,
+    });
+  } catch (err: any) {
+    console.error("[Runtime Turn Error]", err);
+    return res.status(500).json({ error: "Failed to process turn", detail: err.message });
+  }
+});
+
+// GET /api/calling/runtime/rag/docs
+callingRouter.get("/runtime/rag/docs", (_req: Request, res: Response) => {
+  res.json({ documents: localKnowledgeBase.getAllDocuments() });
+});
+
+// POST /api/calling/runtime/rag/docs
+callingRouter.post("/runtime/rag/docs", (req: Request, res: Response) => {
+  const { title, content, category, tags } = req.body;
+  if (!title || !content) {
+    return res.status(400).json({ error: "Title and content are required." });
+  }
+  const newDoc = {
+    id: `kb_${nanoid(8)}`,
+    title,
+    content,
+    category: category || "banking_policy",
+    tags: Array.isArray(tags) ? tags : [],
+  };
+  localKnowledgeBase.addDocument(newDoc);
+  res.json({ success: true, document: newDoc });
+});
+
+// GET /api/calling/runtime/tools
+callingRouter.get("/runtime/tools", (_req: Request, res: Response) => {
+  res.json({
+    tools: BUILTIN_BANKING_TOOLS.map((t) => ({
+      name: t.name,
+      description: t.description,
+      parameters: t.parameters,
+    })),
+  });
+});
+
+// =============================================================================
 // 8. SUBSCRIPTION & PAYMENT CHECKOUT ENDPOINTS
 // =============================================================================
 
@@ -1010,8 +1157,8 @@ callingRouter.post("/webhooks/voice/status", (req: Request, res: Response) => {
 // =============================================================================
 const emailOtpStore = new Map<string, { code: string; expiresAt: number; name?: string }>();
 
-const GMAIL_USER = process.env.GMAIL_USER || "tatadialer7@gmail.com";
-const GMAIL_APP_PASS = (process.env.GMAIL_APP_PASSWORD || "weyfveenhgunvyrb").replace(/\s+/g, "");
+const GMAIL_USER = process.env.GMAIL_USER || "";
+const GMAIL_APP_PASS = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
 
 const emailTransporter = nodemailer.createTransport({
   pool: true,
@@ -1443,3 +1590,361 @@ callingRouter.post("/settings", (req: Request, res: Response) => {
   );
   res.json({ success: true, settings: updated });
 });
+
+// =============================================================================
+// 15. CORE ENGINE VOICE AGENT INTEGRATION & VIRTUAL NUMBER STATUS
+// =============================================================================
+
+const CORE_ENGINE_URL = process.env.CORE_ENGINE_URL || "http://localhost:8000";
+
+// GET /api/calling/core-engine/health
+// Probes Python FastAPI Core Engine service (Port 8000)
+callingRouter.get("/core-engine/health", async (_req: Request, res: Response) => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const response = await fetch(`${CORE_ENGINE_URL}/health`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      return res.json({
+        available: true,
+        engineUrl: CORE_ENGINE_URL,
+        status: data.status || "healthy",
+        telephonyProvider: data.default_telephony || "twilio",
+        activeCalls: data.active_calls || 0,
+        resilience: data.resilience || {},
+        virtualNumberPending: true,
+        primaryAgent: "Priya (Aarogya Dental Care)",
+      });
+    }
+
+    return res.json({
+      available: false,
+      engineUrl: CORE_ENGINE_URL,
+      status: "degraded",
+      virtualNumberPending: true,
+      message: `Core Engine responded with status ${response.status}`,
+    });
+  } catch (err: any) {
+    return res.json({
+      available: false,
+      engineUrl: CORE_ENGINE_URL,
+      status: "offline",
+      virtualNumberPending: true,
+      message: "Python Core Engine is not running on port 8000. Launch it via 'npm run dev:agent'.",
+    });
+  }
+});
+
+// GET /api/calling/core-engine/agents
+// Returns available core engine agent personas including Priya Aarogya Dental
+callingRouter.get("/core-engine/agents", (_req: Request, res: Response) => {
+  const agents = [
+    {
+      id: "agent_aarogya_dental",
+      name: "Priya",
+      company: "Aarogya Dental Care & Implant Center",
+      location: "FC Road, Shivaji Nagar, Pune",
+      doctor: "Dr. Sharma (BDS MDS, 15+ years experience)",
+      mode: "appointment_booking",
+      role: "Front Desk Assistant & Clinic Coordinator",
+      defaultLanguage: "hi",
+      supportedLanguages: ["hi", "en", "mr", "hinglish"],
+      llmProvider: "openai",
+      llmModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      ttsProvider: "openai_neural",
+      tools: ["check_availability", "book_appointment", "get_clinic_services", "schedule_callback", "transfer_call"],
+      browserVoiceWsUrl: "ws://localhost:8000/ws/browser-voice?preset=clinic_booking&lang=hi",
+      greeting: "Namaste! Welcome to Aarogya Dental Care. Main Priya bol rahi hoon, bataiye main aapki kya help kar sakti hoon?",
+    },
+    {
+      id: "agent_tata_banking_01",
+      name: "Aarti",
+      company: "Tata Smartflo Banking",
+      location: "Mumbai, India",
+      mode: "telecaller_sales",
+      role: "Senior Customer Care Specialist",
+      defaultLanguage: "hi-IN",
+      supportedLanguages: ["hi-IN", "en-IN"],
+      llmProvider: "openai",
+      llmModel: "gpt-4o-mini",
+      ttsProvider: "kokoro_piper",
+      tools: ["fetch_loan_account_balance", "fetch_emi_schedule", "trigger_payment_link_sms", "register_dnc"],
+      greeting: "Namaste! Main CallForge autonomous banking assistant hoon on a recorded line. Main aapki kya sahayata kar sakti hoon?",
+    },
+  ];
+
+  res.json({ agents, total: agents.length });
+});
+
+// GET /api/calling/virtual-number/status
+// Indicates virtual number readiness & guidelines
+callingRouter.get("/virtual-number/status", (_req: Request, res: Response) => {
+  const hasTwilioNumber = Boolean(process.env.TWILIO_PHONE_NUMBER);
+  const hasExotelNumber = Boolean(process.env.EXOTEL_CALLER_ID);
+  const hasTataTrunk = Boolean(process.env.TATA_SIP_TRUNK);
+
+  const isConfigured = hasTwilioNumber || hasExotelNumber || hasTataTrunk;
+
+  res.json({
+    status: isConfigured ? "configured" : "deferred_pending",
+    virtualNumberPending: !isConfigured,
+    message: isConfigured
+      ? "Virtual number is provisioned and ready for telecom routing."
+      : "Virtual number (DID) is deferred as requested. The system is operating in Browser Voice Mode and Interactive Sandbox Mode. Add your number anytime in .env or Settings.",
+    currentTrunk: process.env.DEFAULT_TELEPHONY_PROVIDER || "tata_smartflo",
+    carriers: {
+      tata_smartflo: {
+        configured: hasTataTrunk,
+        trunk: process.env.TATA_SIP_TRUNK || "sip.tatasmartflo.com:5060",
+      },
+      twilio: {
+        configured: hasTwilioNumber,
+        callerId: process.env.TWILIO_PHONE_NUMBER || "Pending DID",
+      },
+      exotel: {
+        configured: hasExotelNumber,
+        callerId: process.env.EXOTEL_CALLER_ID || "Pending DID",
+      },
+    },
+    browserVoiceAvailable: true,
+  });
+});
+
+// =============================================================================
+// 16. AUTOMATED CALLBACK REMINDERS & CALL SUMMARY PERSISTENCE
+// =============================================================================
+
+// GET /api/calling/callbacks
+// Fetches all scheduled callbacks and reminders
+callingRouter.get("/callbacks", (_req: Request, res: Response) => {
+  const callbacks = persistentStore.getScheduledCallbacks();
+  res.json({ callbacks, total: callbacks.length });
+});
+
+// POST /api/calling/callbacks/schedule
+// Schedules an autonomous callback for a customer
+callingRouter.post("/callbacks/schedule", (req: Request, res: Response) => {
+  const { customerName, customerPhone, company, delayDays, preferredTime, reason } = req.body;
+
+  if (!customerPhone) {
+    return res.status(400).json({ error: "customerPhone is required." });
+  }
+
+  const days = Number(delayDays) || 2;
+  const scheduledDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+  const callback = persistentStore.addScheduledCallback({
+    customerName: customerName || "Valued Customer",
+    customerPhone,
+    company: company || "CallForge Operations",
+    scheduledAt: scheduledDate.toISOString(),
+    reason: reason || preferredTime || `Customer asked to call back in ${days} days`,
+    requestedBy: "customer",
+    notes: `Autonomous callback scheduled for ${customerName} (${days} days follow-up).`,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: `Callback scheduled for ${new Date(callback.scheduledAt).toLocaleString("en-IN")}`,
+    callback,
+  });
+});
+
+// POST /api/calling/callbacks/:id/complete
+callingRouter.post("/callbacks/:id/complete", (req: Request, res: Response) => {
+  const updated = persistentStore.markCallbackCompleted(req.params.id, "Manually marked as completed.");
+  if (!updated) return res.status(404).json({ error: "Callback not found" });
+  res.json({ success: true, callback: updated });
+});
+
+// POST /api/calling/callbacks/:id/cancel
+callingRouter.post("/callbacks/:id/cancel", (req: Request, res: Response) => {
+  const updated = persistentStore.cancelScheduledCallback(req.params.id);
+  if (!updated) return res.status(404).json({ error: "Callback not found" });
+  res.json({ success: true, callback: updated });
+});
+
+// POST /api/calling/calls/record-summary
+// Analyzes call transcript, extracts insights summary, and persists to database
+callingRouter.post("/calls/record-summary", async (req: Request, res: Response) => {
+  const { callId, customerName, customerPhone, transcript, durationSeconds, campaignName, agentName } = req.body;
+
+  if (!customerPhone) {
+    return res.status(400).json({ error: "customerPhone is required" });
+  }
+
+  try {
+    const qa = await analyzeCallWithClaude(
+      transcript || "",
+      customerName || "Customer",
+      agentName || "Priya (AI Voice Agent)"
+    );
+
+    const cdr = persistentStore.addCDRLog({
+      callId: callId || `call_${nanoid(8)}`,
+      customerName: customerName || "Customer",
+      customerPhone,
+      agentName: agentName || "Priya (AI Voice Agent)",
+      campaign: campaignName || "Outbound AI Dial",
+      durationSeconds: Number(durationSeconds) || 45,
+      status: "Completed",
+      sentiment: qa.sentiment === "positive" ? "Positive" : qa.sentiment === "negative" ? "Negative" : "Neutral",
+      qaScore: qa.overallScore,
+      transcript: transcript || "",
+      summary: qa.summary,
+      customerFeedback: qa.recommendations?.[0] || "Call successfully completed.",
+    });
+
+    // Update matching lead in database
+    const cleanPhone = customerPhone.replace(/\D/g, "").slice(-10);
+    const lead = persistentStore.getLeads().find((l) => l.phone.replace(/\D/g, "").slice(-10) === cleanPhone);
+    if (lead) {
+      lead.last = qa.summary;
+      lead.stage = qa.sentiment === "positive" ? "Interested" : "Qualified";
+      lead.notes.push(`[Call Summary] ${qa.summary} (QA Score: ${qa.overallScore}/100)`);
+      persistentStore.updateLead(lead.id, lead);
+    }
+
+    res.status(201).json({
+      success: true,
+      cdr,
+      summary: qa.summary,
+      sentiment: qa.sentiment,
+      qaScore: qa.overallScore,
+      recommendations: qa.recommendations,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to record call summary", detail: err.message });
+  }
+});
+
+// =============================================================================
+// CONVERSATIONAL AI RUNTIME & INTERACTIVE VOICE SESSION ENDPOINTS
+// =============================================================================
+
+// GET /api/calling/runtime/personas
+// Returns all configurable AI agent profiles and supported languages
+callingRouter.get("/runtime/personas", (_req: Request, res: Response) => {
+  const personas = [
+    {
+      id: "agent_swifttel_5g",
+      name: "Simran - SwiftTel 5G Specialist",
+      company: "SwiftTel 5G",
+      roleTitle: "Promotions & Customer Relationship Executive",
+      description: "Exciting 5G annual upgrade (₹1,999, 2.5GB/day, OTT bundle, WhatsApp/SMS fulfillment)",
+      supportedLanguages: [
+        { code: "en-IN", label: "English (Indian)" },
+        { code: "hi-IN", label: "Hindi (हिंदी / Hinglish)" },
+        { code: "mr-IN", label: "Marathi (मराठी)" },
+      ],
+    },
+    {
+      id: "agent_aarogya_dental",
+      name: "Priya - Aarogya Dental Care",
+      company: "Aarogya Dental Care",
+      roleTitle: "Front Desk Assistant & Clinic Coordinator",
+      description: "Clinic appointments, Dr. Sharma consultation, cleaning & root canal pricing, clinic directions",
+      supportedLanguages: [
+        { code: "hi-IN", label: "Hindi (हिंदी / Hinglish)" },
+        { code: "en-IN", label: "English (Indian)" },
+        { code: "mr-IN", label: "Marathi (मराठी)" },
+      ],
+    },
+    {
+      id: "agent_tata_banking_01",
+      name: "Aarti - Tata Smartflo Banking Specialist",
+      company: "Tata Smartflo Banking",
+      roleTitle: "Senior Customer Care Specialist",
+      description: "Loan balances, EMI schedule, payment links, human supervisor transfer",
+      supportedLanguages: [
+        { code: "hi-IN", label: "Hindi (हिंदी / Hinglish)" },
+        { code: "en-IN", label: "English (Indian)" },
+        { code: "mr-IN", label: "Marathi (मराठी)" },
+      ],
+    },
+  ];
+  res.json({ success: true, personas });
+});
+
+// POST /api/calling/runtime/session/create
+// Creates a new conversational session with state memory and initial human-like opening
+callingRouter.post("/runtime/session/create", (req: Request, res: Response) => {
+  const { agentId, language, customerName, customerPhone, companyName, callObjective, customGreeting } = req.body;
+
+  const targetPersona = (agentId && AVAILABLE_PERSONAS[agentId]) || AVAILABLE_PERSONAS["agent_swifttel_5g"] || DEFAULT_AGENT_PERSONA;
+
+  const session = agentRuntime.createSession({
+    customerPhone: customerPhone || "+91 98201 55432",
+    customerName: customerName || "Rajesh Varma",
+    companyName: companyName,
+    callObjective: callObjective,
+    language: language || "en-IN",
+    persona: targetPersona,
+    customGreeting,
+  });
+
+  const initialGreeting = session.messages.find((m) => m.role === "assistant")?.content ||
+    `Hello! This is ${targetPersona.name.split(" ")[0]} calling you today. Do you have a minute?`;
+
+  res.status(201).json({
+    success: true,
+    sessionId: session.sessionId,
+    callId: session.callId,
+    agent: {
+      id: targetPersona.id,
+      name: targetPersona.name,
+      roleTitle: targetPersona.roleTitle,
+      language: session.agentConfig.language,
+    },
+    initialGreeting,
+    status: session.status,
+  });
+});
+
+// POST /api/calling/runtime/session/end
+// Terminates session, scores QA rubric, and stores persistent CDR record
+callingRouter.post("/runtime/session/end", async (req: Request, res: Response) => {
+  const { sessionId, transcript, durationSeconds, customerName, customerPhone, agentName, reason } = req.body;
+
+  agentRuntime.endSession(sessionId, reason || "user_hangup");
+
+  try {
+    const qa = await analyzeCallWithClaude(
+      transcript || "",
+      customerName || "Customer",
+      agentName || "AI Voice Agent"
+    );
+
+    const cdr = persistentStore.addCDRLog({
+      callId: `call_${nanoid(8)}`,
+      customerName: customerName || "Customer",
+      customerPhone: customerPhone || "+91 98201 55432",
+      agentName: agentName || "AI Calling Agent",
+      campaign: "Live Interactive Conversational Call",
+      durationSeconds: Number(durationSeconds) || 30,
+      status: "Completed",
+      sentiment: qa.sentiment === "positive" ? "Positive" : qa.sentiment === "negative" ? "Negative" : "Neutral",
+      qaScore: qa.overallScore,
+      transcript: transcript || "",
+      summary: qa.summary,
+      customerFeedback: qa.recommendations?.[0] || "Call recorded and analyzed.",
+    });
+
+    res.json({
+      success: true,
+      cdr,
+      summary: qa.summary,
+      sentiment: qa.sentiment,
+      qaScore: qa.overallScore,
+      recommendations: qa.recommendations,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to record session end", detail: err.message });
+  }
+});
+
+
+

@@ -1,0 +1,75 @@
+# Indian English (en-IN) Localized Lines
+language: en
+name: Indian English (en-IN)
+
+gender_forms:
+  female:
+    speaking_verb: "speaking"
+    can_verb: "can"
+    polite_verb: "will"
+  male:
+    speaking_verb: "speaking"
+    can_verb: "can"
+    polite_verb: "will"
+
+honorifics:
+  default: "Mr./Ms."
+  formal: "Sir/Madam"
+  female: "Ms."
+  male: "Mr."
+
+call_types:
+  outbound:
+    variants:
+      - personalized: "Hello {name}! This is {agent_name} calling from {company}. We have an important update regarding your account, do you have a quick minute to speak?"
+        neutral: "Hello! This is {agent_name} calling from {company}. We have an important update regarding your account, do you have a quick minute to speak?"
+      - personalized: "Good morning {name}! This is {agent_name} from {company}. We have an exclusive plan tailored for your number, would you like to hear about it?"
+        neutral: "Hello! This is {agent_name} from {company}. We have an exclusive plan tailored for your number, would you like to hear about it?"
+      - personalized: "Hello {name}! {agent_name} from {company} here. I am calling with an exciting benefit update for you, do you have 30 seconds to talk?"
+        neutral: "Hello! {agent_name} from {company} here. I am calling with an exciting benefit update for you, do you have 30 seconds to talk?"
+
+  inbound:
+    variants:
+      - "Hello and a warm welcome to {company}. This is {agent_name} speaking, how may I assist you today?"
+      - "Hello! Thank you for contacting {company}. My name is {agent_name}, how can I help you today?"
+      - "Hello and welcome to {company}. This is {agent_name}, what can I assist you with today?"
+
+  reminder:
+    variants:
+      - personalized: "Hello {name}! This is {agent_name} from {company} with a courtesy reminder regarding your upcoming payment, may I share the brief details?"
+        neutral: "Hello! This is {agent_name} from {company} with a courtesy reminder regarding your upcoming payment, may I share the brief details?"
+      - personalized: "Good day {name}! {agent_name} calling from {company}. We wanted to help you stay ahead of your due date, do you have a quick moment?"
+        neutral: "Good day! {agent_name} calling from {company}. We wanted to help you stay ahead of your due date, do you have a quick moment?"
+      - personalized: "Hello {name}! This is {agent_name} from {company} regarding your scheduled payment date, would you like me to send the payment link?"
+        neutral: "Hello! This is {agent_name} from {company} regarding your scheduled payment date, would you like me to send the payment link?"
+
+  support:
+    variants:
+      - "Hello and welcome to {company} Customer Support. This is {agent_name}, how can I resolve your issue today?"
+      - "Hello! Thank you for reaching out to the {company} helpline. My name is {agent_name}, how may I help you?"
+      - "Hello and welcome to {company} Support. This is {agent_name}, what service can I help you with today?"
+
+  survey:
+    variants:
+      - personalized: "Hello {name}! This is {agent_name} from {company} with a quick follow-up on your recent service experience, could you spare 30 seconds for feedback?"
+        neutral: "Hello! This is {agent_name} from {company} with a quick follow-up on your recent service experience, could you spare 30 seconds for feedback?"
+      - personalized: "Good day {name}! {agent_name} from {company} here. We would love to hear how your recent visit went, do you have a brief moment?"
+        neutral: "Good day! {agent_name} from {company} here. We would love to hear how your recent visit went, do you have a brief moment?"
+      - personalized: "Hello {name}! This is {agent_name} from {company}. We value your opinion on our service quality, would you be open to sharing your thoughts?"
+        neutral: "Hello! This is {agent_name} from {company}. We value your opinion on our service quality, would you be open to sharing your thoughts?"
+
+ai_disclosure: ""
+
+greeting: "Hello and welcome to Aarogya Dental Care. This is Priya speaking, how may I assist you today?"
+consent: "Please note, this call is recorded for quality assurance and training purposes."
+are_you_there: "Hello, are you there? I am here to help whenever you are ready."
+silence_farewell: "It seems you may be away. Thank you for reaching out, have a great day ahead!"
+goodbye: "Understood, thank you so much for your time today. Have a wonderful day ahead!"
+not_interested: "Understood, thank you so much for your time today. Have a wonderful day ahead!"
+transfer: "Certainly, I am transferring your call to our specialist right away. Please hold the line."
+error_fallback: "One moment, I couldn't hear that clearly. Could you please say that again?"
+callback_offer: "Would you like me to schedule a callback at a more convenient time for you?"
+not_understood: "I am sorry, I did not catch that. Could you please repeat that?"
+hold: "Please give me just a moment while I pull up those details."
+dnc_confirmed: "Your number has been added to our Do-Not-Call registry. You will receive no further calls from us. Thank you."
+offer_language_switch: "Would you prefer to continue this conversation in English? I can assist you directly."
