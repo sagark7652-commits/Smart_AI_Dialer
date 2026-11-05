@@ -8,15 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function getGreetingAudio(agentId?: string, language?: string): string | null {
-  const lang = language ? (language.startsWith("mr") ? "mr" : language.startsWith("hi") ? "hi" : "en") : "en";
-  if (agentId === "agent_swifttel_5g") {
-    return `${lang}_cartesia_mobile_recharge_promo_greeting.wav`;
-  } else if (agentId === "agent_aarogya_dental") {
-    return `${lang}_cartesia_clinic_booking_greeting.wav`;
-  } else if (agentId === "agent_tata_banking_01") {
-    return `${lang}_cartesia_bill_emi_reminder_greeting.wav`;
-  }
-  return `${lang}_cartesia_greeting.wav`;
+  // Pure dynamic synthesis with ElevenLabs cloned female voice per language
+  return null;
 }
 
 function getTurnActionAudio(intent?: string, language?: string, agentId?: string): string | null {
@@ -901,12 +894,13 @@ function generateNeuralAudio(text: string, language: string): Promise<string | n
     // Hindi: RABOvaPec1ymXz02oDQi
     // English: ZUrEGyu8GFMwnHbvLhv2
     // Marathi: dSEhEXLzhnZEytnJ2rRy
-    const isPaid = process.env.ELEVENLABS_IS_PAID === "true";
-    let elevenVoiceId = "EXAVITQu4vr4xnSDxMaL"; // Fast 400ms human female studio voice
-    if (isPaid) {
-      if (langKey === "hi") elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_HI || "RABOvaPec1ymXz02oDQi";
-      else if (langKey === "en") elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_EN || "ZUrEGyu8GFMwnHbvLhv2";
-      else if (langKey === "mr") elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_MR || "dSEhEXLzhnZEytnJ2rRy";
+    let elevenVoiceId = "RABOvaPec1ymXz02oDQi";
+    if (langKey === "hi") {
+      elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_HI || "RABOvaPec1ymXz02oDQi";
+    } else if (langKey === "en") {
+      elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_EN || "ZUrEGyu8GFMwnHbvLhv2";
+    } else if (langKey === "mr") {
+      elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_MR || "dSEhEXLzhnZEytnJ2rRy";
     }
 
     // Clean text for natural human audio synthesis
