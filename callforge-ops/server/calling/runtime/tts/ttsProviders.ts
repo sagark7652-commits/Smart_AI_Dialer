@@ -144,7 +144,7 @@ export class HuggingFaceTTSProvider implements TTSProvider {
     }
 
     try {
-      const res = await fetch(`https://api-inference.huggingface.co/models/${targetModel}`, {
+      const res = await fetch(`https://router.huggingface.co/hf-inference/models/${targetModel}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiKey}`,

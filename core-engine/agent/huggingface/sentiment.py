@@ -13,7 +13,7 @@ from agent.logger import setup_logger
 logger = setup_logger("huggingface.sentiment")
 
 DEFAULT_SENTIMENT_MODEL = "distilbert/distilbert-base-uncased-finetuned-sst-2-english"
-HF_INFERENCE_URL = "https://api-inference.huggingface.co/models"
+HF_INFERENCE_URL = "https://router.huggingface.co/hf-inference/models"
 
 
 class HuggingFaceSentimentAnalyzer:

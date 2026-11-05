@@ -15,7 +15,7 @@ from agent.logger import setup_logger
 logger = setup_logger("huggingface.embeddings")
 
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-HF_INFERENCE_URL = "https://api-inference.huggingface.co/models"
+HF_INFERENCE_URL = "https://router.huggingface.co/hf-inference/models"
 
 
 class HuggingFaceEmbedder:

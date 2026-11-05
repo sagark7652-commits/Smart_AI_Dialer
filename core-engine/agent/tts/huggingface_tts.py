@@ -18,7 +18,7 @@ logger = setup_logger("tts.huggingface")
 
 DEFAULT_HF_TTS_ENG = "facebook/mms-tts-eng"
 DEFAULT_HF_TTS_HIN = "facebook/mms-tts-hin"
-HF_INFERENCE_URL = "https://api-inference.huggingface.co/models"
+HF_INFERENCE_URL = "https://router.huggingface.co/hf-inference/models"
 
 
 class HuggingFaceTTS(BaseTTS):
