@@ -135,8 +135,16 @@ export class HuggingFaceTTSProvider implements TTSProvider {
       return { audioBuffer: Buffer.alloc(0), format: "pcm", sampleRate: 16000, success: false };
     }
 
+    const lang = (_options?.language || "").toLowerCase();
+    let targetModel = this.model;
+    if (lang.startsWith("mr") || lang.includes("marathi")) {
+      targetModel = "facebook/mms-tts-mar";
+    } else if (lang.startsWith("hi") || lang.includes("hindi")) {
+      targetModel = "facebook/mms-tts-hin";
+    }
+
     try {
-      const res = await fetch(`https://api-inference.huggingface.co/models/${this.model}`, {
+      const res = await fetch(`https://api-inference.huggingface.co/models/${targetModel}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
