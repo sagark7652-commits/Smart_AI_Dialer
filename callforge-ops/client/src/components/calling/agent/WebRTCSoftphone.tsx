@@ -232,6 +232,7 @@ export const WebRTCSoftphone: React.FC = () => {
   };
 
   const handleHangup = () => {
+    softphoneSessionId.current = "softphone_" + Math.random().toString(36).substring(2, 9);
     audioEngine.stopRingback();
     audioEngine.playDisconnectTone();
     audioEngine.stopSpeaking();

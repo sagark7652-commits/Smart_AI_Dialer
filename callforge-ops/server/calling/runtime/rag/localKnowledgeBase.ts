@@ -65,13 +65,29 @@ export const DEFAULT_KNOWLEDGE_DOCS: RAGDocument[] = [
     content:
       "Customers can activate SwiftTel 5G on physical SIM or instant eSIM. If the customer requests plan details via WhatsApp or SMS, use the send_plan_details tool. If the customer agrees to proceed, use confirm_plan_activation. True 5G SA standalone network is active across 500+ Indian cities.",
   },
-  {
+    {
     id: "kb_marathi_dental_09",
     title: "Aarogya Dental Clinic Marathi Language Guide (मराठी)",
     category: "dental_marathi",
-    tags: ["marathi", "aarogya", "dental", "pune", "dant", "sharma"],
+    tags: ["marathi", "aarogya", "dental", "pune", "dant", "sharma", "क्लिनिक", "पत्ता", "फी", "अपॉइंटमेंट", "वेळ", "डॉक्टर"],
     content:
-      "मराठी संभाषण मार्गदर्शक: आरोग्य डेंटल केअर एफसी रोड, शिवाजी नगर, पुणे येथे आहे. डॉ. शर्मा यांची पहिली तपासणी फी ₹५०० आहे. दात स्वच्छ करण्याचे शुल्क ₹१,२०० आणि वेदनारहित रूट कॅनॉल ₹३,५०० पासून सुरू होते. क्लिनिक सकाळी ९ ते रात्री ८ चालू असते.",
+      "मराठी संभाषण मार्गदर्शक: आरोग्य डेंटल केअर एफसी रोड, शिवाजी नगर, पुणे येथे गुडलक कॅफेजवळ (मेट्रो पिलर ४२ समोर) आहे. मुख्य दंतवैद्य डॉ. शर्मा आहेत ज्यांना १५+ वर्षांचा अनुभव आहे. तपासणी फी ₹४०० आहे. दात स्वच्छ करण्याचे शुल्क ₹१,२०० आणि वेदनारहित रूट कॅनॉल ₹३,५०० पासून सुरू होते. क्लिनिक सोमवार ते शनिवार सकाळी ९ ते रात्री ८:३० चालू असते. इमारतीसमोर मोफत पार्किंग उपलब्ध आहे. UPI, कार्ड आणि रोख पेमेंट स्वीकारले जाते.",
+  },
+  {
+    id: "kb_marathi_dental_services",
+    title: "Aarogya Dental Clinic Marathi Services and Procedures",
+    category: "dental_marathi",
+    tags: ["रूट कॅनॉल", "क्लीनिंग", "इम्प्लांट", "दातदुखी", "वेदना", "फी", "खर्च", "शुल्क", "उपचार", "स्वच्छ"],
+    content:
+      "आरोग्य डेंटल केअर उपचार व दर: १. कन्सल्टेशन व तपासणी फी: ₹४००. २. दात स्वच्छता व पॉलिशिंग: ₹१,२०० (वेळ ३० मिनिटे). ३. रूट कॅनॉल ट्रीटमेंट (RCT): ₹३,५०० पासून (पूर्णपणे वेदनारहित). ४. डेंटल इम्प्लांट्स: ₹२५,००० पासून. ५. पारदर्शक अलाइनर्स व ब्रेसेस: तपासणीनंतर योग्य प्लॅन. ६. दातदुखीसाठी तातडीने आपत्कालीन सेवा उपलब्ध.",
+  },
+  {
+    id: "kb_marathi_dental_timings_location",
+    title: "Aarogya Dental Clinic Marathi Timings and Location",
+    category: "dental_marathi",
+    tags: ["पत्ता", "स्थान", "वेळ", "रविवार", "पार्किंग", "कुठे", "कधी", "गाडी", "पत्ता काय आहे"],
+    content:
+      "क्लिनिक पत्ता व वेळ: ऑफिस २०४, फॉर्च्युन प्लाझा, एफसी रोड, शिवाजी नगर, पुणे ४११००५ (गुडलक कॅफे जवळ, मेट्रो पिलर ४२). वेळ: सोमवार ते शनिवार सकाळी ९:०० ते रात्री ८:३०. रविवार सकाळी १०:०० ते दुपारी २:०० (केवळ इमर्जन्सी). दुचाकी व चारचाकी वाहनांसाठी मोफत पार्किंग आणि लिफ्ट सुविधा उपलब्ध आहे.",
   },
   {
     id: "kb_marathi_swifttel_10",
@@ -106,7 +122,7 @@ export class LocalKnowledgeBase {
 
     const terms = query
       .toLowerCase()
-      .replace(/[^\w\s]/g, "")
+      .replace(/[^\p{L}\p{N}\s]/gu, "")
       .split(/\s+/)
       .filter((t: string) => t.length > 2);
 

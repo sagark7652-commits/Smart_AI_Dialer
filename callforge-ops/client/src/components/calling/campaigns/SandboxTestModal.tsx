@@ -157,6 +157,7 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
   const [interimSpeech, setInterimSpeech] = useState("");
   const [statusText, setStatusText] = useState("Ready to dial");
   const [sessionId, setSessionId] = useState<string>("");
+  const sessionIdRef = useRef<string>("");
   const [executedActions, setExecutedActions] = useState<string[]>([]);
   const [showDTMF, setShowDTMF] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -277,7 +278,8 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
 
     try {
       // Connect to the real backend LLM turn engine with full conversation memory
-      const turnResult = await audioEngine.sendTurnToServer(sessionId, userText, {
+      const activeSessionId = sessionIdRef.current || sessionId;
+      const turnResult = await audioEngine.sendTurnToServer(activeSessionId, userText, {
         language: selectedLanguage,
         dtmfDigit,
         agentId: selectedAgentId,
@@ -375,6 +377,7 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
 
       const sessionData = await res.json();
       const currentSessionId = sessionData.sessionId || `sess_${Date.now()}`;
+      sessionIdRef.current = currentSessionId;
       setSessionId(currentSessionId);
       const greeting = sessionData.initialGreeting || "Hello! Do you have a minute?";
 
@@ -424,6 +427,9 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
 
   // End Call & Persist QA Evaluation
   const handleHangup = async () => {
+    const endingSessionId = sessionIdRef.current || sessionId;
+    sessionIdRef.current = "";
+    setSessionId("");
     audioEngine.stopRingback();
     audioEngine.playDisconnectTone();
     audioEngine.stopSpeaking();
@@ -445,7 +451,7 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId,
+          sessionId: endingSessionId,
           transcript: fullTranscript,
           durationSeconds: timer || 25,
           customerName: leadName,
@@ -559,7 +565,16 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
               </label>
               <select
                 value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
+                onChange={(e) => {
+                  const newLang = e.target.value;
+                  setSelectedLanguage(newLang);
+                  if (callState === "idle" || callState === "ended") {
+                    sessionIdRef.current = "";
+                    setSessionId("");
+                    setMessages([]);
+                    setExecutedActions([]);
+                  }
+                }}
                 disabled={callState !== "idle"}
                 className="w-full px-2.5 py-1.5 text-xs bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 focus:outline-none focus:border-emerald-500 disabled:opacity-60 cursor-pointer"
               >

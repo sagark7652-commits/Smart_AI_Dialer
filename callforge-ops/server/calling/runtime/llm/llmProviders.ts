@@ -117,7 +117,37 @@ export class LocalLLMProvider implements LLMProvider {
           }
         } else {
           const errDetail = await res.text();
-          console.error(`[DynamicAI] Groq API returned HTTP ${res.status}: ${errDetail}`);
+          console.warn(`[DynamicAI] Groq tool execution notice (HTTP ${res.status}): ${errDetail}. Retrying pure conversational mode...`);
+          try {
+            const fbRes = await fetch(`${activeBaseUrl}/chat/completions`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${activeApiKey}`,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              },
+              body: JSON.stringify({
+                model: activeModel,
+                messages: messages.map((m: LLMMessage) => ({ role: m.role, content: m.content })),
+                temperature: 0.35,
+                max_tokens: 160,
+              }),
+            });
+            if (fbRes.ok) {
+              const fbData = await fbRes.json();
+              const fbChoice = fbData.choices?.[0];
+              const fbText = (fbChoice?.message?.content || "").trim();
+              if (fbText) {
+                console.log(`[DynamicAI] Conversational Groq fallback succeeded -> "${fbText}"`);
+                return {
+                  text: fbText,
+                  finishReason: "stop",
+                };
+              }
+            }
+          } catch (fbErr: any) {
+            console.error("[DynamicAI] Conversational retry error:", fbErr.message);
+          }
         }
       } catch (e: any) {
         console.error("[DynamicAI] Groq fetch network error:", e.message);
@@ -186,6 +216,9 @@ export class LocalLLMProvider implements LLMProvider {
       lastUserMsg.includes("listening") ||
       lastUserMsg.includes("can you hear") ||
       lastUserMsg.includes("are you there") ||
+      lastUserMsg.includes("नमस्कार") ||
+      lastUserMsg.includes("हॅलो") ||
+      lastUserMsg.includes("नमस्ते") ||
       lastUserMsg.includes("hello") ||
       lastUserMsg.includes("namaste") ||
       lastUserMsg.includes("suniye") ||
@@ -258,19 +291,19 @@ export class LocalLLMProvider implements LLMProvider {
           ? `नक्कीच! मी आपल्यासाठी कॉलबॅक रिमाइंडर सेट केले आहे. आमचे रिसेप्शन आपल्याला संपर्क करेल.`
           : isHindi
           ? `जी बिल्कुल! मैंने आपके लिए कॉलबॅक रिमाइंडर सेट कर दिया है। हमारी टीम आपसे संपर्क करेगी।`
-          : `Certainly! I have scheduled a callback for you. Our reception team will reach out to you.`;
+          : `Sure! I have scheduled a callback for you. Our reception team will reach out to you.`;
       } else if (isBankingAgent) {
         cbReply = isMarathi
           ? `नक्कीच! मी टाटा स्मार्टफ्लो बँकिंग कडून कॉलबॅक नोंदवला आहे.`
           : isHindi
           ? `जी बिल्कुल! मैंने टाटा स्मार्टफ्लो बैंकिंग से आपका कॉलबैक रिमाइंडर नोट कर लिया है।`
-          : `Certainly! I have scheduled a callback reminder from Tata Smartflo Banking.`;
+          : `Sure! I have scheduled a callback reminder from Tata Smartflo Banking.`;
       } else {
         cbReply = isMarathi
           ? `नक्कीच! मी स्विफ्टटेल ५G कडून कॉलबॅक रिमाइंडर सेट केले आहे.`
           : isHindi
           ? `जी बिल्कुल! मैंने स्विफ्टटेल ५G से आपका कॉलबैक रिमाइंडर नोट कर लिया है।`
-          : `Certainly! I have scheduled a callback reminder from SwiftTel 5G.`;
+          : `Sure! I have scheduled a callback reminder from SwiftTel 5G.`;
       }
 
       return {
@@ -296,13 +329,13 @@ export class LocalLLMProvider implements LLMProvider {
         return { text: reply, intent: "repetition_apology", finishReason: "stop" } as any;
       }
 
-      // 0b. Presence / Hearing checks
+      // 0b. Presence / Hearing checks & Greetings
       if (isPresenceCheck) {
         const reply = isMarathi
-          ? "होय, मी अगदी व्यवस्थित ऐकत आहे! सांगा, मी आपल्यासाठी काय मदत करू शकते?"
+          ? "नमस्कार! मी डॉ. शर्मा यांच्या क्लिनिकमधून प्रिया बोलतेय, मी अगदी व्यवस्थित ऐकतेय. सांगा, दात तपासणी किंवा उपचाराबद्दल मी काय मदत करू?"
           : isHindi
-          ? "जी हाँ, मैं बिल्कुल सुन रही हूँ! बताइए, मैं आपकी किस प्रकार सहायता करूँ?"
-          : "Yes, I can hear you clearly! How can I assist you with your dental care today?";
+          ? "नमस्ते! जी हाँ, मैं डॉ. शर्मा के क्लिनिक से प्रिया बोल रही हूँ और सुन रही हूँ। बताइए, दांतों के चेकअप या अपॉइंटमेंट के लिए मैं क्या सहायता करूँ?"
+          : "Hello! Yes, this is Priya from Dr. Sharma's dental clinic, listening clearly. How may I assist you with your dental appointment today?";
         return { text: reply, intent: "presence_confirmed", finishReason: "stop" } as any;
       }
 
@@ -312,7 +345,7 @@ export class LocalLLMProvider implements LLMProvider {
           ? "हो नक्कीच! डॉ. शर्मा यांच्या तपासणीसाठी आपण आज किंवा उद्याची वेळ निश्चित करू इच्छिता?"
           : isHindi
           ? "जी बिल्कुल! क्या आप डॉक्टर शर्मा से चेकअप के लिए आज या कल में कोई समय देखना चाहेंगे?"
-          : "Certainly! Would you like me to check an appointment slot with Dr. Sharma for today or tomorrow?";
+          : "Sure! Would you like me to check an appointment slot with Dr. Sharma for today or tomorrow?";
         return { text: reply, intent: "appointment_progression", finishReason: "stop" } as any;
       }
 
@@ -344,7 +377,7 @@ export class LocalLLMProvider implements LLMProvider {
           ? "होय नक्कीच! क्लिनिकच्या समोरच सुरक्षित कार आणि दुचाकी पार्किंगची उत्तम सोय उपलब्ध आहे."
           : isHindi
           ? "जी बिल्कुल! क्लिनिक के ठीक सामने कार और टू-व्हीलर के लिए खुली और सुरक्षित पार्किंग उपलब्ध है।"
-          : "Yes certainly! We have convenient dedicated parking available directly in front of the clinic for both cars and two-wheelers.";
+          : "Yes, absolutely! We have convenient dedicated parking available directly in front of the clinic for both cars and two-wheelers.";
         return { text: reply, intent: "parking_amenity", finishReason: "stop" } as any;
       }
 
@@ -424,7 +457,7 @@ export class LocalLLMProvider implements LLMProvider {
           ? "होय, जर तीव्र वेदना किंवा आणीबाणी असेल, तर आम्ही तात्काळ प्राधान्याने तपासणी करतो. मी आपल्यासाठी त्वरित वेळ नोंदवून घेऊ शकते."
           : isHindi
           ? "जी बिल्कुल, अगर अचानक तेज दर्द या इमरजेंसी हो, तो हम तुरंत प्राथमिकता के आधार पर पेशेंट को अटेंड करते हैं। आप तुरंत आ सकते हैं।"
-          : "Certainly! In case of sudden toothache or emergency, we accommodate patients on immediate priority. You may walk in directly.";
+          : "Of course! In case of sudden toothache or emergency, we accommodate patients on immediate priority. You may walk in directly.";
         return { text: reply, intent: "emergency_care", finishReason: "stop" } as any;
       }
 
@@ -737,19 +770,11 @@ export class LocalLLMProvider implements LLMProvider {
           m.includes("नमस्कार")
         );
 
-      if (alreadyIntroduced) {
-        reply = isMarathi
-          ? "डॉ. शर्मा यांच्याकडे तपासणीसाठी या आठवड्यात वेळ उपलब्ध आहे. मी आपल्यासाठी वेळ बुक करू का?"
-          : isHindi
-          ? "डॉक्टर शर्मा से जांच के लिए हमारे पास इस हफ्ते स्लॉट्स उपलब्ध हैं, क्या मैं आपके लिए अपॉइंटमेंट बुक करूँ?"
-          : "We have available slots this week for consultation with Dr. Sharma. Would you like me to schedule an appointment for you?";
-      } else {
-        reply = isMarathi
-          ? "मी आरोग्य डेंटल केअर मधून प्रिया बोलत आहे. मी दात तपासणी, स्वच्छता आणि डॉ. शर्मा यांच्या अपॉइंटमेंटबद्दल आपली पूर्ण मदत करू शकते."
-          : isHindi
-          ? "मैं आरोग्य डेंटल केयर से प्रिया बोल रही हूँ। मैं दांतों की जांच, सफाई और डॉ. शर्मा से अपॉइंटमेंट के बारे में आपकी पूरी सहायता कर सकती हूँ।"
-          : "I am Priya from Aarogya Dental Care. I can assist you with dental checkups, cleaning, and booking appointments with Dr. Sharma.";
-      }
+      reply = isMarathi
+        ? "डॉ. शर्मा यांच्याकडे तपासणीसाठी या आठवड्यात वेळ उपलब्ध आहे. मी आपल्यासाठी वेळ बुक करू का?"
+        : isHindi
+        ? "डॉक्टर शर्मा से जांच के लिए हमारे पास इस हफ्ते स्लॉट्स उपलब्ध हैं, क्या मैं आपके लिए अपॉइंटमेंट बुक करूँ?"
+        : "We have available slots this week for consultation with Dr. Sharma. Would you like me to schedule an appointment for you?";
 
       return { text: reply, intent: "dental_guidance", finishReason: "stop" } as any;
     }
@@ -828,7 +853,7 @@ export class LocalLLMProvider implements LLMProvider {
         ? "नक्कीच! आम्ही या ५G प्लॅनचे संपूर्ण तपशील आपल्या WhatsApp वर पाठवू का, की लगेच ॲक्टिव्हेट करू?"
         : isHindi
         ? "जी बिल्कुल! क्या मैं इस 5G प्लान की डिटेल्स आपके WhatsApp पर भेज दूँ, या अभी एक्टिवेट कर दूँ?"
-        : "Certainly! Would you like me to send the complete 5G plan details to your WhatsApp, or should I activate it for you right away?";
+        : "Sure! Would you like me to send the complete 5G plan details to your WhatsApp, or should I activate it for you right away?";
       return { text: reply, intent: "plan_progression", finishReason: "stop" } as any;
     }
     // ========================================================================
@@ -869,7 +894,7 @@ export class LocalLLMProvider implements LLMProvider {
         ? `नक्कीच! मी स्विफ्टटेल ५G वार्षिक प्लॅनचे संपूर्ण तपशील आपल्या ${channel === "sms" ? "एसएमएस" : "व्हॉट्सॲप"} वर पाठवले आहेत.`
         : isHindi
         ? `Ji bilkul! Maine SwiftTel 5G annual plan ke saare details aapke ${channel === "sms" ? "SMS" : "WhatsApp"} par bhej diye hain.`
-        : `Certainly! I have dispatched the complete SwiftTel 5G annual plan details to your ${channel === "sms" ? "SMS" : "WhatsApp"}.`;
+        : `Sure! I have dispatched the complete SwiftTel 5G annual plan details to your ${channel === "sms" ? "SMS" : "WhatsApp"}.`;
 
       return {
         text: reply,

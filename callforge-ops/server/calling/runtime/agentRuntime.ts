@@ -78,16 +78,28 @@ STRICT GENDER MANDATE (FEMALE):
   NEVER use masculine verb inflections (बोलतो, करतो, सांगतो, शकतो).
 
 STRICT ANTI-INTRODUCTION RULE:
-- The phone call has ALREADY started and the initial greeting has already been delivered.
-- You must NEVER introduce yourself again (do NOT say "Namaste", "Hello", "नमस्कार", "मी प्रिया", "Main Priya", "Aarogya Dental Care mein swagat" or introduce your clinic).
-- Answer the customer's question directly, clearly, and concisely in 1-2 spoken sentences!
+- The phone call has ALREADY started and the opening greeting has already been delivered.
+- You must NEVER repeat the full clinic greeting or introduce yourself again.
+- Answer the customer's direct question first, concisely and warmly in 1-2 spoken sentences!
+
+DEEP MARATHI CLINIC KNOWLEDGE:
+- Clinic: Aarogya Dental Care (आरोग्य डेंटल केअर), Office 204, Fortune Plaza, FC Road, Shivaji Nagar, Pune, near Goodluck Cafe (opposite Metro Pillar 42).
+- Doctor: Senior Dentist Dr. Sharma (BDS, MDS) with 15+ years experience.
+- Timings: Monday to Saturday 9:00 AM to 8:30 PM; Sunday 10:00 AM to 2:00 PM (emergency only).
+- Consultation Fee: ₹400.
+- Teeth Cleaning & Polishing: ₹1,200 (approx 30 mins).
+- Root Canal Treatment (RCT): starts at ₹3,500 (completely painless with modern computer-guided anesthesia).
+- Dental Implants: ₹25,000 onwards.
+- Invisible Aligners & Braces: Consultation required for custom plan.
+- Amenities: Free dedicated parking for 2-wheelers & 4-wheelers in front of the building, elevator/wheelchair access.
+- Payments: UPI (Google Pay, PhonePe, Paytm), Debit/Credit Cards, Cash.
+- Emergency: Toothache patients accommodated immediately without waiting.
 
 Rules:
-1. STRICT LANGUAGE LOCK: Speak strictly in the caller's chosen language (English, Hindi, or Marathi). Do not mix languages.
-2. Keep each response concise (1-2 short sentences) suitable for a real telephone call.
-3. Help patients with consultation timings, booking appointments with Dr. Sharma, services (root canals ₹3,500, cleaning ₹1,200, implants), and clinic directions near Goodluck Cafe.
-4. Use the check_availability and book_appointment tools whenever the caller asks for appointment slots or requests a booking.
-5. If the customer requests to call back in 2-3 days or tomorrow, use schedule_callback tool.`,
+1. STRICT LANGUAGE LOCK: Speak 100% in the caller's chosen language (English, Hindi, or Marathi). NEVER mix languages. If language is Marathi, speak 100% Marathi with zero Hindi words.
+2. Keep each response concise (1-2 short natural spoken sentences).
+3. Use check_availability and book_appointment tools whenever the caller asks for appointment slots or requests a booking.
+4. If the customer requests to call back in 2-3 days or tomorrow, use schedule_callback tool.`,
 };
 
 export const DEFAULT_AGENT_PERSONA: AgentPersonaConfig = PRIYA_AAROGYA_PERSONA;
@@ -261,6 +273,7 @@ export class AgentRuntime {
       session.status = "completed";
       session.endedAt = Date.now();
       session.terminationReason = reason;
+      this.sessions.delete(sessionId);
     }
     return session;
   }
@@ -414,7 +427,7 @@ export class AgentRuntime {
     language: string;
   }> {
     let session = this.sessions.get(sessionId);
-    if (!session) {
+    if (!session || session.status === "completed") {
       const persona = (options?.agentId && AVAILABLE_PERSONAS[options.agentId]) ? AVAILABLE_PERSONAS[options.agentId] : PRIYA_AAROGYA_PERSONA;
       session = this.createSession({
         customerPhone: options?.customerPhone || "+91 98201 55432",
@@ -422,12 +435,15 @@ export class AgentRuntime {
         language: options?.language || "hi-IN",
         persona,
       });
-      // Update session map with the requested sessionId if passed
       this.sessions.set(sessionId, session);
     }
 
-    if (options?.language) {
+    // Strict Language Switch & Cross-Call Bleed Prevention:
+    if (options?.language && session.agentConfig.language !== options.language) {
+      console.log(`[AgentRuntime] Language switched from ${session.agentConfig.language} to ${options.language}. Resetting conversation turn history.`);
       session.agentConfig.language = options.language as any;
+      // Retain only system prompt so prior language turns NEVER bleed into new language!
+      session.messages = [session.messages[0]];
     }
 
     const currentLang = session.agentConfig.language || "hi-IN";
@@ -547,7 +563,16 @@ ${session.agentConfig.id === "agent_aarogya_dental"
           const outcome = await toolDef.execute(tc.arguments, session);
           toolsExecuted.push({ name: tc.name, result: outcome });
 
-          if (tc.name === "schedule_callback") {
+          if (tc.name === "check_availability") {
+            intent = "availability_checked";
+            if (!finalAssistantReply) {
+              finalAssistantReply = currentLang === "mr-IN"
+                ? `डॉ. शर्मा यांच्याकडे ${outcome.date || 'या दिवशी'} सकाळी १०:३०, दुपारी १२:००, ३:३० आणि संध्याकाळी ६:०० वाजता वेळ उपलब्ध आहे. मी कोणती वेळ निश्चित करू?`
+                : currentLang === "en-IN"
+                ? `Dr. Sharma has open consultation slots on ${outcome.date || 'that date'} at 10:30 AM, 12:00 PM, 3:30 PM, and 6:00 PM. Which time slot suits you best?`
+                : `डॉक्टर शर्मा के पास ${outcome.date || 'इस दिन'} सुबह 10:30, दोपहर 12:00, 3:30 और शाम 6:00 बजे स्लॉट खाली हैं। आप कौन सा समय पसंद करेंगे?`;
+            }
+          } else if (tc.name === "schedule_callback") {
             if (!options?.dtmfDigit) {
               intent = "callback_scheduled";
             }
@@ -590,14 +615,26 @@ ${session.agentConfig.id === "agent_aarogya_dental"
       }
     }
 
-    // Default fallback if LLM returned empty text
+    // In-character, contextual persona fallback if LLM returned empty text
     if (!finalAssistantReply) {
-      if (currentLang === "mr-IN") {
-        finalAssistantReply = "होय, मी तुम्हाला पूर्ण मदत करण्यासाठी येथे आहे. आपण काय जाणून घेऊ इच्छिता?";
-      } else if (currentLang === "en-IN") {
-        finalAssistantReply = "Certainly, I am here to assist you. Could you please let me know what you would like to know?";
+      if (isDental) {
+        finalAssistantReply = currentLang === "mr-IN"
+          ? "मी डॉ. शर्मा यांच्या क्लिनिकमधून प्रिया बोलतेय. दात तपासणी, क्लिनिंग, रूट कॅनॉल किंवा वेळेबद्दल मी आपली काय मदत करू?"
+          : currentLang === "en-IN"
+          ? "This is Priya from Dr. Sharma's dental clinic. How can I help you with your dental checkup, cleaning, or appointment today?"
+          : "मैं डॉ. शर्मा के क्लिनिक से प्रिया बोल रही हूँ। दांतों की जांच, क्लीनिंग, रूट कैनाल या अपॉइंटमेंट के बारे में मैं आपकी क्या मदद करूँ?";
+      } else if (isTelecom) {
+        finalAssistantReply = currentLang === "mr-IN"
+          ? "मी स्विफ्टटेल ५G कडून सिमरन बोलतेय. आपल्या ५G हाय-स्पीड प्लॅनबद्दल मी आपली कशी मदत करू?"
+          : currentLang === "en-IN"
+          ? "This is Simran from SwiftTel 5G. How may I help you with our high-speed 5G plans today?"
+          : "Main SwiftTel 5G se Simran baat kar rahi hoon. Hamare 5G plans ke baare mein main aapki kya madad kar sakti hoon?";
       } else {
-        finalAssistantReply = "Ji bilkul, main aapki poori madad ke liye yahan hoon. Aap kya jaanna chahenge?";
+        finalAssistantReply = currentLang === "mr-IN"
+          ? "मी आरती बोलतेय टाटा स्मार्टफ्लो बँकिंग सेवेकडून. आपल्या खात्याच्या सेवेबद्दल मी काय मदत करू?"
+          : currentLang === "en-IN"
+          ? "This is Aarti from Tata Smartflo Banking services. How may I help you with your account today?"
+          : "Main Aarti baat kar rahi hoon Tata Smartflo Banking se. Main aapki kya sahayata kar sakti hoon?";
       }
     }
 
