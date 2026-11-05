@@ -143,8 +143,8 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
   onClose,
   onCallCompleted,
 }) => {
-  const [selectedAgentId, setSelectedAgentId] = useState("agent_swifttel_5g");
-  const [selectedLanguage, setSelectedLanguage] = useState("en-IN");
+  const [selectedAgentId, setSelectedAgentId] = useState("agent_aarogya_dental");
+  const [selectedLanguage, setSelectedLanguage] = useState("hi-IN");
   const [phoneNumber, setPhoneNumber] = useState("+91 98201 55432");
   const [leadName, setLeadName] = useState("Rajesh Varma");
   const [callState, setCallState] = useState<"idle" | "ringing" | "connected" | "ended">("idle");
@@ -154,11 +154,19 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [inputText, setInputText] = useState("");
+  const [interimSpeech, setInterimSpeech] = useState("");
   const [statusText, setStatusText] = useState("Ready to dial");
   const [sessionId, setSessionId] = useState<string>("");
   const [executedActions, setExecutedActions] = useState<string[]>([]);
   const [showDTMF, setShowDTMF] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const callStateRef = useRef(callState);
+  callStateRef.current = callState;
+  const isAgentSpeakingRef = useRef(isAgentSpeaking);
+  isAgentSpeakingRef.current = isAgentSpeaking;
+  const isThinkingRef = useRef(isThinking);
+  isThinkingRef.current = isThinking;
 
   const activeAgent = AGENTS.find((a) => a.id === selectedAgentId) || AGENTS[0];
 
@@ -197,17 +205,36 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
     setIsThinking(false);
     setStatusText("🎤 Listening... Speak naturally into your mic");
 
+    setInterimSpeech("");
     const supported = audioEngine.startSpeechRecognition(
       (transcript) => {
         setIsListening(false);
+        setInterimSpeech("");
         handleUserMessage(transcript);
       },
       (err) => {
-        setIsListening(false);
-        setStatusText("Click mic or tap suggestion chip to talk");
+        if (callStateRef.current === "connected" && !isAgentSpeakingRef.current && !isThinkingRef.current) {
+          setTimeout(() => {
+            if (callStateRef.current === "connected" && !isAgentSpeakingRef.current && !isThinkingRef.current) {
+              startListeningLoop();
+            }
+          }, 350);
+        } else {
+          setIsListening(false);
+          setInterimSpeech("");
+          setStatusText("Click mic or tap suggestion chip to talk");
+        }
       },
       () => {
-        setIsListening(false);
+        if (callStateRef.current === "connected" && !isAgentSpeakingRef.current && !isThinkingRef.current) {
+          setTimeout(() => {
+            if (callStateRef.current === "connected" && !isAgentSpeakingRef.current && !isThinkingRef.current) {
+              startListeningLoop();
+            }
+          }, 150);
+        } else {
+          setIsListening(false);
+        }
       },
       selectedLanguage,
       () => {
@@ -215,6 +242,9 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
         setIsAgentSpeaking(false);
         setStatusText("⚡ Interrupted AI — Listening to you...");
         toast.info("AI speech paused (Barge-in)", { duration: 1500 });
+      },
+      (interim) => {
+        setInterimSpeech(interim);
       }
     );
 
@@ -279,8 +309,17 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
       setStatusText("🔊 AI speaking...");
       setIsAgentSpeaking(true);
 
-      // Speak response aloud in the selected language
-      audioEngine.speakAgentMessage(turnResult.replyText, selectedLanguage, () => {
+      // Speak response aloud with real cloned audio or localized TTS
+      audioEngine.speakAgentMessage(
+        turnResult.replyText,
+        {
+          language: selectedLanguage,
+          audioUrl: turnResult.audioUrl,
+          audioBase64: turnResult.audioBase64,
+          agentId: selectedAgentId,
+          intent: turnResult.intent,
+        },
+        () => {
         setIsAgentSpeaking(false);
 
         if (turnResult.shouldEndCall) {
@@ -309,6 +348,10 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
     }
 
     audioEngine.unlockAudio();
+    const micReady = await audioEngine.startMicrophone();
+    if (!micReady) {
+      toast.info("Tip: Allow microphone access in your browser to speak directly to the AI.");
+    }
     setCallState("ringing");
     setMessages([]);
     setExecutedActions([]);
@@ -355,11 +398,20 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
           setStatusText("🔊 AI delivering natural greeting...");
           setIsAgentSpeaking(true);
 
-          audioEngine.speakAgentMessage(greeting, selectedLanguage, () => {
-            setIsAgentSpeaking(false);
-            // Arm continuous listening
-            startListeningLoop();
-          });
+          const initialGreetingAudioUrl = sessionData.initialGreetingAudioUrl;
+          audioEngine.speakAgentMessage(
+            greeting,
+            {
+              language: selectedLanguage,
+              audioUrl: initialGreetingAudioUrl,
+              agentId: selectedAgentId,
+            },
+            () => {
+              setIsAgentSpeaking(false);
+              // Arm continuous listening
+              startListeningLoop();
+            }
+          );
         }, 400);
       }, 1800);
     } catch (err: any) {
@@ -482,7 +534,14 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
               </label>
               <select
                 value={selectedAgentId}
-                onChange={(e) => setSelectedAgentId(e.target.value)}
+                onChange={(e) => {
+                  const newId = e.target.value;
+                  setSelectedAgentId(newId);
+                  const matched = AGENTS.find((a) => a.id === newId);
+                  if (matched && matched.defaultLang) {
+                    setSelectedLanguage(matched.defaultLang);
+                  }
+                }}
                 disabled={callState !== "idle"}
                 className="w-full px-2.5 py-1.5 text-xs bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 focus:outline-none focus:border-violet-500 disabled:opacity-60 cursor-pointer"
               >
@@ -627,8 +686,8 @@ export const SandboxTestModal: React.FC<SandboxTestModalProps> = ({
                         <Volume2 size={13} className="animate-bounce" /> 🔊 AI Speaking...
                       </span>
                     ) : isListening ? (
-                      <span className="text-rose-400 font-semibold flex items-center gap-1.5 animate-pulse">
-                        <Mic size={13} /> 🎤 Listening to your voice... Speak now
+                      <span className="text-emerald-400 font-semibold flex items-center gap-1.5 animate-pulse truncate">
+                        <Mic size={13} className="text-rose-500 animate-ping" /> {interimSpeech ? `🎤 Hearing: "${interimSpeech}"` : `🎤 Listening in ${selectedLanguage.startsWith("hi") ? "Hindi" : selectedLanguage.startsWith("mr") ? "Marathi" : "English"}... Speak now`}
                       </span>
                     ) : (
                       <span className="text-zinc-400">{statusText}</span>

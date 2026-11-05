@@ -1,6 +1,453 @@
 {
-  "leads": [],
-  "cdrLogs": [],
+  "leads": [
+    {
+      "id": "lead_vaBDunGM",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Opted-Out",
+      "score": 40,
+      "last": "10 mins ago",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 5/11/2026."
+      ],
+      "createdAt": "2026-11-05T02:54:28.237Z"
+    },
+    {
+      "id": "lead_ixpUcw1S",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-05T02:54:28.182Z"
+    },
+    {
+      "id": "lead_zZTFXl7c",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Callback",
+      "score": 40,
+      "last": "Callback scheduled for 5/11/2026, 8:24:22 am",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 5/11/2026.",
+        "[Automated AI Reminder] Customer requested callback: Customer requested callback in 2 days scheduled for 5/11/2026, 8:24:22 am"
+      ],
+      "createdAt": "2026-11-04T18:54:05.728Z"
+    },
+    {
+      "id": "lead_OZBmegU1",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-04T18:54:05.627Z"
+    },
+    {
+      "id": "lead_dNma4tDJ",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Callback",
+      "score": 40,
+      "last": "Callback scheduled for 5/11/2026, 12:23:59 am",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 5/11/2026.",
+        "[Automated AI Reminder] Customer requested callback: Customer requested callback in 2 days scheduled for 5/11/2026, 12:23:59 am"
+      ],
+      "createdAt": "2026-11-04T18:34:17.200Z"
+    },
+    {
+      "id": "lead_C3ZqJvrF",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-04T18:34:17.121Z"
+    },
+    {
+      "id": "lead_AG18YLs9",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Callback",
+      "score": 40,
+      "last": "Callback scheduled for 5/11/2026, 12:04:11 am",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 5/11/2026.",
+        "[Automated AI Reminder] Customer requested callback: Customer requested callback in 2 days scheduled for 5/11/2026, 12:04:11 am"
+      ],
+      "createdAt": "2026-11-04T18:33:43.530Z"
+    },
+    {
+      "id": "lead_prlAq-DK",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-04T18:33:43.395Z"
+    },
+    {
+      "id": "lead_imrV7cGH",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Callback",
+      "score": 40,
+      "last": "Callback scheduled for 5/11/2026, 12:03:37 am",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 4/11/2026.",
+        "[Automated AI Reminder] Customer requested callback: Customer requested callback in 2 days scheduled for 5/11/2026, 12:03:37 am"
+      ],
+      "createdAt": "2026-11-04T18:28:59.801Z"
+    },
+    {
+      "id": "lead_ncqF_lJ3",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-04T18:28:59.722Z"
+    },
+    {
+      "id": "lead_DQamkRo4",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Callback",
+      "score": 40,
+      "last": "Callback scheduled for 4/11/2026, 11:58:54 pm",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 4/11/2026.",
+        "[Automated AI Reminder] Customer requested callback: Customer requested callback in 2 days scheduled for 4/11/2026, 11:58:54 pm"
+      ],
+      "createdAt": "2026-11-04T17:32:12.402Z"
+    },
+    {
+      "id": "lead_5HWczpBe",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-04T17:32:12.356Z"
+    },
+    {
+      "id": "lead_zd8XewE-",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Callback",
+      "score": 40,
+      "last": "Callback scheduled for 4/11/2026, 11:02:06 pm",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 4/11/2026.",
+        "[Automated AI Reminder] Customer requested callback: Customer requested callback in 2 days scheduled for 4/11/2026, 11:02:06 pm"
+      ],
+      "createdAt": "2026-11-04T17:31:52.283Z"
+    },
+    {
+      "id": "lead_OuDNFPtI",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-04T17:31:52.247Z"
+    },
+    {
+      "id": "lead_z_Nb7QOZ",
+      "name": "Rohit Deshmukh",
+      "phone": "+91 99887 76655",
+      "company": "Deshmukh Tech",
+      "source": "Outbound Blast",
+      "stage": "Callback",
+      "score": 40,
+      "last": "Callback scheduled for 4/11/2026, 11:01:46 pm",
+      "isDnc": true,
+      "notes": [
+        "[Statutory NDNC] Opted out by customer during AI voice call on 4/11/2026.",
+        "[Automated AI Reminder] Customer requested callback: Customer requested callback in 2 days scheduled for 4/11/2026, 11:01:46 pm"
+      ],
+      "createdAt": "2026-11-04T17:31:01.107Z"
+    },
+    {
+      "id": "lead_JvJk7zws",
+      "name": "Vikram Malhotra",
+      "phone": "+91 98111 22334",
+      "company": "Malhotra Enterprises",
+      "source": "Inbound Call",
+      "stage": "Qualified",
+      "score": 85,
+      "last": "Just now",
+      "isDnc": false,
+      "notes": [
+        "[Voice AI Agent] Balance queried: ₹50,000"
+      ],
+      "createdAt": "2026-11-04T17:31:01.071Z"
+    }
+  ],
+  "cdrLogs": [
+    {
+      "id": "call_KdyDiDyA",
+      "callId": "call_IIXPAp7G",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "0m 25s",
+      "durationSeconds": 25,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 70,
+      "transcript": "Agent: नमस्कार! आरोग्य डेंटल केअरमध्ये आपले स्वागत आहे. मी प्रिया बोलतेय, क्लिनिक अपॉइंटमेंटबद्दल मी संपर्क केला आहे. मी आपली काय मदत करू शकते?\nCustomer: मला एक अपॉइंटमेंट बुक करायची होती\nAgent: नक्की, मी आपल्यासाठी अपॉइंटमेंट बुक करू शकते. कृपया सांगा, कोणता तारीख आणि वेळाची उपलब्धता पाहू?\nCustomer: मला पुढील दोन दिवसात एक अपार्टमेंट हवी होती\nAgent: आपल्यासाठी पुढील दोन दिवसांची उपलब्धता तपासून देते. कृपया सांगा, कोणता तारीख आणि वेळाची उपलब्धता पाहू?\nCustomer: साडेतीन नंतर\nAgent: आपण पुढील दोन दिवसांची उपलब्धता तपासून देते. कृपया सांगा, कोणता तारीख आणि वेळाची उपलब्धता पाहू?\nCustomer: मला 12 तारखेला दुपारी दोन नंतर अपॉइंटमेंट हवी होती\nAgent: पुढील आठवड्यात येत्या मंगळवारी दुपारी साडेतीन वाजता आपल्यासाठी वेळ उपलब्ध आहे.\nCustomer: ठीक आहे चालेल\nAgent: आपल्या नावाची माहिती कृपया सांगा, जेणेकरून मी अपॉइंटमेंट बुक करू शकते.\nCustomer: माझं नाव सुमित आहे\nAgent: तुमची अपॉइंटमेंट यशस्वीरित्या बुक झाली आहे. लवकरच भेटूया!\nCustomer: ठीक आहे धन्यवाद\nAgent: आपल्याला आणखी काही मदत हवी असल्यास कळवा. लवकरच भेटूया!\nCustomer: मला या अपॉइंटमेंट साठी फी किती लागेल ते कळेल का\nAgent: कृपया सांगा, तुम्ही कोणती सेवा घेणार आहात — कन्सल्टेशन, रुट कॅनल, क्लीनिंग की इम्प्लांट्स?\nCustomer: मला रोग एनर्जी सेवा हवी आहे\nAgent: रूट कॅनलची फी ३,५०० रुपये आहे. तुम्हाला अपॉइंटमेंट बुक करायचे आहे का?",
+      "summary": "Call connected. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-05T04:52:51.893Z"
+    },
+    {
+      "id": "call_csx1i2Qn",
+      "callId": "call_BFPw2Le3",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "2m 56s",
+      "durationSeconds": 176,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 70,
+      "transcript": "Agent: नमस्कार! आरोग्य डेंटल केअरमध्ये आपले स्वागत आहे. मी प्रिया बोलतेय, क्लिनिक अपॉइंटमेंटबद्दल मी संपर्क केला आहे. मी आपली काय मदत करू शकते?\nCustomer: मला एक अपॉइंटमेंट बुक करायची होती\nAgent: नक्की, मी आपल्यासाठी अपॉइंटमेंट बुक करू शकते. कृपया सांगा, कोणता तारीख आणि वेळाची उपलब्धता पाहू?\nCustomer: मला पुढील दोन दिवसात एक अपार्टमेंट हवी होती\nAgent: आपल्यासाठी पुढील दोन दिवसांची उपलब्धता तपासून देते. कृपया सांगा, कोणता तारीख आणि वेळाची उपलब्धता पाहू?\nCustomer: साडेतीन नंतर\nAgent: आपण पुढील दोन दिवसांची उपलब्धता तपासून देते. कृपया सांगा, कोणता तारीख आणि वेळाची उपलब्धता पाहू?\nCustomer: मला 12 तारखेला दुपारी दोन नंतर अपॉइंटमेंट हवी होती\nAgent: पुढील आठवड्यात येत्या मंगळवारी दुपारी साडेतीन वाजता आपल्यासाठी वेळ उपलब्ध आहे.\nCustomer: ठीक आहे चालेल\nAgent: आपल्या नावाची माहिती कृपया सांगा, जेणेकरून मी अपॉइंटमेंट बुक करू शकते.\nCustomer: माझं नाव सुमित आहे\nAgent: तुमची अपॉइंटमेंट यशस्वीरित्या बुक झाली आहे. लवकरच भेटूया!\nCustomer: ठीक आहे धन्यवाद\nAgent: आपल्याला आणखी काही मदत हवी असल्यास कळवा. लवकरच भेटूया!\nCustomer: मला या अपॉइंटमेंट साठी फी किती लागेल ते कळेल का\nAgent: कृपया सांगा, तुम्ही कोणती सेवा घेणार आहात — कन्सल्टेशन, रुट कॅनल, क्लीनिंग की इम्प्लांट्स?\nCustomer: मला रोग एनर्जी सेवा हवी आहे\nAgent: रूट कॅनलची फी ३,५०० रुपये आहे. तुम्हाला अपॉइंटमेंट बुक करायचे आहे का?",
+      "summary": "Call connected. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-05T04:52:49.638Z"
+    },
+    {
+      "id": "call_jTSpi7Nh",
+      "callId": "call_qep4wCzI",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "1m 32s",
+      "durationSeconds": 92,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 70,
+      "transcript": "Agent: नमस्कार! आरोग्य डेंटल केअरमध्ये आपले स्वागत आहे. मी प्रिया बोलतेय, क्लिनिक अपॉइंटमेंटबद्दल मी संपर्क केला आहे. मी आपली काय मदत करू शकते?\nCustomer: बँक अकाउंट मध्ये होती\nAgent: माफ करा, मी बँकिंग किंवा अकाउंटशी निगडित काम करत नाही. मी फक्त आरोग्य डेंटल केअर क्लिनिकमधील डेंटल सेवा आणि अपॉइंटमेंटबद्दल मदत करू शकते.\n\nकृपया सांगा, डेंटल कन्सल्टेशन किंवा इतर कोणत्या तक्रारीसाठी मदत हवी आहे?\nCustomer: हो मला एक अपॉइंटमेंट बुक करायची होती\nAgent: नक्कीच, मी आपल्यासाठी अपॉइंटमेंट बुक करतो. कृपया सांगा, कोणती डेंटल सेवा हवी आहे? (उदा. कन्सल्टेशन, रूट कॅनल, क्लीनिंग, इम्प्लांट्स) आणि कोणत्या दिवशी अपॉइंटमेंट हवी आहे?\nCustomer: मला रूट कॅनल साठी परवा दिवशी साठी परवा दिवशीची एक अपॉइंटमेंट हवी आहे\nAgent: रूट कॅनलसाठी परवाच्या दिवशीची उपलब्धता तपासतो. कृपया थोडा थांबा.\nCustomer: ठीक आहे सांगा लवकर\nAgent: मी आरोग्य डेंटल केअर मधून प्रिया बोलत आहे. मी दात तपासणी, स्वच्छता आणि डॉ. शर्मा यांच्या अपॉइंटमेंटबद्दल आपली पूर्ण मदत करू शकते.",
+      "summary": "Call connected. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-05T04:29:13.052Z"
+    },
+    {
+      "id": "call_tu6ceL3e",
+      "callId": "call_fFgwGA8w",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "0m 46s",
+      "durationSeconds": 46,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 80,
+      "transcript": "Agent: Namaste Rajesh Varma ji! Welcome to Aarogya Dental Care. Main Priya bol rahi hoon, clinic appointment ke regarding. Batayiye, main aapki kya sahayata kar sakti hoon?\nCustomer: यह कंपोनेंट बुक करनी थी\nAgent: आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।\nCustomer: क्या अगले दो-तीन दिन में कोई अवेलेबल नहीं है\nAgent: मैं आरोग्य डेंटल केयर से प्रिया बोल रही हूँ। मैं दांतों की जांच, सफाई और डॉ. शर्मा से अपॉइंटमेंट के बारे में आपकी पूरी सहायता कर सकती हूँ।",
+      "summary": "Polite greeting initiated. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-05T04:10:44.175Z"
+    },
+    {
+      "id": "call_uIPscigK",
+      "callId": "call_GWgakEPz",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "0m 34s",
+      "durationSeconds": 34,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 80,
+      "transcript": "Agent: Namaste Rajesh Varma ji! Welcome to Aarogya Dental Care. Main Priya bol rahi hoon, clinic appointment ke regarding. Batayiye, main aapki kya sahayata kar sakti hoon?\nCustomer: क्या मुझे कल के लिए अपॉइंटमेंट मिल सकती है\nAgent: आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।\nCustomer: क्या और कोई अपॉइंटमेंट अवेलेबल नहीं है\nAgent: आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।",
+      "summary": "Polite greeting initiated. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-04T19:06:51.717Z"
+    },
+    {
+      "id": "call_MbZE7goU",
+      "callId": "call_3xGf6s_h",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "0m 48s",
+      "durationSeconds": 48,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 80,
+      "transcript": "Agent: Namaste Rajesh Varma ji! Welcome to Aarogya Dental Care. Main Priya bol rahi hoon, clinic appointment ke regarding. Batayiye, main aapki kya sahayata kar sakti hoon?\nCustomer: मुझे अपॉइंटमेंट बुक करनी थी\nAgent: आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।\nCustomer: ठीक है आप कौन से डॉक्टर अवेलेबल है मुझे बता सकती है\nAgent: डॉक्टर शर्मा की पहली परामर्श फ़ीस पाँच सौ रुपये है और क्लिनिक सुबह नौ से रात आठ बजे तक खुला रहता है।\nCustomer: क्या मैं अभी अपॉइंटमेंट बुक करवा सकता हूं\nAgent: आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।",
+      "summary": "Polite greeting initiated. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-04T18:39:18.789Z"
+    },
+    {
+      "id": "call_qAqw_H-6",
+      "callId": "call_71HIyfsB",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "0m 31s",
+      "durationSeconds": 31,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 80,
+      "transcript": "Agent: Namaste Rajesh Varma ji! Welcome to Aarogya Dental Care. Main Priya bol rahi hoon, clinic appointment ke regarding. Batayiye, main aapki kya sahayata kar sakti hoon?\nCustomer: क्या आप मेरे लिए एक अपॉइंटमेंट बुक करसकते हैं\nAgent: आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।\nCustomer: क्या आप मेरी एक अपॉइंटमेंट बुक कर दीजिए\nAgent: आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।",
+      "summary": "Polite greeting initiated. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-04T18:23:48.235Z"
+    },
+    {
+      "id": "call_uaa4CWgI",
+      "callId": "call_25e7fj78",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "1m 1s",
+      "durationSeconds": 61,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 70,
+      "transcript": "Agent: नमस्कार! आरोग्य डेंटल केअरमध्ये आपले स्वागत आहे. मी प्रिया बोलतेय, क्लिनिक अपॉइंटमेंटबद्दल मी संपर्क केला आहे. मी आपली काय मदत करू शकते?\nCustomer: मला एक अपॉइंटमेंट बुक करायची होती\nAgent: पुढील आठवड्यात येत्या मंगळवारी दुपारी साडेतीन वाजता आपल्यासाठी वेळ उपलब्ध आहे.\nCustomer: ठीक आहे या आठवड्यात आपण म्हणतो\nAgent: मी आरोग्य डेंटल केअर मधून प्रिया बोलत आहे. मी दात तपासणी, स्वच्छता आणि डॉ. शर्मा यांच्या अपॉइंटमेंटबद्दल आपली पूर्ण मदत करू शकते.\nCustomer: मला दात तपासणीसाठी एक अपार्टमेंट हवी होती\nAgent: पुढील आठवड्यात येत्या मंगळवारी दुपारी साडेतीन वाजता आपल्यासाठी वेळ उपलब्ध आहे.\nCustomer: ठीक आहे तुम्ही माझी अपॉइंटमेंट बुक करू शकता का\nAgent: पुढील आठवड्यात येत्या मंगळवारी दुपारी साडेतीन वाजता आपल्यासाठी वेळ उपलब्ध आहे.",
+      "summary": "Call connected. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-04T18:22:45.075Z"
+    },
+    {
+      "id": "call_kuRkYWop",
+      "callId": "call_Qq8tnJC_",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Priya - Aarogya Dental Care",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "0m 49s",
+      "durationSeconds": 49,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 80,
+      "transcript": "Agent: Namaste Rajesh Varma ji! Welcome to Aarogya Dental Care. Main Priya bol rahi hoon, clinic appointment ke regarding. Batayiye, main aapki kya sahayata kar sakti hoon?\nAgent: Certainly! I have scheduled a callback reminder from SwiftTel 5G.\nAgent: आने वाले मंगलवार को दोपहर साढ़े तीन बजे का समय आपके लिए उपलब्ध है।\nCustomer: Kya Main component book kar sakta hun\nCustomer: क्या आप मुझे टाइम बता सकती है कि अपॉइंटमेंट का फ्री है\nAgent: I understand what you're asking, but as your SwiftTel 5G specialist, I am dedicated to helping you with your network upgrade and services today. Would you like me to share details about our high-speed 5G annual plan?",
+      "summary": "Polite greeting initiated. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-04T17:57:33.527Z"
+    },
+    {
+      "id": "call_vN--T08i",
+      "callId": "call_XMtWOM68",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Simran - SwiftTel 5G",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "3m 37s",
+      "durationSeconds": 217,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 80,
+      "transcript": "Agent: Hello! This is Simran from SwiftTel 5G. We have an exciting 5G plan update for you today. Do you have a minute?\nCustomer: okay tell me about the plan\nAgent: Our annual plan offers 2.5 GB of daily 5G data, truly unlimited voice calls, and OTT entertainment benefits like Disney+ Hotstar and SonyLIV for ₹1,999.\nCustomer: can you give me more details him about the plan\nAgent: Our annual plan offers 2.5 GB of daily 5G data, truly unlimited voice calls, and OTT entertainment benefits like Disney+ Hotstar and SonyLIV for ₹1,999.\nCustomer: any more details beside them\nAgent: I understand what you're asking, but as your SwiftTel 5G specialist, I am dedicated to helping you with your network upgrade and services today. Would you like me to share details about our high-speed 5G annual plan?\nCustomer: can you share the details with me on my WhatsApp\nAgent: Certainly! I have dispatched the complete SwiftTel 5G annual plan details to your WhatsApp.\nCustomer: okay when when would you call me next time to get call back",
+      "summary": "Polite greeting initiated. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-04T17:56:31.597Z"
+    },
+    {
+      "id": "call_4vSs_ita",
+      "callId": "call_gAeD6q8Q",
+      "provider": "tata_smartflo",
+      "customerName": "Rajesh Varma",
+      "customerPhone": "+91 98201 55432",
+      "agentName": "Simran - SwiftTel 5G",
+      "campaign": "Live Interactive Conversational Call",
+      "duration": "0m 31s",
+      "durationSeconds": 31,
+      "status": "Completed",
+      "sentiment": "Neutral",
+      "qaScore": 80,
+      "transcript": "Agent: Hello! This is Simran from SwiftTel 5G. We have an exciting 5G plan update for you today. Do you have a minute?\nCustomer: okay tell me about the plan\nAgent: Our annual plan offers 2.5 GB of daily 5G data, truly unlimited voice calls, and OTT entertainment benefits like Disney+ Hotstar and SonyLIV for ₹1,999.\nCustomer: yes can you please say\nAgent: I understand what you're asking, but as your SwiftTel 5G specialist, I am dedicated to helping you with your network upgrade and services today. Would you like me to share details about our high-speed 5G annual plan?",
+      "summary": "Polite greeting initiated. Customer expressed neutral sentiment. Compliance disclosure check noted.",
+      "customerFeedback": "Ensure statutory recording disclosure is spoken in the first 10 seconds.",
+      "createdAt": "2026-11-04T17:36:15.376Z"
+    }
+  ],
   "carrierConfig": {
     "provider": "mock",
     "twilioAccountSid": "",
@@ -9,7 +456,7 @@
     "exotelApiKey": "",
     "exotelApiToken": "",
     "exotelSid": "",
-    "updatedAt": "2026-11-04T15:53:42.612Z"
+    "updatedAt": "2026-11-04T17:31:00.744Z"
   },
   "subscription": {
     "planId": "plan_starter",
@@ -17,7 +464,7 @@
     "price": 0,
     "status": "active",
     "callingMinutesRemaining": 0,
-    "renewalDate": "2026-12-04T15:53:42.612Z"
+    "renewalDate": "2026-12-04T17:31:00.744Z"
   },
   "autoRecharge": {
     "enabled": true,
@@ -25,7 +472,7 @@
     "rechargeAmount": 25000,
     "paymentMethod": "upi_autopay",
     "gstin": "27AABCC1234F1Z8",
-    "updatedAt": "2026-11-04T15:53:42.608Z"
+    "updatedAt": "2026-11-04T17:31:00.717Z"
   },
   "ivrNodes": [
     {
@@ -132,7 +579,7 @@
         "override_qa": false
       }
     },
-    "updatedAt": "2026-11-04T15:53:42.609Z"
+    "updatedAt": "2026-11-04T17:31:00.720Z"
   },
   "abSplitConfig": {
     "splitPercentA": 50,
@@ -140,7 +587,7 @@
     "scriptA": "Namaste {lead_name} ji. We are offering an exclusive 20% discount on festive calling agent packs. Would you like to schedule a 10-minute demo with our team?",
     "scriptB": "Namaste {lead_name} ji! Most retail businesses in {city} are saving 4 hours daily using CallForge AI calling. Can we demonstrate how it handles your festive inbound rush?",
     "winnerVariant": "B",
-    "updatedAt": "2026-11-04T15:53:42.609Z"
+    "updatedAt": "2026-11-04T17:31:00.720Z"
   },
   "walletBalance": 0,
   "transactions": [],
@@ -148,114 +595,720 @@
   "teamMembers": [],
   "auditLogs": [
     {
-      "id": "log_OiUNOXuy",
-      "action": "Plan Activation Requested",
-      "user": "SwiftTel AI Agent",
+      "id": "log_gnXwk6Bp",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
       "ip": "10.107.157.9",
-      "timestamp": "2026-11-04T15:57:04.187Z",
-      "details": "Plan activation initiated for Customer (+91 98201 55432) - Plan: swifttel_annual_1999",
-      "category": "system"
-    },
-    {
-      "id": "log_DBxb38v8",
-      "action": "Callback Scheduled",
-      "user": "AI Calling Agent",
-      "ip": "10.107.157.9",
-      "timestamp": "2026-11-04T15:57:02.134Z",
-      "details": "Scheduled autonomous follow-up call to Customer (+91 98201 55432) for 6/11/2026, 9:27:02 pm.",
+      "timestamp": "2026-11-05T04:51:23.328Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to 9820155432 (Sumit).",
       "category": "campaign"
     },
     {
-      "id": "log_oMRbuA2y",
-      "action": "Callback Scheduled",
-      "user": "AI Calling Agent",
+      "id": "log_gFp7xaD3",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
       "ip": "10.107.157.9",
-      "timestamp": "2026-11-04T15:56:58.042Z",
-      "details": "Scheduled autonomous follow-up call to Customer (+91 98201 55432) for 6/11/2026, 9:26:58 pm.",
+      "timestamp": "2026-11-05T04:50:59.152Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
       "category": "campaign"
     },
     {
-      "id": "log_zCIF1Z8n",
-      "action": "Plan Activation Requested",
-      "user": "SwiftTel AI Agent",
-      "ip": "10.107.157.9",
-      "timestamp": "2026-11-04T15:56:55.996Z",
-      "details": "Plan activation initiated for Customer (+91 98201 55432) - Plan: swifttel_annual_1999",
-      "category": "system"
-    },
-    {
-      "id": "log_cAME1WXn",
+      "id": "log_MSu_9jLx",
       "action": "Callback Scheduled",
       "user": "AI Calling Agent",
       "ip": "10.107.157.9",
-      "timestamp": "2026-11-04T15:56:53.956Z",
-      "details": "Scheduled autonomous follow-up call to Customer (+91 98201 55432) for 6/11/2026, 9:26:53 pm.",
+      "timestamp": "2026-11-05T04:25:52.239Z",
+      "details": "Scheduled autonomous follow-up call to Rajesh Varma (+91 98201 55432) for 8/11/2026, 9:55:52 am.",
       "category": "campaign"
     },
     {
-      "id": "log_NE_WcXil",
-      "action": "Plan Activation Requested",
-      "user": "SwiftTel AI Agent",
+      "id": "log_hAomh8Ad",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
       "ip": "10.107.157.9",
-      "timestamp": "2026-11-04T15:55:34.233Z",
-      "details": "Plan activation initiated for Customer (+91 98201 55432) - Plan: swifttel_annual_1999",
-      "category": "system"
+      "timestamp": "2026-11-05T04:10:14.040Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
     },
     {
-      "id": "log_zQIxHxey",
+      "id": "log_bTBvg5_D",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-05T02:54:28.256Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_N2UDie5W",
       "action": "Callback Scheduled",
       "user": "AI Calling Agent",
       "ip": "10.107.157.9",
-      "timestamp": "2026-11-04T15:55:34.171Z",
-      "details": "Scheduled autonomous follow-up call to Customer (+91 98201 55432) for 6/11/2026, 9:25:34 pm.",
+      "timestamp": "2026-11-05T02:54:27.666Z",
+      "details": "Scheduled autonomous follow-up call to Ramesh Sharma (+919988776655) for 5/11/2026, 8:24:22 am.",
+      "category": "campaign"
+    },
+    {
+      "id": "log__g1QJSKu",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T19:06:47.104Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_HgeoobEu",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T19:06:33.299Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_UZUEKwtC",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:54:05.775Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_Yk0m0u7_",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:54:04.150Z",
+      "details": "Scheduled autonomous follow-up call to Ramesh Sharma (+919988776655) for 5/11/2026, 12:23:59 am.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_J3rpW6dS",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:39:15.284Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_7mggNbAz",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:38:44.876Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_DDJhbsAx",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:34:17.212Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_YlxL54vh",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:34:16.587Z",
+      "details": "Scheduled autonomous follow-up call to Ramesh Sharma (+919988776655) for 5/11/2026, 12:04:11 am.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_NqDfaENf",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:33:43.554Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_bGOAWECo",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:33:42.341Z",
+      "details": "Scheduled autonomous follow-up call to Ramesh Sharma (+919988776655) for 5/11/2026, 12:03:37 am.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_KNekmbpW",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:28:59.868Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_T1yA-wf1",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:28:59.168Z",
+      "details": "Scheduled autonomous follow-up call to Ramesh Sharma (+919988776655) for 4/11/2026, 11:58:54 pm.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_wFDOyPs3",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:23:44.821Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_FuTW3pw6",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:23:32.513Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_e6d1LJWk",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:22:41.434Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_jaFsdtgd",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:22:28.424Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_foOphxCE",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:21:58.539Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_guoB6TRp",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:19:24.732Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Customer).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_lLvFok54",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T18:19:24.720Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Customer).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_ZPzsEu12",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:57:22.121Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_CZDO6YW5",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:56:44.400Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Rajesh Varma).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_PzJ-OnI5",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:56:26.145Z",
+      "details": "Scheduled autonomous follow-up call to Rajesh Varma (+91 98201 55432) for 6/11/2026, 11:26:26 pm.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_xNxeKNAP",
+      "action": "Plan Details Dispatched",
+      "user": "SwiftTel AI Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:55:36.031Z",
+      "details": "Sent SwiftTel 5G Annual Plan (₹1,999 - 2.5GB/day + OTT) details via WHATSAPP to +91 98201 55432",
+      "category": "system"
+    },
+    {
+      "id": "log_X_L24qvJ",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:49:00.329Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 55432 (Customer).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_8buSWt6C",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:33:37.398Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 11223 (Test User).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_k5G3bEWI",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:33:25.102Z",
+      "details": "Delivered template 'Aarogya Dental Appointment Confirmation' to +91 98201 11223 (Test User).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_M8aE7UDu",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:32:12.416Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_VueLjcVn",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:32:11.789Z",
+      "details": "Scheduled autonomous follow-up call to Ramesh Sharma (+919988776655) for 4/11/2026, 11:02:06 pm.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_EgJuIbY5",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:31:52.296Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
+      "category": "campaign"
+    },
+    {
+      "id": "log_txd2vmUP",
+      "action": "Callback Scheduled",
+      "user": "AI Calling Agent",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:31:51.702Z",
+      "details": "Scheduled autonomous follow-up call to Ramesh Sharma (+919988776655) for 4/11/2026, 11:01:46 pm.",
+      "category": "campaign"
+    },
+    {
+      "id": "log_04QlUt11",
+      "action": "WhatsApp Follow-up Sent",
+      "user": "Arjun Mehta (Automated)",
+      "ip": "10.107.157.9",
+      "timestamp": "2026-11-04T17:31:01.119Z",
+      "details": "Delivered template 'Tata Smartflo UPI Payment Dispatch' to +91 98200 11223 (Anjali Gupta).",
       "category": "campaign"
     }
   ],
-  "whatsappLogs": [],
+  "whatsappLogs": [
+    {
+      "id": "wa_DqbGusFo",
+      "recipientName": "Sumit",
+      "recipientPhone": "9820155432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Sumit! Your appointment at Aarogya Dental Care for Consultation is confirmed for 2024-05-14 at 3:30 PM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-05T04:51:23.328Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_cP4C9Zl5",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-05T04:50:59.151Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_NitAY-Wu",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-05T04:10:14.039Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_ZIjh_pTo",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793847268255",
+      "status": "delivered",
+      "timestamp": "2026-11-05T02:54:28.255Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_QeMJYkn9",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T19:06:47.103Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_fat7HqpB",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T19:06:33.293Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_rVKUoIEV",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793818445774",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:54:05.775Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa__9DvABXg",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:39:15.284Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_qlkAniIm",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:38:44.870Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_65ju6Iz3",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793817257212",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:34:17.212Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_tVLbMLmo",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793817223554",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:33:43.554Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_WTGo7-50",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793816939865",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:28:59.867Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_ex4p68Pw",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:23:44.821Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_HYz1SlSe",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:23:32.512Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_d5C8aOzx",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:22:41.434Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_NTfllYok",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:22:28.424Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_r7pPq1DL",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:21:58.539Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_gk7od_Ze",
+      "recipientName": "Customer",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Customer! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:19:24.732Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_aC_E_Tj5",
+      "recipientName": "Customer",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Customer! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T18:19:24.720Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_6cDK3tgy",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T17:57:22.121Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_PCcO018l",
+      "recipientName": "Rajesh Varma",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Rajesh Varma! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T17:56:44.400Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_UStSu6_N",
+      "recipientName": "Customer",
+      "recipientPhone": "+91 98201 55432",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Customer! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T17:49:00.329Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_U3TJKqWy",
+      "recipientName": "Test User",
+      "recipientPhone": "+91 98201 11223",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Test User! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T17:33:37.398Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_VKbjO3ch",
+      "recipientName": "Test User",
+      "recipientPhone": "+91 98201 11223",
+      "templateName": "Aarogya Dental Appointment Confirmation",
+      "body": "Namaste Test User! Your appointment at Aarogya Dental Care for General Dental Consultation is confirmed for Tuesday at 11:00 AM. Doctor: Dr. Sharma. Location: FC Road, Shivaji Nagar, Pune.",
+      "status": "delivered",
+      "timestamp": "2026-11-04T17:33:25.102Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_Bi97snTw",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793813532416",
+      "status": "delivered",
+      "timestamp": "2026-11-04T17:32:12.416Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_30fblOEJ",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793813512295",
+      "status": "delivered",
+      "timestamp": "2026-11-04T17:31:52.295Z",
+      "disposition": "Interested"
+    },
+    {
+      "id": "wa_xuthYqbG",
+      "recipientName": "Anjali Gupta",
+      "recipientPhone": "+91 98200 11223",
+      "templateName": "Tata Smartflo UPI Payment Dispatch",
+      "body": "Your secure payment link for ₹4,850: https://pay.tatasmartflo.in/quickpay/txn_1793813461118",
+      "status": "delivered",
+      "timestamp": "2026-11-04T17:31:01.119Z",
+      "disposition": "Interested"
+    }
+  ],
   "scheduledCallbacks": [
     {
-      "id": "cb_8V0rUsbd",
-      "customerName": "Customer",
+      "id": "cb_xBCxLLaW",
+      "customerName": "Rajesh Varma",
       "customerPhone": "+91 98201 55432",
-      "scheduledAt": "2026-11-06T15:57:02.134Z",
-      "reason": "Customer requested callback in 2 days",
+      "scheduledAt": "2026-11-08T04:25:52.137Z",
+      "reason": "Consultation and cleaning appointment booking",
       "requestedBy": "customer",
-      "notes": "Automated callback scheduled by AI Voice Assistant for Customer.",
+      "notes": "Automated callback scheduled by AI Voice Assistant for Rajesh Varma.",
       "status": "pending",
-      "createdAt": "2026-11-04T15:57:02.134Z"
+      "createdAt": "2026-11-05T04:25:52.141Z"
     },
     {
-      "id": "cb_njU6Z6gG",
-      "customerName": "Customer",
-      "customerPhone": "+91 98201 55432",
-      "scheduledAt": "2026-11-06T15:56:58.042Z",
+      "id": "cb_WmYyx_pr",
+      "customerPhone": "+919988776655",
+      "customerName": "Ramesh Sharma",
+      "campaignId": "camp_dental_01",
       "reason": "Customer requested callback in 2 days",
-      "requestedBy": "customer",
-      "notes": "Automated callback scheduled by AI Voice Assistant for Customer.",
-      "status": "pending",
-      "createdAt": "2026-11-04T15:56:58.042Z"
+      "scheduledAt": "2026-11-05T02:54:22.506Z",
+      "retryCount": 0,
+      "status": "completed",
+      "createdAt": "2026-11-05T02:54:27.508Z"
     },
     {
-      "id": "cb_812DhRQh",
-      "customerName": "Customer",
-      "customerPhone": "+91 98201 55432",
-      "scheduledAt": "2026-11-06T15:56:53.956Z",
+      "id": "cb_e7axpQcV",
+      "customerPhone": "+919988776655",
+      "customerName": "Ramesh Sharma",
+      "campaignId": "camp_dental_01",
       "reason": "Customer requested callback in 2 days",
-      "requestedBy": "customer",
-      "notes": "Automated callback scheduled by AI Voice Assistant for Customer.",
-      "status": "pending",
-      "createdAt": "2026-11-04T15:56:53.956Z"
+      "scheduledAt": "2026-11-04T18:53:59.002Z",
+      "retryCount": 0,
+      "status": "completed",
+      "createdAt": "2026-11-04T18:54:04.006Z"
     },
     {
-      "id": "cb_DBp7k3al",
-      "customerName": "Customer",
+      "id": "cb_-5ohQwpW",
+      "customerPhone": "+919988776655",
+      "customerName": "Ramesh Sharma",
+      "campaignId": "camp_dental_01",
+      "reason": "Customer requested callback in 2 days",
+      "scheduledAt": "2026-11-04T18:34:11.546Z",
+      "retryCount": 0,
+      "status": "completed",
+      "createdAt": "2026-11-04T18:34:16.548Z"
+    },
+    {
+      "id": "cb_2d4iHmFK",
+      "customerPhone": "+919988776655",
+      "customerName": "Ramesh Sharma",
+      "campaignId": "camp_dental_01",
+      "reason": "Customer requested callback in 2 days",
+      "scheduledAt": "2026-11-04T18:33:37.159Z",
+      "retryCount": 0,
+      "status": "completed",
+      "createdAt": "2026-11-04T18:33:42.170Z"
+    },
+    {
+      "id": "cb_8IwCDVL5",
+      "customerPhone": "+919988776655",
+      "customerName": "Ramesh Sharma",
+      "campaignId": "camp_dental_01",
+      "reason": "Customer requested callback in 2 days",
+      "scheduledAt": "2026-11-04T18:28:54.086Z",
+      "retryCount": 0,
+      "status": "completed",
+      "createdAt": "2026-11-04T18:28:59.089Z"
+    },
+    {
+      "id": "cb_9Ns6LjzF",
+      "customerName": "Rajesh Varma",
       "customerPhone": "+91 98201 55432",
-      "scheduledAt": "2026-11-06T15:55:34.168Z",
+      "scheduledAt": "2026-11-06T17:56:26.047Z",
       "reason": "Customer requested callback in 2 days",
       "requestedBy": "customer",
-      "notes": "Automated callback scheduled by AI Voice Assistant for Customer.",
+      "notes": "Automated callback scheduled by AI Voice Assistant for Rajesh Varma.",
       "status": "pending",
-      "createdAt": "2026-11-04T15:55:34.168Z"
+      "createdAt": "2026-11-04T17:56:26.052Z"
+    },
+    {
+      "id": "cb_zr6df-DU",
+      "customerPhone": "+919988776655",
+      "customerName": "Ramesh Sharma",
+      "campaignId": "camp_dental_01",
+      "reason": "Customer requested callback in 2 days",
+      "scheduledAt": "2026-11-04T17:32:06.756Z",
+      "retryCount": 0,
+      "status": "completed",
+      "createdAt": "2026-11-04T17:32:11.758Z"
+    },
+    {
+      "id": "cb_EUgWBgDn",
+      "customerPhone": "+919988776655",
+      "customerName": "Ramesh Sharma",
+      "campaignId": "camp_dental_01",
+      "reason": "Customer requested callback in 2 days",
+      "scheduledAt": "2026-11-04T17:31:46.666Z",
+      "retryCount": 0,
+      "status": "completed",
+      "createdAt": "2026-11-04T17:31:51.669Z"
     }
-  ]
+  ],
+  "userCredentials": {
+    "sumitkhomne123@gmail.com": {
+      "email": "sumitkhomne123@gmail.com",
+      "passwordHash": "@Rashbaccha",
+      "passwordPlain": "@Rashbaccha",
+      "name": "sumitkhomne123@gmail.com",
+      "role": "Enterprise Admin",
+      "updatedAt": "2026-11-05T04:00:00.391Z"
+    }
+  }
 }

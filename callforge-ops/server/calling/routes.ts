@@ -1,3 +1,76 @@
+import crypto from "crypto";
+import { spawn } from "child_process";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function getGreetingAudio(agentId?: string, language?: string): string | null {
+  const lang = language ? (language.startsWith("mr") ? "mr" : language.startsWith("hi") ? "hi" : "en") : "en";
+  if (agentId === "agent_swifttel_5g") {
+    return `${lang}_cartesia_mobile_recharge_promo_greeting.wav`;
+  } else if (agentId === "agent_aarogya_dental") {
+    return `${lang}_cartesia_clinic_booking_greeting.wav`;
+  } else if (agentId === "agent_tata_banking_01") {
+    return `${lang}_cartesia_bill_emi_reminder_greeting.wav`;
+  }
+  return `${lang}_cartesia_greeting.wav`;
+}
+
+function getTurnActionAudio(intent?: string, language?: string, agentId?: string): string | null {
+  const lang = language ? (language.startsWith("mr") ? "mr" : language.startsWith("hi") ? "hi" : "en") : "en";
+  const speaker = lang === "mr" ? "meera" : lang === "hi" ? "leher" : "maple";
+
+  // 1. Aarogya Dental Care (Priya) - 100% Studio Cloned Human Voice Map
+  if (agentId === "agent_aarogya_dental" || (!agentId && intent && intent.includes("dental"))) {
+    if (intent === "consultation_fees" || intent === "doctor_info" || intent === "clinic_timings") {
+      return `${lang}_sample_02_local_24k.wav`;
+    }
+    if (intent === "appointment_booking" || intent === "appointment_confirmed" || intent === "slot_inquiry") {
+      return `${lang}_sample_03_local_24k.wav`;
+    }
+    if (intent === "pricing_charges" || intent === "treatment_costs") {
+      return `${lang}_sample_04_local_24k.wav`;
+    }
+    if (intent === "clinic_contact" || intent === "helpline_number") {
+      return `${lang}_sample_05_local_24k.wav`;
+    }
+    if (intent === "hold_apology") {
+      return `${lang}_sample_06_local_24k.wav`;
+    }
+    if (intent === "painless_treatment" || intent === "cleaning_procedure") {
+      return `${lang}_sample_07_local_24k.wav`;
+    }
+    if (intent === "ai_identity" || intent === "who_are_you") {
+      return `${lang}_sample_08_local_24k.wav`;
+    }
+    if (intent === "clinic_location" || intent === "address_sent") {
+      return `${lang}_sample_09_local_24k.wav`;
+    }
+    if (intent === "farewell" || intent === "thank_you" || intent === "call_terminated") {
+      return `${lang}_sample_10_local_24k.wav`;
+    }
+    if (intent === "callback_scheduled" || intent === "dtmf_callback") {
+      return `${lang}_${speaker}_callback_offer.wav`;
+    }
+    return null;
+  }
+
+  // 2. Generic / SwiftTel / Banking
+  if (intent === "callback_scheduled" || intent === "dtmf_callback") {
+    return `${lang}_${speaker}_callback_offer.wav`;
+  }
+  if (intent === "call_terminated" || intent === "farewell") {
+    return `${lang}_${speaker}_goodbye.wav`;
+  }
+  if (intent === "not_understood" || intent === "error_fallback") {
+    return `${lang}_${speaker}_not_understood.wav`;
+  }
+
+  return null;
+}
 import { Request, Response, Router } from "express";
 import { nanoid } from "nanoid";
 import nodemailer from "nodemailer";
@@ -783,6 +856,224 @@ callingRouter.get("/runtime/config", (_req: Request, res: Response) => {
 });
 
 // POST /api/calling/runtime/turn (Execute conversational turn with full Multi-turn Memory + RAG + LLM + Tool Execution)
+
+// GET /api/calling/runtime/audio/:filename
+// Serves pre-generated zero-latency cloned Cartesia and Sarvam audio clips directly
+function findCoreEngineCacheDir(): string {
+  const candidates = [
+    path.resolve(process.cwd(), "../core-engine/locales/cache"),
+    path.resolve(process.cwd(), "core-engine/locales/cache"),
+    path.resolve(__dirname, "../../core-engine/locales/cache"),
+    path.resolve(__dirname, "../../../core-engine/locales/cache"),
+    "D:/Integrated_updated_Smart_AI_Dialer/Smart_AI_Dialer/core-engine/locales/cache",
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[0];
+}
+
+function findCoreEngineVoiceReelDir(): string {
+  const candidates = [
+    path.resolve(process.cwd(), "../core-engine/voice_reel"),
+    path.resolve(process.cwd(), "core-engine/voice_reel"),
+    path.resolve(__dirname, "../../core-engine/voice_reel"),
+    path.resolve(__dirname, "../../../core-engine/voice_reel"),
+    "D:/Integrated_updated_Smart_AI_Dialer/Smart_AI_Dialer/core-engine/voice_reel",
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[0];
+}
+
+
+function generateNeuralAudio(text: string, language: string): Promise<string | null> {
+  return new Promise(async (resolve) => {
+    if (!text || !text.trim()) {
+      return resolve(null);
+    }
+
+    const langKey = language.startsWith("mr") ? "mr" : (language.startsWith("hi") ? "hi" : "en");
+    const elevenApiKey = process.env.ELEVENLABS_API_KEY || "";
+    
+    // Select language-specific Voice ID strictly per language:
+    // Hindi: RABOvaPec1ymXz02oDQi
+    // English: ZUrEGyu8GFMwnHbvLhv2
+    // Marathi: dSEhEXLzhnZEytnJ2rRy
+    const isPaid = process.env.ELEVENLABS_IS_PAID === "true";
+    let elevenVoiceId = "EXAVITQu4vr4xnSDxMaL"; // Fast 400ms human female studio voice
+    if (isPaid) {
+      if (langKey === "hi") elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_HI || "RABOvaPec1ymXz02oDQi";
+      else if (langKey === "en") elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_EN || "ZUrEGyu8GFMwnHbvLhv2";
+      else if (langKey === "mr") elevenVoiceId = process.env.ELEVENLABS_VOICE_ID_MR || "dSEhEXLzhnZEytnJ2rRy";
+    }
+
+    // Clean text for natural human audio synthesis
+    let cleanText = text.trim()
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replace(/\*([^*]+)\*/g, "$1")
+      .replace(/₹\s*([0-9,]+)/g, langKey === "en" ? "$1 rupees" : "$1 रुपये")
+      .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const cacheDir = findCoreEngineCacheDir();
+
+    // 1. Check ElevenLabs cached audio (0ms instant response)
+    const elevenHash = crypto.createHash("md5").update(`eleven_${elevenVoiceId}_${cleanText}`).digest("hex");
+    const elevenFilename = `eleven_${langKey}_${elevenHash}.mp3`;
+    if (fs.existsSync(path.join(cacheDir, elevenFilename))) {
+      return resolve(elevenFilename);
+    }
+
+    // 2. Synthesize with ElevenLabs Real Human Female Voice
+    if (elevenApiKey) {
+      try {
+        const tStart = Date.now();
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${elevenVoiceId}`, {
+          method: "POST",
+          headers: {
+            "xi-api-key": elevenApiKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: cleanText,
+            model_id: "eleven_turbo_v2_5",
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.8,
+            },
+          }),
+        });
+
+        if (response.ok) {
+          const arrayBuf = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuf);
+          if (buffer.length > 500) {
+            fs.writeFileSync(path.join(cacheDir, elevenFilename), buffer);
+            console.log(`[ElevenLabsTTS] Synthesized ${buffer.length}b in ${Date.now() - tStart}ms -> ${elevenFilename}`);
+            return resolve(elevenFilename);
+          }
+        } else {
+          const errDetail = await response.text();
+          console.warn(`[ElevenLabsTTS] Voice ID ${elevenVoiceId} status ${response.status}: ${errDetail}`);
+          // If library voice requires paid plan, try premade voice Sarah
+          if (response.status === 402 && elevenVoiceId !== "EXAVITQu4vr4xnSDxMaL") {
+            try {
+              const fbRes = await fetch("https://api.elevenlabs.io/v1/text-to-speech/EXAVITQu4vr4xnSDxMaL", {
+                method: "POST",
+                headers: {
+                  "xi-api-key": elevenApiKey,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  text: cleanText,
+                  model_id: "eleven_turbo_v2_5",
+                  voice_settings: { stability: 0.5, similarity_boost: 0.8 },
+                }),
+              });
+              if (fbRes.ok) {
+                const fbBuf = Buffer.from(await fbRes.arrayBuffer());
+                if (fbBuf.length > 500) {
+                  const fbFile = `eleven_${langKey}_sarah_${elevenHash}.mp3`;
+                  fs.writeFileSync(path.join(cacheDir, fbFile), fbBuf);
+                  return resolve(fbFile);
+                }
+              }
+            } catch {}
+          }
+        }
+      } catch (err: any) {
+        console.warn("[ElevenLabsTTS] Network exception, falling back:", err.message);
+      }
+    }
+
+    // 3. Fallback: Edge Neural Voice if ElevenLabs is unavailable
+    const edgeVoice = langKey === "mr" ? "mr-IN-AarohiNeural" : (langKey === "hi" ? "hi-IN-SwaraNeural" : "en-IN-NeerjaNeural");
+    const edgeHash = crypto.createHash("md5").update(`${edgeVoice}_${cleanText}`).digest("hex");
+    const edgeFilename = `edge_${langKey}_${edgeHash}.mp3`;
+    if (fs.existsSync(path.join(cacheDir, edgeFilename))) {
+      return resolve(edgeFilename);
+    }
+
+    const candidatePaths = [
+      path.resolve(__dirname, "runtime/tts/edge_tts_server.py"),
+      path.resolve(__dirname, "../server/calling/runtime/tts/edge_tts_server.py"),
+      path.resolve(process.cwd(), "server/calling/runtime/tts/edge_tts_server.py"),
+      "D:\\Integrated_updated_Smart_AI_Dialer\\Smart_AI_Dialer\\callforge-ops\\server\\calling\\runtime\\tts\\edge_tts_server.py"
+    ];
+    const pythonScript = candidatePaths.find((p) => fs.existsSync(p)) || candidatePaths[candidatePaths.length - 1];
+    const py = spawn("python", [pythonScript, language, "--stdin"], {
+      env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+    });
+    let out = "";
+    py.stdout.on("data", (d) => { out += d.toString(); });
+    py.on("close", (exitCode) => {
+      if (exitCode === 0 && out.trim()) {
+        resolve(out.trim());
+      } else {
+        resolve(null);
+      }
+    });
+    py.on("error", () => resolve(null));
+    py.stdin.write(text, "utf-8");
+    py.stdin.end();
+  });
+}
+
+callingRouter.get("/runtime/audio/:filename", (req: Request, res: Response) => {
+  const filename = path.basename(req.params.filename);
+  const cacheDir = findCoreEngineCacheDir();
+  const reelDir = findCoreEngineVoiceReelDir();
+
+  const isMp3 = filename.toLowerCase().endsWith(".mp3");
+  const contentType = isMp3 ? "audio/mpeg" : "audio/wav";
+
+  const searchCandidates = [
+    path.join(cacheDir, filename),
+    path.join(reelDir, filename),
+    path.join(reelDir, "hi", filename),
+    path.join(reelDir, "mr", filename),
+    path.join(reelDir, "en", filename),
+    path.join(cacheDir, filename.replace(/^(hi|mr|en)_/, "")),
+    path.join(reelDir, "hi", filename.replace(/^(hi|mr|en)_/, "")),
+    path.join(reelDir, "mr", filename.replace(/^(hi|mr|en)_/, "")),
+    path.join(reelDir, "en", filename.replace(/^(hi|mr|en)_/, "")),
+  ];
+
+  for (const candidate of searchCandidates) {
+    if (fs.existsSync(candidate)) {
+      res.setHeader("Content-Type", contentType);
+      return fs.createReadStream(candidate).pipe(res);
+    }
+  }
+
+  return res.status(404).json({ error: "Audio file not found: " + filename });
+});
+
+// POST /api/calling/runtime/tts
+// Unified TTS endpoint that synthesizes exact speech for any text
+callingRouter.post("/runtime/tts", async (req: Request, res: Response) => {
+  const { text, language } = req.body;
+  const lang = language || "en-IN";
+
+  if (!text || !text.trim()) {
+    return res.json({ audioUrl: null, audioBase64: null });
+  }
+
+  try {
+    const genFile = await generateNeuralAudio(text, lang);
+    if (genFile) {
+      return res.json({ audioUrl: `/api/calling/runtime/audio/${genFile}` });
+    }
+  } catch (e: any) {
+    console.warn("[Runtime TTS] Synthesis error:", e.message);
+  }
+
+  return res.json({ audioUrl: null, audioBase64: null });
+});
+
 callingRouter.post("/runtime/turn", async (req: Request, res: Response) => {
   const { sessionId, userMessage, query, language, dtmfDigit, customerPhone, customerName, agentId, rawAudioBase64 } = req.body;
 
@@ -808,6 +1099,7 @@ callingRouter.post("/runtime/turn", async (req: Request, res: Response) => {
 
     // Process real-time conversational AI turn
     const effectiveMsg = userMessage || query || "";
+    const t0 = Date.now();
     const result = await agentRuntime.processTextTurn(effectiveSessionId, effectiveMsg, {
       language,
       dtmfDigit,
@@ -815,6 +1107,29 @@ callingRouter.post("/runtime/turn", async (req: Request, res: Response) => {
       customerName,
       agentId,
     });
+    const t1 = Date.now();
+    console.log(`[Turn Perf] processTextTurn: ${t1 - t0}ms`);
+
+    let audioUrl: string | null = null;
+    const effectiveAgentId = agentId || (result as any).agentId;
+
+    // Synthesize the EXACT dynamic replyText so the audio matches the text 100%
+    try {
+      const tAudioStart = Date.now();
+      const generatedFile = await generateNeuralAudio(result.aiResponseText, result.language);
+      const tAudioEnd = Date.now();
+      console.log(`[Turn Perf] generateNeuralAudio: ${tAudioEnd - tAudioStart}ms -> ${generatedFile}`);
+      if (generatedFile) {
+        audioUrl = `/api/calling/runtime/audio/${generatedFile}`;
+      }
+    } catch (e: any) {
+      console.warn("[Turn Audio] Synthesis warning:", e.message);
+    }
+
+    // Strictly speak the real AI thought response, NEVER pre-recorded canned script audio!
+    if (!audioUrl) {
+      console.warn("[Turn Audio] Neural synthesis pending or fallback, serving clean text response");
+    }
 
     return res.json({
       success: true,
@@ -827,6 +1142,7 @@ callingRouter.post("/runtime/turn", async (req: Request, res: Response) => {
       sessionStatus: result.sessionStatus,
       shouldEndCall: result.shouldEndCall,
       language: result.language,
+      audioUrl,
     });
   } catch (err: any) {
     console.error("[Runtime Turn Error]", err);
@@ -1871,7 +2187,7 @@ callingRouter.get("/runtime/personas", (_req: Request, res: Response) => {
 
 // POST /api/calling/runtime/session/create
 // Creates a new conversational session with state memory and initial human-like opening
-callingRouter.post("/runtime/session/create", (req: Request, res: Response) => {
+callingRouter.post("/runtime/session/create", async (req: Request, res: Response) => {
   const { agentId, language, customerName, customerPhone, companyName, callObjective, customGreeting } = req.body;
 
   const targetPersona = (agentId && AVAILABLE_PERSONAS[agentId]) || AVAILABLE_PERSONAS["agent_swifttel_5g"] || DEFAULT_AGENT_PERSONA;
@@ -1889,7 +2205,16 @@ callingRouter.post("/runtime/session/create", (req: Request, res: Response) => {
   const initialGreeting = session.messages.find((m) => m.role === "assistant")?.content ||
     `Hello! This is ${targetPersona.name.split(" ")[0]} calling you today. Do you have a minute?`;
 
+  let greetingAudioFile: string | null = null;
+  try {
+    greetingAudioFile = await generateNeuralAudio(initialGreeting, session.agentConfig.language);
+  } catch (e) {
+    greetingAudioFile = getGreetingAudio(targetPersona.id, session.agentConfig.language);
+  }
+  const initialGreetingAudioUrl = greetingAudioFile ? `/api/calling/runtime/audio/${greetingAudioFile}` : null;
+
   res.status(201).json({
+    initialGreetingAudioUrl,
     success: true,
     sessionId: session.sessionId,
     callId: session.callId,

@@ -21,3 +21,10 @@ ehthumbs.db
 
 # Binaries
 cloudflared.exe
+
+# Audio Cache and Temporary Files
+core-engine/locales/cache/
+core-engine/cache/
+callforge-ops/scratch/
+__pycache__/
+*.pyc

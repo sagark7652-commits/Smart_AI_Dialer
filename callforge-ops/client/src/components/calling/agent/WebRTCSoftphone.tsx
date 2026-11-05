@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Phone,
   PhoneOff,
@@ -84,6 +84,7 @@ export const WebRTCSoftphone: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [softphoneInputText, setSoftphoneInputText] = useState("");
   const [showCarrierModal, setShowCarrierModal] = useState(false);
+  const softphoneSessionId = useRef<string>("softphone_" + Math.random().toString(36).substring(2, 9));
 
   // Subscribe to global calling bus
   useEffect(() => {
@@ -173,15 +174,22 @@ export const WebRTCSoftphone: React.FC = () => {
       setAgentSpeaking(true);
       const greeting =
         customScript ||
-        `Namaste ${customerName || ""} ji! CallForge AI Voice Assistant mein aapka swagat hai. Main aapki kya sahayata kar sakti hoon?`;
+        `Namaste ${customerName || ""} ji! Aarogya Dental Care clinic mein aapka swagat hai. Main Priya bol rahi hoon. Main aapki kya sahayata kar sakti hoon?`;
       
       const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       setConversationLogs([{ sender: "agent", text: greeting, time: timeStr }]);
 
-      audioEngine.speakAgentMessage(greeting, () => {
-        setAgentSpeaking(false);
-        handleStartListening();
-      });
+      audioEngine.speakAgentMessage(
+        greeting,
+        {
+          language: "hi-IN",
+          agentId: "agent_aarogya_dental",
+        },
+        () => {
+          setAgentSpeaking(false);
+          handleStartListening();
+        }
+      );
     }, 2200);
   };
 
@@ -284,10 +292,18 @@ export const WebRTCSoftphone: React.FC = () => {
         handleProcessUserSpeech(transcript);
       },
       () => {
-        setIsListening(false);
+        if (callState === "connected" && !agentSpeaking) {
+          setTimeout(() => handleStartListening(), 300);
+        } else {
+          setIsListening(false);
+        }
       },
       () => {
-        setIsListening(false);
+        if (callState === "connected" && !agentSpeaking) {
+          setTimeout(() => handleStartListening(), 150);
+        } else {
+          setIsListening(false);
+        }
       }
     );
 
@@ -296,7 +312,7 @@ export const WebRTCSoftphone: React.FC = () => {
     }
   };
 
-  const handleProcessUserSpeech = (userSpeech: string) => {
+  const handleProcessUserSpeech = async (userSpeech: string) => {
     if (!userSpeech.trim()) return;
     audioEngine.stopSpeechRecognition();
     setIsListening(false);
@@ -304,22 +320,47 @@ export const WebRTCSoftphone: React.FC = () => {
     const userTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     setConversationLogs((prev) => [...prev, { sender: "user", text: userSpeech, time: userTime }]);
 
-    // Generate intelligent AI response with active lead context
-    const reply = audioEngine.generateConversationalReply(userSpeech, {
-      leadName: activeLead.name,
-      agentName: "Asha",
+    // Detect Marathi script or fallback to conversational Hindi
+    const isMarathi = /[ऀ-ॿ]/.test(userSpeech) && (
+      userSpeech.includes("आहे") || userSpeech.includes("करा") || userSpeech.includes("नाही") ||
+      userSpeech.includes("काय") || userSpeech.includes("कधी") || userSpeech.includes("कसा") ||
+      userSpeech.includes("हवे") || userSpeech.includes("पाहिजे") || userSpeech.includes("होय") ||
+      userSpeech.includes("खर्च") || userSpeech.includes("तपासणी") || userSpeech.includes("दात") ||
+      userSpeech.includes("वेळ") || userSpeech.includes("शुल्क") || userSpeech.includes("कुठे") ||
+      userSpeech.includes("डॉक्टर") || userSpeech.includes("शर्मा") || userSpeech.includes("क्लिनिक")
+    );
+    const lang = isMarathi ? "mr-IN" : "hi-IN";
+
+    // Dynamic backend execution with Groq Qwen AI + ElevenLabs cloned female voice
+    const turnResult = await audioEngine.sendTurnToServer(softphoneSessionId.current, userSpeech, {
+      language: lang,
+      agentId: "agent_aarogya_dental",
+      customerName: activeLead.name,
+      customerPhone: activeLead.phone,
     });
+
+    const reply = turnResult.replyText;
     const agentTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     setConversationLogs((prev) => [...prev, { sender: "agent", text: reply, time: agentTime }]);
 
     setAgentSpeaking(true);
-    audioEngine.speakAgentMessage(reply, () => {
-      setAgentSpeaking(false);
-      // Auto-rearm speech recognition for ongoing two-way conversation
-      setTimeout(() => {
-        handleStartListening();
-      }, 350);
-    });
+    audioEngine.speakAgentMessage(
+      reply,
+      {
+        language: turnResult.language || lang,
+        audioUrl: turnResult.audioUrl,
+        audioBase64: turnResult.audioBase64,
+        agentId: "agent_aarogya_dental",
+        intent: turnResult.intent,
+      },
+      () => {
+        setAgentSpeaking(false);
+        // Auto-rearm speech recognition for continuous conversational loop
+        setTimeout(() => {
+          handleStartListening();
+        }, 350);
+      }
+    );
   };
 
   const handleTriggerAIResponse = (text: string) => {

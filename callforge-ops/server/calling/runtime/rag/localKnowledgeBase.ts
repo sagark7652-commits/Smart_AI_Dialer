@@ -66,12 +66,20 @@ export const DEFAULT_KNOWLEDGE_DOCS: RAGDocument[] = [
       "Customers can activate SwiftTel 5G on physical SIM or instant eSIM. If the customer requests plan details via WhatsApp or SMS, use the send_plan_details tool. If the customer agrees to proceed, use confirm_plan_activation. True 5G SA standalone network is active across 500+ Indian cities.",
   },
   {
-    id: "kb_marathi_clinic_support_09",
-    title: "Aarogya Dental & SwiftTel Marathi Language Support (मराठी)",
-    category: "marathi_support",
-    tags: ["marathi", "aarogya", "swifttel", "pune", "dant", "5g"],
+    id: "kb_marathi_dental_09",
+    title: "Aarogya Dental Clinic Marathi Language Guide (मराठी)",
+    category: "dental_marathi",
+    tags: ["marathi", "aarogya", "dental", "pune", "dant", "sharma"],
     content:
-      "मराठी संभाषण मार्गदर्शक: आरोग्य डेंटल केअर एफसी रोड, पुणे येथे आहे. दात स्वच्छ करणे ₹१,२०० आणि रूट कॅनॉल ₹३,५०० पासून सुरू होते. स्विफ्टटेल ५G वार्षिक प्लॅन ₹१,९९९ मध्ये २.५ GB दररोज डेटा आणि मोफत कॉलिंग मिळते. जर ग्राहकाने २ दिवसांनी फोन करण्यास सांगितले तर कॉलबॅक शेड्यूल करा.",
+      "मराठी संभाषण मार्गदर्शक: आरोग्य डेंटल केअर एफसी रोड, शिवाजी नगर, पुणे येथे आहे. डॉ. शर्मा यांची पहिली तपासणी फी ₹५०० आहे. दात स्वच्छ करण्याचे शुल्क ₹१,२०० आणि वेदनारहित रूट कॅनॉल ₹३,५०० पासून सुरू होते. क्लिनिक सकाळी ९ ते रात्री ८ चालू असते.",
+  },
+  {
+    id: "kb_marathi_swifttel_10",
+    title: "SwiftTel 5G Marathi Language Guide (मराठी)",
+    category: "telecom_marathi",
+    tags: ["marathi", "swifttel", "5g", "plan", "recharge"],
+    content:
+      "मराठी संभाषण मार्गदर्शक: स्विफ्टटेल ५G वार्षिक प्लॅन ₹१,९९९ मध्ये २.५ GB दररोज डेटा आणि मोफत कॉलिंग मिळते.",
   },
 ];
 
@@ -93,7 +101,7 @@ export class LocalKnowledgeBase {
   /**
    * Fast local lexical / TF-IDF scoring over documents
    */
-  search(query: string, limit: number = 2): Array<{ doc: RAGDocument; score: number }> {
+  search(query: string, limit: number = 2, personaId?: string): Array<{ doc: RAGDocument; score: number }> {
     if (!query || query.trim().length === 0) return [];
 
     const terms = query
@@ -104,7 +112,16 @@ export class LocalKnowledgeBase {
 
     if (terms.length === 0) return [];
 
-    const scored = this.docs.map((doc) => {
+    let pool = this.docs;
+    if (personaId === "agent_aarogya_dental") {
+      pool = pool.filter((d) => d.category.includes("dental"));
+    } else if (personaId === "agent_swifttel_5g") {
+      pool = pool.filter((d) => d.category.includes("telecom") || d.category === "trai_compliance");
+    } else if (personaId === "agent_tata_banking_01") {
+      pool = pool.filter((d) => d.category.includes("banking") || d.category.includes("emi") || d.category.includes("kyc"));
+    }
+
+    const scored = pool.map((doc) => {
       let matchScore = 0;
       const lowerContent = (doc.title + " " + doc.content + " " + doc.tags.join(" ")).toLowerCase();
 

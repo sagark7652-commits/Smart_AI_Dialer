@@ -83,7 +83,7 @@ export class DeepgramSTTProvider implements STTProvider {
   async transcribe(audioBuffer: Buffer, options?: STTOptions): Promise<{ text: string; confidence: number; language?: string }> {
     if (this.apiKey) {
       try {
-        const lang = options?.language || "hi";
+        const lang = options?.language ? (options.language.startsWith("mr") ? "mr" : options.language.startsWith("hi") ? "hi" : "en") : "hi";
         const url = `https://api.deepgram.com/v1/listen?model=nova-2&language=${lang}&smart_format=true`;
         const res = await fetch(url, {
           method: "POST",
@@ -109,5 +109,30 @@ export class DeepgramSTTProvider implements STTProvider {
     }
 
     return { text: "I want to know my loan balance.", confidence: 0.98, language: "en-IN" };
+  }
+}
+
+export class UnifiedAdaptiveSTTProvider implements STTProvider {
+  name = "unified_adaptive_stt";
+  private deepgram: DeepgramSTTProvider;
+  private whisper: LocalWhisperSTTProvider;
+
+  constructor() {
+    this.deepgram = new DeepgramSTTProvider();
+    this.whisper = new LocalWhisperSTTProvider();
+  }
+
+  async transcribe(audioBuffer: Buffer, options?: STTOptions): Promise<{ text: string; confidence: number; language?: string }> {
+    if (process.env.DEEPGRAM_API_KEY) {
+      try {
+        const res = await this.deepgram.transcribe(audioBuffer, options);
+        if (res.text && res.text.trim()) {
+          return res;
+        }
+      } catch (e) {
+        console.warn("[UnifiedSTT] Deepgram transcription fallback:", e);
+      }
+    }
+    return this.whisper.transcribe(audioBuffer, options);
   }
 }

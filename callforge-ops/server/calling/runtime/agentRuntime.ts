@@ -10,7 +10,7 @@ import {
   VADProvider,
 } from "./types";
 import { SileroVADProvider } from "./vad/sileroVAD";
-import { LocalWhisperSTTProvider } from "./stt/sttProviders";
+import { UnifiedAdaptiveSTTProvider } from "./stt/sttProviders";
 import { UnifiedAdaptiveTTSProvider } from "./tts/ttsProviders";
 import { LocalLLMProvider } from "./llm/llmProviders";
 import { BUILTIN_BANKING_TOOLS } from "./tools/bankingTools";
@@ -65,6 +65,23 @@ export const PRIYA_AAROGYA_PERSONA: AgentPersonaConfig = {
   bargeInEnabled: true,
   maxTurnDurationMs: 8000,
   systemPrompt: `You are Priya, a warm, polite, and helpful female AI Front Desk Assistant for Aarogya Dental Care & Implant Center in Shivaji Nagar, Pune.
+
+STRICT GENDER MANDATE (FEMALE):
+- You are strictly FEMALE (स्त्रीलिंगी).
+- When speaking Marathi, you MUST ALWAYS use female grammatical verb forms:
+  * Use 'मी बोलतेय' or 'मी बोलते' (NEVER use 'बोलतो').
+  * Use 'मी मदत करू शकते' (NEVER use 'करू शकतो').
+  * Use 'मी सांगू शकते' (NEVER use 'सांगू शकतो').
+  * Use 'मी नोंदवून घेते' or 'मी नोंद करते' (NEVER use 'नोंदवून घेतो').
+  * Use 'मी विचारते' (NEVER use 'विचारतो').
+  * Use 'मी समजू शकते' (NEVER use 'समजू शकतो').
+  NEVER use masculine verb inflections (बोलतो, करतो, सांगतो, शकतो).
+
+STRICT ANTI-INTRODUCTION RULE:
+- The phone call has ALREADY started and the initial greeting has already been delivered.
+- You must NEVER introduce yourself again (do NOT say "Namaste", "Hello", "नमस्कार", "मी प्रिया", "Main Priya", "Aarogya Dental Care mein swagat" or introduce your clinic).
+- Answer the customer's question directly, clearly, and concisely in 1-2 spoken sentences!
+
 Rules:
 1. STRICT LANGUAGE LOCK: Speak strictly in the caller's chosen language (English, Hindi, or Marathi). Do not mix languages.
 2. Keep each response concise (1-2 short sentences) suitable for a real telephone call.
@@ -73,7 +90,9 @@ Rules:
 5. If the customer requests to call back in 2-3 days or tomorrow, use schedule_callback tool.`,
 };
 
-export const DEFAULT_AGENT_PERSONA: AgentPersonaConfig = {
+export const DEFAULT_AGENT_PERSONA: AgentPersonaConfig = PRIYA_AAROGYA_PERSONA;
+
+export const TATA_BANKING_PERSONA: AgentPersonaConfig = {
   id: "agent_tata_banking_01",
   name: "Aarti - Tata Smartflo Banking Specialist",
   roleTitle: "Senior Customer Care Specialist",
@@ -119,7 +138,7 @@ export class AgentRuntime {
     tts?: TTSProvider;
   }) {
     this.vad = customProviders?.vad || new SileroVADProvider();
-    this.stt = customProviders?.stt || new LocalWhisperSTTProvider();
+    this.stt = customProviders?.stt || new UnifiedAdaptiveSTTProvider();
     this.llm = customProviders?.llm || new LocalLLMProvider();
     this.tts = customProviders?.tts || new UnifiedAdaptiveTTSProvider();
 
@@ -281,7 +300,7 @@ export class AgentRuntime {
     session.messages.push({ role: "user", content: userText });
 
     // 3. Local RAG Retrieval
-    const ragMatches = localKnowledgeBase.search(userText, 2);
+    const ragMatches = localKnowledgeBase.search(userText, 2, session.agentConfig.id);
     const ragSnippets = ragMatches.map((m) => `[Policy Knowledge: ${m.doc.title}] ${m.doc.content}`);
 
     let contextualSystemPrompt = `${session.agentConfig.systemPrompt}\nCustomer: ${session.memory.customerName} (${session.customerPhone})`;
@@ -396,7 +415,7 @@ export class AgentRuntime {
   }> {
     let session = this.sessions.get(sessionId);
     if (!session) {
-      const persona = options?.agentId ? AVAILABLE_PERSONAS[options.agentId] : DEFAULT_AGENT_PERSONA;
+      const persona = (options?.agentId && AVAILABLE_PERSONAS[options.agentId]) ? AVAILABLE_PERSONAS[options.agentId] : PRIYA_AAROGYA_PERSONA;
       session = this.createSession({
         customerPhone: options?.customerPhone || "+91 98201 55432",
         customerName: options?.customerName || "Customer",
@@ -450,13 +469,23 @@ export class AgentRuntime {
     session.messages.push({ role: "user", content: effectiveUserText });
 
     // Local RAG Knowledge Retrieval
-    const ragMatches = localKnowledgeBase.search(effectiveUserText, 3);
+    const ragMatches = localKnowledgeBase.search(effectiveUserText, 3, session.agentConfig.id);
     const ragSnippets = ragMatches.map((m) => `[Knowledge: ${m.doc.title}] ${m.doc.content}`);
 
-    // Strict Language Enforcement
+    // Strict Language & Gender Enforcement
     let langInstruction = "CRITICAL LANGUAGE RULE: Speak strictly in conversational Hindi (Hinglish). Do NOT use Marathi words.";
     if (currentLang === "mr-IN") {
-      langInstruction = "CRITICAL LANGUAGE RULE: Speak 100% strictly in polite, authentic Marathi (मराठी). Do NOT use Hindi or English sentences. Use Marathi words like 'नक्कीच', 'होय', 'धन्यवाद', 'आपण'.";
+      langInstruction = `CRITICAL MARATHI LANGUAGE & FEMALE GENDER RULES:
+- Speak 100% strictly in polite, authentic Marathi (शुद्ध व नम्र मराठी). Do NOT mix Hindi or English sentences.
+- GENDER MANDATE (FEMALE): You are Priya, a young FEMALE assistant. All first-person verbs and self-references MUST be feminine:
+  * Say 'मी बोलतेय' or 'मी बोलते' (NEVER say 'बोलतो').
+  * Say 'मी मदत करू शकते' (NEVER say 'करू शकतो').
+  * Say 'मी सांगू शकते' (NEVER say 'सांगू शकतो').
+  * Say 'मी नोंदवून घेते' or 'मी नोंद करते' (NEVER say 'नोंदवून घेतो').
+  * Say 'मी विचारते' (NEVER say 'विचारतो').
+  * Say 'मी समजते' (NEVER say 'समजतो').
+  NEVER use male inflections (बोलतो, करतो, सांगतो, शकतो).
+- STRICT NO-INTRODUCTION RULE: The phone call is already ongoing. The greeting is already finished. DO NOT say "नमस्कार", "मी प्रिया", "आरोग्य डेंटल केअरमध्ये आपले स्वागत आहे" or introduce yourself again. Directly answer the user's question in 1-2 short spoken sentences!`;
     } else if (currentLang === "en-IN") {
       langInstruction = "CRITICAL LANGUAGE RULE: Speak 100% strictly in professional, natural Indian English. NEVER utter Hindi words (do NOT say 'Ji bilkul', 'Haan', 'shukriya', 'karegi', etc.) or Marathi words.";
     }
@@ -466,22 +495,37 @@ ${langInstruction}
 Customer: ${session.memory.customerName || "Customer"} (${session.customerPhone})
 ${ragSnippets.length > 0 ? `Relevant Product & Knowledge Context:\n${ragSnippets.join("\n")}` : ""}
 Rules:
+- DYNAMIC AI REASONING: You are an intelligent voice AI assistant with full cognitive freedom. Reason about and answer any question dynamically, intelligently, and contextually in 1-2 natural spoken sentences. Do NOT be limited to fixed scripts.
+- ANTI-REPETITION: Strictly do NOT repeat the same sentences, phrases, or greetings you said previously. Advance the dialogue naturally.
 - STRICT LANGUAGE LOCK: Answer ONLY in the designated language (${currentLang}).
-- NEVER repeat a fixed greeting if the conversation is ongoing.
+- STRICT NO-INTRODUCTION RULE: Do NOT say "Namaste", "Hello", "नमस्कार", "मी प्रिया", "Main Priya", or give an introduction in ongoing turns. Answer the question directly.
 - Answer the customer's direct question first, then offer relevant next steps.
-- If customer wants to activate or confirms agreement, invoke confirm_plan_activation tool.
-- If customer requests details via WhatsApp or SMS, use send_plan_details tool.
+${session.agentConfig.id === "agent_aarogya_dental"
+  ? "- PERSONA LOCK: You are Priya from Aarogya Dental Care ONLY. NEVER mention telecom, SIM, 5G, recharge, or banking.\n- If customer inquires about appointment or slots, use check_availability or book_appointment tool.\n- If customer mentions fees, doctor timings, cleaning, or root canal, explain clinic dental services clearly."
+  : session.agentConfig.id === "agent_swifttel_5g"
+  ? "- PERSONA LOCK: You are Simran from SwiftTel 5G.\n- If customer wants to activate or confirms agreement, invoke confirm_plan_activation tool.\n- If customer requests details via WhatsApp or SMS, use send_plan_details tool."
+  : "- PERSONA LOCK: You are Aarti from Tata Smartflo Banking.\n- If customer inquires about balance or EMI, use fetch_loan_account_balance or send_payment_link."}
 - If customer says "call after 2 days", "busy", "tomorrow", use schedule_callback tool.
-- If customer asks off-topic or out-of-syllabus questions, gently acknowledge and redirect back to the call purpose.
+- OUT-OF-SYLLABUS & OFF-TOPIC QUESTIONS: You have full general AI intelligence. Answer any out-of-syllabus, general knowledge, or casual question smartly, warmly, and concisely in 1 sentence using your general knowledge, and then gracefully bring the conversation back to how you can help them at the clinic.
 - If customer says "no / not interested / bye", politely close and finish.`;
 
     const messagesToSend: LLMMessage[] = [
       { role: "system", content: contextualSystemPrompt },
-      ...session.messages.slice(-10), // Maintain complete multi-turn conversational context
+      ...session.messages.slice(-5), // Keep recent conversational context while saving tokens
     ];
 
-    // LLM Reasoning & Tool Calling
-    const availableToolsList = Array.from(this.tools.values());
+    // LLM Reasoning & Tool Calling: Strictly expose only tools belonging to this persona!
+    const isDental = session.agentConfig.id === "agent_aarogya_dental";
+    const isTelecom = session.agentConfig.id === "agent_swifttel_5g";
+    const isBanking = session.agentConfig.id === "agent_tata_banking_01";
+
+    const availableToolsList = Array.from(this.tools.values()).filter((t) => {
+      if (t.name === "schedule_callback") return true;
+      if (isDental) return t.name === "check_availability" || t.name === "book_appointment";
+      if (isTelecom) return t.name === "confirm_plan_activation" || t.name === "send_plan_details";
+      if (isBanking) return t.name === "fetch_loan_account_balance" || t.name === "send_payment_link";
+      return true;
+    });
     const llmRes = await this.llm.generate({
       messages: messagesToSend,
       tools: availableToolsList,
@@ -491,6 +535,9 @@ Rules:
     });
 
     let finalAssistantReply = llmRes.text ? llmRes.text.trim() : "";
+    if ((llmRes as any).intent && !options?.dtmfDigit) {
+      intent = (llmRes as any).intent;
+    }
 
     // Execute Tool Calls if requested by the LLM
     if (llmRes.toolCalls && llmRes.toolCalls.length > 0) {
@@ -580,6 +627,7 @@ Rules:
       toolsExecuted,
       ragSnippetsUsed: ragSnippets,
       intent,
+      agentId: session.agentConfig.id,
       sessionStatus: session.status,
       shouldEndCall,
       language: currentLang,

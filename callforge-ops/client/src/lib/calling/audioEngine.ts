@@ -198,21 +198,147 @@ class CallAudioEngine {
   }
 
   public isSpeaking = false;
+  public lastSpokenText: string = "";
+  public lastSpokenEndTime: number = 0;
 
-  // 5. Speak with AI Voice via Web Speech API (Strictly FEMALE persona voice with Language Lock)
-  speakAgentMessage(text: string, languageOrOnEnd?: string | (() => void), onEnd?: () => void) {
+  public isAgentEcho(transcript: string): boolean {
+    // Crucial: Echo CAN ONLY occur when agent is actively speaking through device speakers!
+    // Once speaking has stopped, caller speech is ALWAYS genuine and NEVER discarded.
+    if (!this.isSpeaking || !this.lastSpokenText) return false;
+    const cleanUser = transcript.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+    const cleanAgent = this.lastSpokenText.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+    if (!cleanUser || !cleanAgent) return false;
+
+    // Only flag as echo if it's a long phrase (>= 15 chars) matching agent output almost verbatim
+    if (cleanAgent.includes(cleanUser) && cleanUser.length >= 15) {
+      return true;
+    }
+    const userWords = cleanUser.split(/\s+/).filter((w) => w.length > 2);
+    if (userWords.length >= 4) {
+      const matchCount = userWords.filter((w) => cleanAgent.includes(w)).length;
+      if (matchCount / userWords.length >= 0.85) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private currentAudioElement: HTMLAudioElement | null = null;
+
+  async playAudio(src: string, onEnd?: () => void): Promise<boolean> {
+    try {
+      this.stopSpeaking();
+      this.isSpeaking = true;
+
+      const audio = new Audio(src);
+      audio.volume = 1.0;
+      this.currentAudioElement = audio;
+
+      let hasEnded = false;
+      // Watchdog timer: Guarantee speaking state resets even if onended event stalls
+      const safetyWatchdog = setTimeout(() => {
+        if (!hasEnded) {
+          console.warn("[AudioEngine] Audio watchdog timeout, releasing speaking state");
+          finish();
+        }
+      }, 14000);
+
+      const finish = () => {
+        if (!hasEnded) {
+          hasEnded = true;
+          clearTimeout(safetyWatchdog);
+          this.isSpeaking = false;
+          this.lastSpokenEndTime = Date.now();
+          this.currentAudioElement = null;
+          if (onEnd) onEnd();
+        }
+      };
+
+      audio.onended = finish;
+      audio.onerror = (e) => {
+        console.warn("[AudioEngine] Audio playback error for src:", src, e);
+        finish();
+      };
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((e) => {
+          console.warn("[AudioEngine] Playback promise rejected:", e);
+          finish();
+        });
+      }
+
+      return true;
+    } catch (e) {
+      console.warn("[AudioEngine] Could not play audio stream:", e);
+      this.isSpeaking = false;
+      this.currentAudioElement = null;
+      if (onEnd) onEnd();
+      return false;
+    }
+  }
+
+  // 5. Speak with Cloned AI Voice or Web Speech API Fallback
+  async speakAgentMessage(
+    text: string,
+    languageOrOptions?: string | { language?: string; audioUrl?: string | null; audioBase64?: string | null; agentId?: string; intent?: string } | (() => void),
+    onEnd?: () => void
+  ) {
+    this.lastSpokenText = (text || "").trim();
     let language = "en-IN";
+    let audioUrl: string | undefined | null;
+    let audioBase64: string | undefined | null;
+    let agentId: string | undefined;
+    let intent: string | undefined;
     let callback = onEnd;
-    if (typeof languageOrOnEnd === "function") {
-      callback = languageOrOnEnd;
-    } else if (typeof languageOrOnEnd === "string") {
-      language = languageOrOnEnd;
+
+    if (typeof languageOrOptions === "object" && languageOrOptions !== null) {
+      language = languageOrOptions.language || "en-IN";
+      audioUrl = languageOrOptions.audioUrl;
+      audioBase64 = languageOrOptions.audioBase64;
+      agentId = languageOrOptions.agentId;
+      intent = languageOrOptions.intent;
+    } else if (typeof languageOrOptions === "string") {
+      language = languageOrOptions;
+    } else if (typeof languageOrOptions === "function") {
+      callback = languageOrOptions;
     }
 
-    if (!("speechSynthesis" in window)) {
-      if (callback) callback();
+    // 1. Direct audio URL or base64 provided (plays real cloned studio audio!)
+    if (audioUrl) {
+      await this.playAudio(audioUrl, callback);
       return;
     }
+    if (audioBase64) {
+      const src = `data:audio/wav;base64,${audioBase64}`;
+      await this.playAudio(src, callback);
+      return;
+    }
+
+    // 2. Fetch cloned voice TTS from backend
+    try {
+      const res = await fetch("/api/calling/runtime/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, language, agentId, intent }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audioUrl) {
+          await this.playAudio(data.audioUrl, callback);
+          return;
+        } else if (data.audioBase64) {
+          await this.playAudio(`data:audio/wav;base64,${data.audioBase64}`, callback);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("[AudioEngine] TTS endpoint error:", e);
+    }
+
+    // Fallback callback without robotic voice
+    if (callback) callback();
+    return;
 
     try {
       this.isSpeaking = true;
@@ -312,8 +438,17 @@ class CallAudioEngine {
 
   stopSpeaking() {
     this.isSpeaking = false;
+    if (this.currentAudioElement) {
+      try {
+        this.currentAudioElement.pause();
+        this.currentAudioElement.currentTime = 0;
+      } catch {}
+      this.currentAudioElement = null;
+    }
     if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+      } catch {}
     }
   }
 
@@ -321,7 +456,14 @@ class CallAudioEngine {
   async startMicrophone(): Promise<AnalyserNode | null> {
     try {
       if (!navigator.mediaDevices?.getUserMedia) return null;
-      this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: { ideal: true },
+          noiseSuppression: { ideal: true },
+          autoGainControl: { ideal: true },
+          channelCount: 1,
+        },
+      });
       const ctx = this.getContext();
       const source = ctx.createMediaStreamSource(this.micStream);
       this.micAnalyser = ctx.createAnalyser();
@@ -341,8 +483,11 @@ class CallAudioEngine {
     this.micAnalyser = null;
   }
 
-  // 7. Speech Recognition for Two-Way Conversational Dialogue with Barge-In Support
+  // 7. Speech Recognition for Two-Way Conversational Dialogue with Continuous Listening & Auto-Recovery
   private recognition: any = null;
+  public isListeningActive = false;
+  private silenceTimer: any = null;
+  private accumulatedTranscript = "";
 
   isSpeechRecognitionSupported(): boolean {
     return !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
@@ -353,7 +498,8 @@ class CallAudioEngine {
     onError?: (err: any) => void,
     onEnd?: () => void,
     language: string = "hi-IN",
-    onBargeIn?: () => void
+    onBargeIn?: () => void,
+    onInterim?: (interimText: string) => void
   ): boolean {
     const SpeechRecognitionClass =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -363,59 +509,143 @@ class CallAudioEngine {
       return false;
     }
 
-    try {
-      this.stopSpeechRecognition();
-      const reco = new SpeechRecognitionClass();
-      reco.continuous = false;
-      reco.interimResults = true;
-      reco.lang = language || "hi-IN";
+    this.isListeningActive = true;
+    this.accumulatedTranscript = "";
 
-      reco.onstart = () => {
-        // Recognition started
-      };
+    const startInstance = () => {
+      if (!this.isListeningActive || this.isSpeaking) return;
 
-      reco.onspeechstart = () => {
-        // Customer started speaking! If AI is currently talking, trigger BARGE-IN!
-        if (this.isSpeaking) {
-          console.log("[AudioEngine] Barge-In detected! Customer interrupted AI.");
-          this.stopSpeaking();
-          if (onBargeIn) onBargeIn();
-        }
-      };
-
-      reco.onresult = (event: any) => {
-        // If barge-in happened
-        if (this.isSpeaking) {
-          this.stopSpeaking();
-          if (onBargeIn) onBargeIn();
+      try {
+        if (this.recognition) {
+          try {
+            this.recognition.abort();
+          } catch {}
+          this.recognition = null;
         }
 
-        const isFinal = event.results[event.results.length - 1]?.isFinal;
-        const transcript = event.results[event.results.length - 1]?.[0]?.transcript || "";
-        if (isFinal && transcript.trim()) {
-          onResult(transcript.trim());
-        }
-      };
+        const reco = new SpeechRecognitionClass();
+        reco.continuous = true; // KEEP LISTENING! Never drop mic after a single breath!
+        reco.interimResults = true;
+        reco.lang = language || "hi-IN";
 
-      reco.onerror = (event: any) => {
-        if (onError) onError(event);
-      };
+        reco.onstart = () => {
+          console.log("[AudioEngine] Speech recognition active for", language);
+        };
 
-      reco.onend = () => {
-        if (onEnd) onEnd();
-      };
+        reco.onspeechstart = () => {
+          if (this.isSpeaking) {
+            console.log("[AudioEngine] Barge-In detected! Customer interrupted AI.");
+            this.stopSpeaking();
+            if (onBargeIn) onBargeIn();
+          }
+        };
 
-      reco.start();
-      this.recognition = reco;
-      return true;
-    } catch (e) {
-      console.warn("[AudioEngine] Error starting speech recognition", e);
-      if (onError) onError(e);
-      return false;
-    }
+        reco.onresult = (event: any) => {
+          let fullTranscript = "";
+          let hasFinal = false;
+          for (let i = 0; i < event.results.length; ++i) {
+            const piece = event.results[i][0]?.transcript || "";
+            fullTranscript += piece;
+            if (event.results[i].isFinal) hasFinal = true;
+          }
+
+          const currentSpeech = fullTranscript.trim();
+          if (currentSpeech) {
+            // Anti-Echo Filter: Discard microphone transcription if it picked up the agent's own speech
+            const now = Date.now();
+            const isRecentEcho =
+              (this.isSpeaking || now - this.lastSpokenEndTime < 1800) &&
+              this.isAgentEcho(currentSpeech);
+
+            if (isRecentEcho) {
+              console.log("[AudioEngine] Self-echo suppressed:", currentSpeech);
+              return;
+            }
+
+            if (this.isSpeaking) {
+              this.stopSpeaking();
+              if (onBargeIn) onBargeIn();
+            }
+
+            this.accumulatedTranscript = currentSpeech;
+
+            if (onInterim) {
+              onInterim(currentSpeech);
+            }
+
+            if (this.silenceTimer) clearTimeout(this.silenceTimer);
+
+            // Natural conversational cadence: 850ms after final, 1300ms after interim (prevents cutting off caller)
+            const delayMs = hasFinal ? 850 : 1300;
+            this.silenceTimer = setTimeout(() => {
+              if (this.accumulatedTranscript.trim() && this.isListeningActive) {
+                const toSend = this.accumulatedTranscript.trim();
+                const isEcho = this.isSpeaking && this.isAgentEcho(toSend);
+                if (!isEcho) {
+                  this.accumulatedTranscript = "";
+                  this.stopSpeechRecognition();
+                  onResult(toSend);
+                } else {
+                  console.log("[AudioEngine] Suppressed true echo during agent speech:", toSend);
+                  this.accumulatedTranscript = "";
+                }
+              }
+            }, delayMs);
+          }
+        };
+
+        reco.onerror = (event: any) => {
+          console.warn("[AudioEngine] Recognition event error:", event.error);
+          if (event.error === "no-speech") {
+            // Normal silence in Chrome, keep listening!
+            return;
+          }
+          if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+            this.isListeningActive = false;
+            if (onError) onError(event);
+            return;
+          }
+          // Transient errors (network, aborted): Auto re-arm if still connected!
+          if (this.isListeningActive && !this.isSpeaking) {
+            setTimeout(() => {
+              if (this.isListeningActive && !this.isSpeaking) {
+                startInstance();
+              }
+            }, 150);
+          }
+        };
+
+        reco.onend = () => {
+          // If listening is still active and agent is NOT speaking, auto-rearm recognition immediately!
+          if (this.isListeningActive && !this.isSpeaking) {
+            setTimeout(() => {
+              if (this.isListeningActive && !this.isSpeaking) {
+                startInstance();
+              }
+            }, 80);
+          } else {
+            if (onEnd) onEnd();
+          }
+        };
+
+        reco.start();
+        this.recognition = reco;
+      } catch (e) {
+        console.warn("[AudioEngine] Exception starting recognition instance", e);
+        if (onError) onError(e);
+      }
+    };
+
+    startInstance();
+    return true;
   }
 
   stopSpeechRecognition() {
+    this.isListeningActive = false;
+    if (this.silenceTimer) {
+      clearTimeout(this.silenceTimer);
+      this.silenceTimer = null;
+    }
     if (this.recognition) {
       try {
         this.recognition.abort();
@@ -441,21 +671,41 @@ class CallAudioEngine {
     intent: string;
     shouldEndCall: boolean;
     language: string;
+    audioUrl?: string;
+    audioBase64?: string;
   }> {
     try {
-      const res = await fetch("/api/calling/runtime/turn", {
+      let res = await fetch("/api/calling/runtime/turn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
           userMessage,
-          language: options?.language || "en-IN",
+          language: options?.language || "hi-IN",
           dtmfDigit: options?.dtmfDigit,
-          agentId: options?.agentId,
+          agentId: options?.agentId || "agent_aarogya_dental",
           customerName: options?.customerName,
           customerPhone: options?.customerPhone,
         }),
       });
+
+      // Quick retry once if server was busy or momentarily re-starting
+      if (!res.ok) {
+        await new Promise((r) => setTimeout(r, 400));
+        res = await fetch("/api/calling/runtime/turn", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId,
+            userMessage,
+            language: options?.language || "hi-IN",
+            dtmfDigit: options?.dtmfDigit,
+            agentId: options?.agentId || "agent_aarogya_dental",
+            customerName: options?.customerName,
+            customerPhone: options?.customerPhone,
+          }),
+        });
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -464,7 +714,9 @@ class CallAudioEngine {
           toolsExecuted: data.toolsExecuted || [],
           intent: data.intent || "general",
           shouldEndCall: !!data.shouldEndCall,
-          language: data.language || options?.language || "en-IN",
+          language: data.language || options?.language || "hi-IN",
+          audioUrl: data.audioUrl,
+          audioBase64: data.audioBase64,
         };
       }
     } catch (e) {
@@ -499,272 +751,98 @@ class CallAudioEngine {
   ): string {
     const text = userSpeech.trim();
     const lower = text.toLowerCase();
-    const lang = (context?.language || "en-IN").toLowerCase();
-    const isMarathi = lang.includes("mr");
-    const isHindi = lang.includes("hi");
+    const lang = (context?.language || "hi-IN").toLowerCase();
+    const isMarathi = lang.includes("mr") || /[ऀ-ॿ]/.test(text) && (text.includes("आहे") || text.includes("करा") || text.includes("नाही"));
+    const isHindi = !isMarathi && (lang.includes("hi") || /[ऀ-ॿ]/.test(text) || lower.includes("hai") || lower.includes("karo"));
     const isEnglish = !isMarathi && !isHindi;
     const namePrefix = context?.leadName ? `${context.leadName} ji, ` : "";
 
-    // 1. Activation Intent
-    if (
-      lower.includes("activate") ||
-      lower.includes("activation") ||
-      lower.includes("confirm") ||
-      lower.includes("kar do") ||
-      lower.includes("chalu kar do") ||
-      lower.includes("shuru karo") ||
-      lower.includes("le lo") ||
-      lower.includes("agree") ||
-      lower.includes("subscribe") ||
-      lower.includes("yes activate") ||
-      lower.includes("ॲक्टिव्हेट") ||
-      lower.includes("सुरू करा") ||
-      lower.includes("चालू करा") ||
-      lower.includes("active kara")
-    ) {
-      if (isMarathi) {
-        return `उत्तम ${namePrefix}! मी आपल्या स्विफ्टटेल ५G वार्षिक प्लॅनचे ॲक्टिव्हेशन सुरू केले आहे. कन्फर्मेशन मेसेज आपल्या नोंदणीकृत नंबरवर पाठवला आहे.`;
-      } else if (isHindi) {
-        return `Bahut badhiya ${namePrefix}! Maine aapka SwiftTel 5G annual upgrade activate karne ka process start kar diya hai. Confirmation details aapke registered number par bhej di gayi hain.`;
+    const rawAgent = (context?.agentName || "").toLowerCase();
+    const isBanking = rawAgent.includes("banking") || rawAgent.includes("tata") || rawAgent.includes("aarti");
+    const isTelecom = rawAgent.includes("swifttel") || rawAgent.includes("simran") || rawAgent.includes("telecom");
+    const isDental = !isBanking && !isTelecom; // Default strictly to Dental Clinic (Aarogya Dental Care)
+
+    // =========================================================================
+    // 1. DENTAL CLINIC PERSONA (PRIYA - AAROGYA DENTAL CARE) - STRICTLY ENFORCED
+    // =========================================================================
+    if (isDental) {
+      // Rejection / End
+      if (lower.includes("nahi chahiye") || lower.includes("not interested") || lower.includes("bye") || lower.includes("cut") || lower.includes("नको") || lower.includes("कापा")) {
+        if (isMarathi) return `समजले ${namePrefix}. आरोग्य डेंटल केअरशी संपर्क केल्याबद्दल धन्यवाद. आपला दिवस शुभ जावो!`;
+        if (isHindi) return `Theek hai ${namePrefix}, koi baat nahi. Aarogya Dental Care se judne ke liye shukriya, apna khayal rakhiye!`;
+        return `Understood ${namePrefix}. Thank you for connecting with Aarogya Dental Care. Have a wonderful day ahead!`;
       }
-      return `Excellent ${namePrefix}! I have confirmed and initiated the activation of your SwiftTel 5G annual upgrade. The activation confirmation has been sent to your registered mobile number.`;
+
+      // Callback
+      if (lower.includes("call me") || lower.includes("call back") || lower.includes("callback") || lower.includes("kal") || lower.includes("busy") || lower.includes("parso") || lower.includes("उद्या") || lower.includes("व्यस्त")) {
+        if (isMarathi) return `नक्कीच ${namePrefix}! मी डॉ. शर्मा यांच्या क्लिनिकसाठी आपल्या कॉलबॅकची नोंद घेतली आहे. आमची टीम आपल्याला संपर्क करेल.`;
+        if (isHindi) return `Ji bilkul ${namePrefix}! Maine Dr. Sharma ke clinic ke liye aapka callback note kar liya hai. Hamari team aapse jald hi rabta karegi.`;
+        return `Certainly ${namePrefix}! I have noted down your callback request for Aarogya Dental Care. Our clinic coordinator will contact you shortly.`;
+      }
+
+      // WhatsApp / SMS / Address details
+      if (lower.includes("whatsapp") || lower.includes("sms") || lower.includes("address") || lower.includes("location") || lower.includes("patta") || lower.includes("kahan") || lower.includes("कुठे") || lower.includes("पत्ता")) {
+        if (isMarathi) return `आरोग्य डेंटल केअर क्लिनिक ऑफिस २०४, फॉर्च्युन प्लाझा, एफसी रोड, शिवाजी नगर, पुणे (गुड लक कॅफेजवळ) येथे आहे. संपूर्ण पत्ता WhatsApp वर पाठवला आहे.`;
+        if (isHindi) return `Aarogya Dental Care clinic Office 204, Fortune Plaza, FC Road, Shivaji Nagar, Pune mein Goodluck Cafe ke paas hai. Maine details aapke WhatsApp par bhej di hain!`;
+        return `Aarogya Dental Care is located at Office 204, Fortune Plaza, FC Road, Shivaji Nagar, Pune near Goodluck Cafe. Details have been shared via WhatsApp!`;
+      }
+
+      // Pricing / Fees / Charges / Cost
+      if (lower.includes("fees") || lower.includes("fee") || lower.includes("price") || lower.includes("cost") || lower.includes("charge") || lower.includes("charges") || lower.includes("kitna") || lower.includes("kharcha") || lower.includes("किंमत") || lower.includes("फीस") || lower.includes("खर्च")) {
+        if (isMarathi) return `आरोग्य डेंटल केअरमध्ये कन्सल्टेशन फी ₹४००, दात क्लिनिंग ₹१,२०० आणि रूट कॅनॉल ₹३,५०० पासून सुरू होते. आपण स्लॉट बुक करू इच्छिता का?`;
+        if (isHindi) return `Aarogya Dental Care mein consultation fees ₹400, teeth cleaning ₹1,200 aur root canal ₹3,500 se shuru hota hai. Kya main aapka appointment book kar doon?`;
+        return `At Aarogya Dental Care, consultation is ₹400, teeth cleaning is ₹1,200, and root canal treatments start at ₹3,500. Would you like to schedule an appointment?`;
+      }
+
+      // Appointment Booking / Slot
+      if (lower.includes("appointment") || lower.includes("book") || lower.includes("slot") || lower.includes("milna") || lower.includes("doctor") || lower.includes("sharma") || lower.includes("अपॉइंटमेंट") || lower.includes("भेट")) {
+        if (isMarathi) return `नक्कीच ${namePrefix}! डॉ. शर्मा यांच्याकडे उद्या सकाळी १०:३० वाजता वेळ उपलब्ध आहे. मी आपली अपॉइंटमेंट बुक करू का?`;
+        if (isHindi) return `Ji bilkul ${namePrefix}! Dr. Sharma ke paas kal subah 10:30 AM ka slot uplabdh hai. Kya main aapka slot book kar doon?`;
+        return `Certainly ${namePrefix}! Dr. Sharma has consultation slots available tomorrow morning at 10:30 AM. Shall I confirm your booking?`;
+      }
+
+      // Identity / Who are you
+      if (lower.includes("who are you") || lower.includes("kaun ho") || lower.includes("naam") || lower.includes("robot") || lower.includes("ai") || lower.includes("कोण")) {
+        if (isMarathi) return `मी प्रिया, आरोग्य डेंटल केअरची AI असिस्टंट आहे. मी डॉ. शर्मा यांच्या भेटीसाठी आणि दंत उपचारांसाठी आपल्या सेवेत आहे.`;
+        if (isHindi) return `Main Priya hoon, Aarogya Dental Care clinic ki smart AI assistant. Main Dr. Sharma se appointment aur dental services mein aapki madad kar sakti hoon.`;
+        return `I am Priya, the front desk AI assistant for Aarogya Dental Care. I am here to help you schedule consultations and answer clinic questions!`;
+      }
+
+      // Greetings
+      if (lower.includes("hello") || lower.includes("hi") || lower.includes("namaste") || lower.includes("नमस्कार")) {
+        if (isMarathi) return `नमस्कार ${namePrefix}! आरोग्य डेंटल केअर क्लिनिकमध्ये आपले स्वागत आहे. मी प्रिया, मी आपली काय मदत करू शकते?`;
+        if (isHindi) return `Namaste ${namePrefix}! Aarogya Dental Care clinic mein aapka swagat hai. Main Priya bol rahi hoon, main aapki kya sahayata kar sakti hoon?`;
+        return `Hello ${namePrefix}! Welcome to Aarogya Dental Care clinic. This is Priya, how may I assist you with your dental consultation today?`;
+      }
+
+      // Dental services (cleaning, root canal, pain, implant)
+      if (lower.includes("dard") || lower.includes("pain") || lower.includes("daant") || lower.includes("cleaning") || lower.includes("root canal") || lower.includes("दात") || lower.includes("वेदना")) {
+        if (isMarathi) return `दात दुखी किंवा उपचारांसाठी आपण लवकरात लवकर डॉ. शर्मा यांना दाखवून घ्यावे. मी आजसाठी आपली अपॉइंटमेंट नोंदवू का?`;
+        if (isHindi) return `Daant dard ya treatment ke liye aap jald se jald Dr. Sharma se consult kar lein. Kya main aaj ke liye aapka slot check karoon?`;
+        return `For toothache or dental treatment, I recommend consulting Senior Dentist Dr. Sharma as soon as possible. May I check available slots for today?`;
+      }
+
+      // Out-of-syllabus default for Dental Clinic
+      if (isMarathi) return `मी समजू शकते ${namePrefix}, मी आरोग्य डेंटल केअर क्लिनिककडून बोलत आहे. काय मी आपल्याला डॉ. शर्मा यांच्या भेटीसाठी किंवा उपचारांबद्दल माहिती देऊ?`;
+      if (isHindi) return `Main samajh sakti hoon ${namePrefix}, main Aarogya Dental Care clinic se Priya baat kar rahi hoon. Kya aapko Dr. Sharma se appointment ya kisi dental treatment ke baare mein jankari chahiye?`;
+      return `I understand ${namePrefix}. I am calling from Aarogya Dental Care clinic. Would you like me to help you schedule a consultation with Dr. Sharma?`;
     }
 
-    // 2. Callback Intent
-    const isCallback =
-      lower.includes("call me") ||
-      lower.includes("call back") ||
-      lower.includes("callback") ||
-      lower.includes("call karna") ||
-      lower.includes("call karo") ||
-      lower.includes("later") ||
-      lower.includes("busy") ||
-      lower.includes("meeting") ||
-      lower.includes("driving") ||
-      lower.includes("tomorrow") ||
-      lower.includes("two days") ||
-      lower.includes("2 days") ||
-      lower.includes("3 days") ||
-      lower.includes("three days") ||
-      lower.includes("do din") ||
-      lower.includes("teen din") ||
-      lower.includes("kal") ||
-      lower.includes("parso") ||
-      lower.includes("फोन करा") ||
-      lower.includes("कॉल करा") ||
-      lower.includes("दोन दिवसांनी") ||
-      lower.includes("तीन दिवसांनी") ||
-      lower.includes("उद्या") ||
-      lower.includes("व्यस्त") ||
-      lower.includes("वेळ नाही") ||
-      lower.includes("don divasani");
-
-    if (isCallback) {
-      let delayDays = 2;
-      let timingStr = "in 2 days";
-      if (lower.includes("3") || lower.includes("three") || lower.includes("teen") || lower.includes("तीन")) {
-        delayDays = 3;
-        timingStr = "in 3 days";
-      } else if (lower.includes("kal") || lower.includes("tomorrow") || lower.includes("उद्या") || lower.includes("udya")) {
-        delayDays = 1;
-        timingStr = "tomorrow";
-      }
-
-      // Automatically dispatch background callback registration to API
-      try {
-        fetch("/api/calling/callbacks/schedule", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            customerName: context?.leadName || "Valued Customer",
-            customerPhone: "+91 98201 55432",
-            delayDays,
-            preferredTime: timingStr,
-            reason: `Customer requested callback on call: ${text}`,
-          }),
-        }).catch(() => {});
-      } catch {}
-
-      if (isMarathi) {
-        return `नक्कीच ${namePrefix}! मी आपल्यासाठी ${delayDays === 1 ? "उद्यासाठी" : `${delayDays} दिवसांनी`} कॉलबॅक रिमाइंडर सेट केले आहे. आमची टीम आपल्याला संपर्क करेल. धन्यवाद, आपला दिवस शुभ जावो!`;
-      } else if (isHindi) {
-        return `Ji bilkul ${namePrefix}! Maine aapka callback reminder ${delayDays === 1 ? "kal" : `${delayDays} din baad`} ke liye note kar liya hai. Hamari team aapko connect karegi. Apna keemti samay dene ke liye shukriya!`;
-      }
-      return `Certainly ${namePrefix}! I have noted down your callback reminder for ${timingStr}. Our team will reach back out to you then. Thank you for your time, have a wonderful day!`;
+    // =========================================================================
+    // 2. BANKING PERSONA (AARTI - TATA SMARTFLO BANKING)
+    // =========================================================================
+    if (isBanking) {
+      if (isMarathi) return `आपली उर्वरित कर्ज शिल्लक ₹५०,००० आहे आणि पुढील ईएमआय तारीख ०५ ऑक्टोबर २०२६ आहे.`;
+      if (isHindi) return `Aapka bacha hua loan balance ₹50,000 hai aur agli EMI 05 October 2026 ko due hai. Tata Smartflo Banking mein sampark ke liye shukriya!`;
+      return `Your outstanding loan balance is ₹50,000 with your next EMI scheduled for October 5th, 2026.`;
     }
 
-    // 3. Rejection / Negative / Not interested
-    if (
-      lower.includes("nahi chahiye") ||
-      lower.includes("not interested") ||
-      lower.includes("zarurat nahi") ||
-      lower.includes("band karo") ||
-      lower.includes("kato") ||
-      lower.includes("bye") ||
-      lower.includes("cut") ||
-      lower.includes("नको") ||
-      lower.includes("गरज नाही") ||
-      lower.includes("कापा")
-    ) {
-      if (isMarathi) {
-        return `समजले ${namePrefix}. आपला बहुमूल्य वेळ दिल्याबद्दल मनापासून धन्यवाद. आपला दिवस आनंदात जावो!`;
-      } else if (isHindi) {
-        return `Theek hai ${namePrefix}, koi baat nahi. Apna keemti samay dene ke liye shukriya, aapka din shubh rahe!`;
-      }
-      return `Understood ${namePrefix}. Thank you so much for your valuable time today. Have a wonderful day ahead!`;
-    }
-
-    // 4. Send Details via WhatsApp / SMS
-    if (
-      lower.includes("whatsapp") ||
-      lower.includes("sms") ||
-      lower.includes("details") ||
-      lower.includes("send") ||
-      lower.includes("bhejo") ||
-      lower.includes("bhej do") ||
-      lower.includes("माहिती पाठवा") ||
-      lower.includes("pathva") ||
-      lower.includes("तपशील")
-    ) {
-      const channel = lower.includes("sms") ? "SMS" : "WhatsApp";
-      if (isMarathi) {
-        return `मी स्विफ्टटेल ५G वार्षिक प्लॅनचे संपूर्ण तपशील आपल्या नंबरवर ${channel} द्वारे पाठवले आहेत. कृपया तपासा!`;
-      } else if (isHindi) {
-        return `Maine SwiftTel 5G plan ki poori details aapke number par ${channel} ke madhyam se bhej di hain. Please check kar lijiye!`;
-      }
-      return `I have sent the complete 5G annual plan details directly to your registered number via ${channel}. Please check your messages!`;
-    }
-
-    // 5. Pricing / Cost / Rates
-    if (
-      lower.includes("price") ||
-      lower.includes("cost") ||
-      lower.includes("rate") ||
-      lower.includes("charges") ||
-      lower.includes("how much") ||
-      lower.includes("1999") ||
-      lower.includes("kitna") ||
-      lower.includes("kharcha") ||
-      lower.includes("paisa") ||
-      lower.includes("rupaye") ||
-      lower.includes("किंमत") ||
-      lower.includes("दर") ||
-      lower.includes("खर्च") ||
-      lower.includes("kimat") ||
-      lower.includes("kitit")
-    ) {
-      if (isMarathi) {
-        return `स्विफ्टटेल ५G वार्षिक प्लॅन ची किंमत पूर्ण ३६५ दिवसांसाठी फक्त ₹१,९९९ आहे ज्यामध्ये दररोज २.५ GB डेटा आणि अमर्यादित कॉलिंग मिळते.`;
-      } else if (isHindi) {
-        return `SwiftTel 5G annual plan ki keemat pooray 365 dino ke liye sirf ₹1,999 hai, jisme daily 2.5 GB high-speed 5G data aur unlimited calls shamil hain.`;
-      }
-      return `The SwiftTel 5G annual plan costs ₹1,999 for 365 days and includes 2.5 GB daily high-speed 5G data, unlimited calls, and OTT subscriptions.`;
-    }
-
-    // 6. Plan / 5G Benefits
-    if (
-      lower.includes("plan") ||
-      lower.includes("5g") ||
-      lower.includes("offer") ||
-      lower.includes("data") ||
-      lower.includes("benefit") ||
-      lower.includes("speed") ||
-      lower.includes("validity") ||
-      lower.includes("माहिती") ||
-      lower.includes("प्लॅन") ||
-      lower.includes("ऑफर")
-    ) {
-      if (isMarathi) {
-        return `आमचा वार्षिक प्लॅन दररोज २.५ GB ५G डेटा, अमर्यादित कॉलिंग आणि डिस्ने+ हॉटस्टार व सोनीलिव्हचे OTT फायदे ₹१,९९९ मध्ये देतो. आपण हा सुरू करू इच्छिता?`;
-      } else if (isHindi) {
-        return `Hamara annual plan aapko 2.5 GB daily 5G data, unlimited calls aur Disney+ Hotstar aur SonyLIV ke OTT benefits sirf ₹1,999 mein deta hai.`;
-      }
-      return `Our annual plan offers 2.5 GB of daily 5G data, truly unlimited voice calls, and OTT entertainment benefits like Disney+ Hotstar and SonyLIV for ₹1,999.`;
-    }
-
-    // 7. Identity / "Who are you" / "AI or Human"
-    if (
-      lower.includes("who are you") ||
-      lower.includes("your name") ||
-      lower.includes("robot") ||
-      lower.includes("ai") ||
-      lower.includes("human") ||
-      lower.includes("kaun ho") ||
-      lower.includes("naam kya") ||
-      lower.includes("तुम्ही कोण") ||
-      lower.includes("रोबोट") ||
-      lower.includes("माणूस")
-    ) {
-      if (isMarathi) {
-        return `मी सिमरन, स्विफ्टटेल ५G ची प्रगत AI व्हॉइस स्पेशलिस्ट आहे. आपला वेळ वाचवून त्वरित माहिती देण्यासाठी मी उपलब्ध आहे!`;
-      } else if (isHindi) {
-        return `Main Simran hoon, SwiftTel 5G ki smart AI voice specialist. Main aapko turant network updates aur plans mein help karne ke liye call kar rahi hoon.`;
-      }
-      return `I am Simran, an advanced AI Voice Specialist for SwiftTel 5G. I am here to assist you with quick plan upgrades and customer support!`;
-    }
-
-    // 8. Dental context (Priya)
-    const isDentalContext =
-      (context?.agentName && (context.agentName.includes("Priya") || context.agentName.includes("Dental") || context.agentName.includes("Aarogya"))) ||
-      lower.includes("dental") ||
-      lower.includes("aarogya") ||
-      lower.includes("cleaning") ||
-      lower.includes("root canal") ||
-      lower.includes("teeth") ||
-      lower.includes("sharma");
-
-    if (isDentalContext) {
-      if (lower.includes("cleaning") || lower.includes("root canal") || lower.includes("charges")) {
-        if (isMarathi) {
-          return `आरोग्य डेंटल केअरमध्ये दात स्वच्छ करण्याचे शुल्क ₹१,२०० आणि रूट कॅनॉल ₹३,५०० पासून सुरू होते.`;
-        } else if (isHindi) {
-          return `Aarogya Dental Care mein teeth cleaning ₹1,200 hai aur root canal treatment ₹3,500 se shuru hota hai.`;
-        }
-        return `At Aarogya Dental Care, teeth cleaning is ₹1,200 and root canal treatments start at ₹3,500 with Dr. Sharma.`;
-      }
-      if (lower.includes("appointment") || lower.includes("booking") || lower.includes("slot")) {
-        if (isMarathi) {
-          return `डॉ. शर्मा यांच्याकडे उद्या सकाळी १०:३० वाजता वेळ उपलब्ध आहे. मी आपली अपॉइंटमेंट बुक करू का?`;
-        } else if (isHindi) {
-          return `Dr. Sharma ke paas kal subah 10:30 AM ka slot uplabdh hai. Kya main aapka slot book kar doon?`;
-        }
-        return `Dr. Sharma has consultation slots available tomorrow at 10:30 AM. Shall I confirm your appointment?`;
-      }
-    }
-
-    // 9. Banking context (Aarti)
-    const isBankingContext =
-      (context?.agentName && (context.agentName.includes("Aarti") || context.agentName.includes("Banking") || context.agentName.includes("Tata"))) ||
-      lower.includes("loan") ||
-      lower.includes("emi") ||
-      lower.includes("balance");
-
-    if (isBankingContext) {
-      if (isMarathi) {
-        return `आपली उर्वरित कर्ज शिल्लक ₹५०,००० आहे आणि पुढील ईएमआय तारीख ०५ ऑक्टोबर २०२६ आहे.`;
-      } else if (isHindi) {
-        return `Aapka bacha hua loan balance ₹50,000 hai aur agli EMI 05 October 2026 ko due hai.`;
-      }
-      return `Your outstanding loan balance is ₹50,000 and the upcoming EMI is scheduled for October 5th, 2026.`;
-    }
-
-    // 10. Greetings ("Hello", "Hi")
-    if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey") || lower.includes("namaste") || lower.includes("नमस्कार")) {
-      if (isMarathi) {
-        return `नमस्कार ${namePrefix}! मी सिमरन बोलतेय स्विफ्टटेल ५G कडून. आमच्याकडे आपल्यासाठी एक विशेष ५G ऑफर आहे. मी आपल्याला माहिती देऊ का?`;
-      } else if (isHindi) {
-        return `Namaste ${namePrefix}! Main Simran baat kar rahi hoon SwiftTel 5G se. Hamare paas aapke liye ek shandar 5G annual offer hai. Kya main iski jankari de sakti hoon?`;
-      }
-      return `Hello ${namePrefix}! This is Simran from SwiftTel 5G. We have an exciting 5G annual plan upgrade for you today. Would you like to hear about it?`;
-    }
-
-    // 11. Out-of-Syllabus / Random / General Chit-Chat (Polite Boundary & Redirection)
-    if (isMarathi) {
-      return `मी समजू शकते ${namePrefix}, पण सध्या मी स्विफ्टटेल ५G स्पेशलिस्ट म्हणून आपल्या मोबाईल नेटवर्क व प्लॅन अपग्रेडसाठी बोलत आहे. मी आपल्याला या ५G प्लॅनची माहिती देऊ का?`;
-    } else if (isHindi) {
-      return `Main samajh sakti hoon ${namePrefix}, parantu abhi main SwiftTel 5G promotions team se judee hoon aur aapko 5G plan upgrade mein madad kar sakti hoon. Kya main aapko iske fayde bata sakti hoon?`;
-    }
-    return `I understand what you're asking ${namePrefix}, but as your SwiftTel 5G specialist today, I am dedicated to helping you with your mobile network and plan upgrade. Would you like me to share details about our high-speed 5G annual plan?`;
+    // =========================================================================
+    // 3. TELECOM PERSONA (SIMRAN - SWIFTTEL 5G)
+    // =========================================================================
+    if (isMarathi) return `मी सिमरन बोलतेय स्विफ्टटेल ५G कडून. आमच्या वार्षिक ५G प्लॅनची माहिती हवी आहे का?`;
+    if (isHindi) return `Main Simran hoon SwiftTel 5G se. Kya aap hamare 5G annual upgrade ke baare mein jaanna chahte hain?`;
+    return `Hello! This is Simran from SwiftTel 5G. Would you like to know about our latest 5G annual upgrade?`;
   }
 }
 

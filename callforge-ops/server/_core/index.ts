@@ -19,7 +19,11 @@ for (const envPath of candidateEnvFiles) {
 }
 
 if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = "development";
+  if (fs.existsSync(path.resolve(__dirname, "public/index.html")) || fs.existsSync(path.resolve(__dirname, "../dist/public/index.html"))) {
+    process.env.NODE_ENV = "production";
+  } else {
+    process.env.NODE_ENV = "development";
+  }
 }
 import express from "express";
 import { createServer } from "http";
@@ -39,7 +43,7 @@ import { spawn, ChildProcess } from "child_process";
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
-    server.listen(port, () => {
+    server.listen(port, "0.0.0.0", () => {
       server.close(() => resolve(true));
     });
     server.on("error", () => resolve(false));
@@ -131,10 +135,11 @@ async function startServer() {
     })
   );
   // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
+  const isDist = fs.existsSync(path.resolve(__dirname, "public/index.html"));
+  if (isDist || process.env.NODE_ENV === "production") {
     serveStatic(app);
+  } else {
+    await setupVite(app, server);
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
