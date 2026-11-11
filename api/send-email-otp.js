@@ -55,8 +55,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Both email and OTP code are required." });
   }
 
-  const senderUser = process.env.GMAIL_USER || "tatadialer7@gmail.com";
-  const appPassword = (process.env.GMAIL_APP_PASSWORD || "weyfveenhgunvyrb").replace(/\s+/g, "");
+  const senderUser = (process.env.GMAIL_USER || "").trim();
+  const appPassword = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
+  if (!senderUser || !appPassword) {
+    return res.status(503).json({ error: "GMAIL_USER and GMAIL_APP_PASSWORD must be configured for SMTP dispatch." });
+  }
   const senderDisplayName = process.env.SMTP_FROM_NAME || "Smart AI Dialer";
   const fromAddress = `"${senderDisplayName}" <${senderUser}>`;
 
@@ -66,7 +69,7 @@ export default async function handler(req, res) {
     await transporter.sendMail({
       from: fromAddress,
       to: email.trim(),
-      replyTo: "tatadialer7@gmail.com",
+      replyTo: senderUser,
       subject: `[Smart AI Dialer] Login Verification Code: ${otp}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">

@@ -99,37 +99,44 @@ export default async function handler(req, res) {
   const hmacSig = crypto.createHmac("sha256", JWT_SECRET).update(hmacPayload).digest("hex");
   const token = `${Buffer.from(hmacPayload).toString("base64")}.${hmacSig}`;
 
-  // Send real email via Gmail SMTP (ultra-fast pooled connection)
-  const senderUser = process.env.GMAIL_USER || "tatadialer7@gmail.com";
-  const appPassword = (process.env.GMAIL_APP_PASSWORD || "weyfveenhgunvyrb").replace(/\s+/g, "");
+  // Send real email via Gmail SMTP when configured
+  const senderUser = (process.env.GMAIL_USER || "").trim();
+  const appPassword = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
   const senderDisplayName = process.env.SMTP_FROM_NAME || "Smart AI Dialer";
   const fromAddress = `"${senderDisplayName}" <${senderUser}>`;
+  let sentReal = false;
+  let deliveryReason = "";
 
-  try {
-    const transporter = getTransporter(senderUser, appPassword);
-
-    await transporter.sendMail({
-      from: fromAddress,
-      to: normalizedEmail,
-      replyTo: "tatadialer7@gmail.com",
-      subject: `[Smart AI Dialer] Your Login Verification Code: ${code}`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
-          <h2 style="color: #a78bfa; margin: 0 0 16px 0; font-size: 20px;">Smart AI Dialer</h2>
-          <p style="color: #d4d4d8; font-size: 14px; line-height: 1.6;">Hello,</p>
-          <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6;">Your workspace password was verified for <strong>${normalizedEmail}</strong>. Your 6-digit login verification OTP is:</p>
-          <div style="text-align: center; margin: 24px 0;">
-            <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #38bdf8; background: #1e1b4b; padding: 12px 28px; border-radius: 10px; border: 1px solid #4338ca; display: inline-block;">
-              ${code}
-            </span>
+  if (!senderUser || !appPassword) {
+    deliveryReason = "GMAIL_USER / GMAIL_APP_PASSWORD not configured in environment";
+  } else {
+    try {
+      const transporter = getTransporter(senderUser, appPassword);
+      await transporter.sendMail({
+        from: fromAddress,
+        to: normalizedEmail,
+        replyTo: senderUser,
+        subject: `[Smart AI Dialer] Your Login Verification Code: ${code}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
+            <h2 style="color: #a78bfa; margin: 0 0 16px 0; font-size: 20px;">Smart AI Dialer</h2>
+            <p style="color: #d4d4d8; font-size: 14px; line-height: 1.6;">Hello,</p>
+            <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6;">Your workspace password was verified for <strong>${normalizedEmail}</strong>. Your 6-digit login verification OTP is:</p>
+            <div style="text-align: center; margin: 24px 0;">
+              <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #38bdf8; background: #1e1b4b; padding: 12px 28px; border-radius: 10px; border: 1px solid #4338ca; display: inline-block;">
+                ${code}
+              </span>
+            </div>
+            <p style="color: #71717a; font-size: 12px;">This code is valid for 10 minutes. Please enter it to complete your login.</p>
           </div>
-          <p style="color: #71717a; font-size: 12px;">This code is valid for 10 minutes. Please enter it to complete your login.</p>
-        </div>
-      `,
-    });
-    console.log(`[SMTP Mailer] Real OTP email sent to ${normalizedEmail}`);
-  } catch (err) {
-    console.error("[SMTP Mailer Error]:", err);
+        `,
+      });
+      sentReal = true;
+      console.log(`[SMTP Mailer] Real OTP email sent to ${normalizedEmail}`);
+    } catch (err) {
+      deliveryReason = err?.message || "SMTP authentication/delivery failed";
+      console.error("[SMTP Mailer Error]:", deliveryReason);
+    }
   }
 
   // Set stateless OTP cookie so verification works across serverless lambdas
@@ -137,9 +144,12 @@ export default async function handler(req, res) {
 
   return res.status(200).json({
     success: true,
-    message: `Password verified! Security OTP sent to your email inbox: ${normalizedEmail}`,
+    message: sentReal
+      ? `Password verified! Security OTP sent to your email inbox: ${normalizedEmail}`
+      : `Password verified! SMTP unavailable (${deliveryReason}); use the on-screen instant OTP.`,
     email: normalizedEmail,
-    sentReal: true,
+    sentReal,
+    deliveryReason,
     code,
   });
 }

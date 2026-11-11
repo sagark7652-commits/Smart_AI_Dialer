@@ -1467,24 +1467,75 @@ callingRouter.post("/webhooks/voice/status", (req: Request, res: Response) => {
 // =============================================================================
 const emailOtpStore = new Map<string, { code: string; expiresAt: number; name?: string }>();
 
-const GMAIL_USER = process.env.GMAIL_USER || "";
-const GMAIL_APP_PASS = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
+let cachedEmailTransporter: nodemailer.Transporter | null = null;
+let cachedTransporterKey = "";
 
-const emailTransporter = nodemailer.createTransport({
-  pool: true,
-  maxConnections: 5,
-  maxMessages: 100,
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: GMAIL_USER,
-    pass: GMAIL_APP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+function getLazyEmailTransporter(): { transporter: nodemailer.Transporter | null; user: string; reason?: string } {
+  const user = (process.env.GMAIL_USER || "").trim();
+  const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
+  if (!user || !pass) {
+    return {
+      transporter: null,
+      user: "",
+      reason: "GMAIL_USER / GMAIL_APP_PASSWORD not configured in .env",
+    };
+  }
+  const key = `${user}:${pass.length}`;
+  if (!cachedEmailTransporter || cachedTransporterKey !== key) {
+    cachedTransporterKey = key;
+    cachedEmailTransporter = nodemailer.createTransport({
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: Number(process.env.SMTP_PORT || 465),
+      secure: Number(process.env.SMTP_PORT || 465) === 465,
+      auth: { user, pass },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      tls: { rejectUnauthorized: false },
+    });
+  }
+  return { transporter: cachedEmailTransporter, user };
+}
+
+async function dispatchOtpEmail(
+  toEmail: string,
+  code: string,
+  subtitle: string
+): Promise<{ sentReal: boolean; deliveryReason?: string }> {
+  const { transporter, user, reason } = getLazyEmailTransporter();
+  if (!transporter || !user) {
+    return { sentReal: false, deliveryReason: reason || "SMTP credentials missing" };
+  }
+  const senderDisplayName = process.env.SMTP_FROM_NAME || "Smart AI Dialer";
+  try {
+    await transporter.sendMail({
+      from: `"${senderDisplayName}" <${user}>`,
+      to: toEmail,
+      replyTo: user,
+      subject: `[Smart AI Dialer] Your Login Verification Code: ${code}`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
+          <h2 style="color: #a78bfa; margin: 0 0 16px 0; font-size: 20px;">Smart AI Dialer</h2>
+          <p style="color: #d4d4d8; font-size: 14px; line-height: 1.6;">Hello,</p>
+          <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6;">${subtitle}</p>
+          <div style="text-align: center; margin: 24px 0;">
+            <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #38bdf8; background: #1e1b4b; padding: 12px 28px; border-radius: 10px; border: 1px solid #4338ca; display: inline-block;">
+              ${code}
+            </span>
+          </div>
+          <p style="color: #71717a; font-size: 12px;">This code is valid for 10 minutes. Please enter it to complete your login.</p>
+        </div>
+      `,
+    });
+    console.log(`[Email Auth Gateway] Real OTP email delivered to ${toEmail}`);
+    return { sentReal: true };
+  } catch (err: any) {
+    console.error("[Email Auth Gateway Error]:", err?.message || err);
+    return { sentReal: false, deliveryReason: err?.message || "SMTP delivery failed" };
+  }
+}
 
 // POST /api/calling/auth/email/check-credentials
 callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Response) => {
@@ -1537,36 +1588,20 @@ callingRouter.post("/auth/email/check-credentials", async (req: Request, res: Re
     name: finalDisplayName,
   });
 
-  // Fast background SMTP dispatch - pooled socket & non-blocking so the user gets instant response (< 50ms)
-  emailTransporter.sendMail({
-    from: `"Smart AI Dialer" <${GMAIL_USER}>`,
-    to: normalizedEmail,
-    replyTo: "tatadialer7@gmail.com",
-    subject: `[Smart AI Dialer] Your Login Verification Code: ${code}`,
-    html: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
-        <h2 style="color: #a78bfa; margin: 0 0 16px 0; font-size: 20px;">Smart AI Dialer</h2>
-        <p style="color: #d4d4d8; font-size: 14px; line-height: 1.6;">Hello,</p>
-        <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6;">Your workspace password was verified for <strong>${normalizedEmail}</strong>. Your 6-digit login verification OTP is:</p>
-        <div style="text-align: center; margin: 24px 0;">
-          <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #38bdf8; background: #1e1b4b; padding: 12px 28px; border-radius: 10px; border: 1px solid #4338ca; display: inline-block;">
-            ${code}
-          </span>
-        </div>
-        <p style="color: #71717a; font-size: 12px;">This code is valid for 10 minutes. Please enter it to complete your login.</p>
-      </div>
-    `,
-  }).then(() => {
-    console.log(`[Email Auth Gateway] Real OTP email delivered to ${normalizedEmail}`);
-  }).catch((err) => {
-    console.error(`[Email Auth Gateway Error]:`, err);
-  });
+  const delivery = await dispatchOtpEmail(
+    normalizedEmail,
+    code,
+    `Your workspace password was verified for <strong>${normalizedEmail}</strong>. Your 6-digit login verification OTP is:`
+  );
 
   return res.json({
     success: true,
-    message: `Password verified! Security OTP sent to your email inbox: ${normalizedEmail}`,
+    message: delivery.sentReal
+      ? `Password verified! Security OTP sent to your email inbox: ${normalizedEmail}`
+      : `Password verified! Email SMTP unavailable (${delivery.deliveryReason || "unconfigured"}); use the on-screen instant OTP.`,
     email: normalizedEmail,
-    sentReal: true,
+    sentReal: delivery.sentReal,
+    deliveryReason: delivery.deliveryReason,
     code,
   });
 });
@@ -1585,36 +1620,20 @@ callingRouter.post("/auth/email/send-otp", async (req: Request, res: Response) =
     expiresAt: Date.now() + 10 * 60 * 1000,
   });
 
-  // Fast background SMTP dispatch
-  emailTransporter.sendMail({
-    from: `"Smart AI Dialer" <${GMAIL_USER}>`,
-    to: normalizedEmail,
-    replyTo: "tatadialer7@gmail.com",
-    subject: `[Smart AI Dialer] Your Login Verification Code: ${code}`,
-    html: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; background: #0c0d12; border-radius: 16px; color: #ffffff; border: 1px solid #27272a;">
-        <h2 style="color: #a78bfa; margin: 0 0 16px 0; font-size: 20px;">TATA Dialer</h2>
-        <p style="color: #d4d4d8; font-size: 14px; line-height: 1.6;">Hello,</p>
-        <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6;">Your 6-digit login verification OTP is:</p>
-        <div style="text-align: center; margin: 24px 0;">
-          <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #38bdf8; background: #1e1b4b; padding: 12px 28px; border-radius: 10px; border: 1px solid #4338ca; display: inline-block;">
-            ${code}
-          </span>
-        </div>
-        <p style="color: #71717a; font-size: 12px;">This code is valid for 10 minutes. Please do not share it with anyone.</p>
-      </div>
-    `,
-  }).then(() => {
-    console.log(`[Email Auth Gateway] Real email delivered to ${normalizedEmail}`);
-  }).catch((err) => {
-    console.error(`[Email Auth Gateway Error]:`, err);
-  });
+  const delivery = await dispatchOtpEmail(
+    normalizedEmail,
+    code,
+    "Your 6-digit login verification OTP is:"
+  );
 
   return res.json({
     success: true,
-    message: `Real verification code sent to your email inbox: ${normalizedEmail}`,
+    message: delivery.sentReal
+      ? `Real verification code sent to your email inbox: ${normalizedEmail}`
+      : `Verification code generated (SMTP unavailable: ${delivery.deliveryReason || "unconfigured"}).`,
     email: normalizedEmail,
-    sentReal: true,
+    sentReal: delivery.sentReal,
+    deliveryReason: delivery.deliveryReason,
     code,
   });
 });

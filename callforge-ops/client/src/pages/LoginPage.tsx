@@ -51,6 +51,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [dispatchedEmailOtp, setDispatchedEmailOtp] = useState<string | null>(null);
   const [emailTimer, setEmailTimer] = useState(30);
   const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
+  const [emailSentViaSmtp, setEmailSentViaSmtp] = useState(true);
+  const [emailDeliveryReason, setEmailDeliveryReason] = useState("");
 
   // Phone & OTP state
   const [countryCode, setCountryCode] = useState("+91");
@@ -182,7 +184,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     setIsSendingEmailOtp(true);
     let generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setDispatchedEmailOtp(generatedOtp);
+    let sentViaEmail = false;
+    let deliveryNote = "";
+    let authRejectedError = "";
 
     try {
       const res = await fetch("/api/calling/auth/email/check-credentials", {
@@ -197,15 +201,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success && data.code) {
-        generatedOtp = data.code;
-        setDispatchedEmailOtp(data.code);
+      if (!res.ok || data.success === false) {
+        authRejectedError = data.error || "Invalid email or password.";
+      } else {
+        if (data.code) generatedOtp = data.code;
+        sentViaEmail = Boolean(data.sentReal);
+        deliveryNote = data.deliveryReason || "";
       }
     } catch (e) {
+      deliveryNote = "Server unreachable";
       console.warn("API check network fallback:", e);
     } finally {
       setIsSendingEmailOtp(false);
     }
+
+    if (authRejectedError) {
+      toast.error(authRejectedError);
+      return;
+    }
+
+    setDispatchedEmailOtp(generatedOtp);
+    setEmailSentViaSmtp(sentViaEmail);
+    setEmailDeliveryReason(deliveryNote);
 
     // Save/update valid credentials for this email
     storedCreds[normEmail] = { password: enteredPass, name: fullName.trim() };
@@ -216,10 +233,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setEmailOtpSent(true);
     setEmailTimer(45);
     setEmailOtpDigits(["", "", "", "", "", ""]);
-    toast.success("Password verified!", {
-      description: `Security OTP sent to ${email}. Please check your email inbox.`,
-      duration: 7000,
-    });
+    if (sentViaEmail) {
+      toast.success("Password verified!", {
+        description: `Security OTP sent to ${email}. Please check your email inbox.`,
+        duration: 7000,
+      });
+    } else {
+      toast.success(`Instant Verification Code: ${generatedOtp}`, {
+        description: `Email SMTP unavailable (${deliveryNote || "unconfigured"}). Use this code directly to sign in.`,
+        duration: 12000,
+      });
+    }
     setTimeout(() => emailOtpInputRefs.current[0]?.focus(), 150);
   };
 
@@ -892,7 +916,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   <div className="flex items-center gap-2 truncate">
                     <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
                     <span className="text-emerald-300 truncate text-[11px] font-mono">
-                      Code sent to {email}
+                      {emailSentViaSmtp ? `Code sent to ${email}` : `Verification code for ${email}`}
                     </span>
                   </div>
                   <button
@@ -903,6 +927,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     Edit
                   </button>
                 </div>
+
+                {!emailSentViaSmtp && dispatchedEmailOtp && (
+                  <div className="p-2.5 rounded-lg bg-amber-950/35 border border-amber-700/40 flex items-center justify-between gap-2 text-xs">
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-medium text-amber-300">
+                        SMTP email not delivered{emailDeliveryReason ? ` (${emailDeliveryReason})` : ""}
+                      </div>
+                      <div className="text-xs text-zinc-200 mt-0.5">
+                        Instant OTP: <strong className="font-mono text-amber-200 tracking-wider">{dispatchedEmailOtp}</strong>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailOtpDigits(dispatchedEmailOtp.split(""));
+                        verifyEmailOtpDirect(dispatchedEmailOtp);
+                      }}
+                      className="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-[11px] font-semibold cursor-pointer shrink-0"
+                    >
+                      Auto-Fill
+                    </button>
+                  </div>
+                )}
 
                 {/* 6 OTP Boxes */}
                 <div className="py-1">
