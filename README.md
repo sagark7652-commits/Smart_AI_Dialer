@@ -1,140 +1,115 @@
+<div align="center">
 
 # Smart AI Dialer & CallForge Ops — Enterprise Autonomous Voice AI Platform
 
-> **Next-Generation India-First Cloud Contact Center Platform** powered by **Tata Smartflo / Cloud SIP** and **OpenAI Voice Intelligence**.
+> **Next-Generation India-First Cloud Contact Center Platform** powered by **Tata Smartflo / Cloud SIP**, **Groq Qwen Reasoning**, and **Tri-Lingual ElevenLabs & Neural Voice Synthesis**.
 
-[![Platform](https://img.shields.io/badge/Platform-Tata%20Smartflo%20%7C%20SIP%20Trunk-blue?style=flat-square)](https://www.tatateleservices.com/)
-[![Speech AI](https://img.shields.io/badge/Speech%20AI-OpenAI%20Voice%20Pipeline-412991?style=flat-square)](https://platform.openai.com/)
-[![SLA](https://img.shields.io/badge/Audio%20Latency-%3C300ms%20SLA-emerald?style=flat-square)](#latency-profile)
-[![Compliance](https://img.shields.io/badge/Compliance-TRAI%20%2F%20DLT%20%2F%20TCCCPR-purple?style=flat-square)](#regulatory-compliance)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
+[![Groq AI](https://img.shields.io/badge/AI%20Engine-Groq%20Qwen3--32B-F55036?style=flat-square)](https://groq.com/)
+[![ElevenLabs](https://img.shields.io/badge/Voice%20AI-ElevenLabs%20%2B%20HF%20Router-000000?style=flat-square)](https://elevenlabs.io/)
+[![Compliance](https://img.shields.io/badge/Compliance-TRAI%20DND%20%26%20DPDP-22C55E?style=flat-square)]()
+[![Vercel Live](https://img.shields.io/badge/Deployment-Vercel-000000?style=flat-square&logo=vercel)](https://smart-ai-dialer-ranger22.vercel.app)
+
+**[Overview](#-overview) • [November 2026 Updates](#-november-2026-updates) • [Architecture](#%EF%B8%8F-architecture) • [Quick Start](#-quick-start) • [Security](#-security--compliance)**
+
+</div>
 
 ---
 
-## Quickstart & Local Setup
+## 🎯 Overview
 
-To run the complete single working system locally:
+**Smart AI Dialer (CallForge Ops)** is a complete B2B autonomous calling & contact center suite built for high-volume Indian outbound sales, healthcare front-desk booking, financial collections, and customer support. It unifies **telephony SIP trunks (Tata Smartflo)**, **real-time conversational AI (Groq + OpenAI-compatible + Python LiveKit engine)**, **tri-lingual female neural voices (English, Hindi, Marathi)**, **local RAG knowledge grounding**, and **automated QA scoring**.
 
+---
+
+## 🚀 November 2026 Updates
+
+- **Groq Real-Time Reasoning (`qwen/qwen3-32b`)**: Low-latency dynamic responses with strict zero-repetition filtering (eliminates canned `"Certainly! I am here to assist you"` loops and mid-call re-introductions).
+- **ElevenLabs Custom Tri-Lingual Female Voices**: Language-locked Voice IDs used consistently across both call intros and every turn:
+  - Hindi (`hi-IN`): `RABOvaPec1ymXz02oDQi`
+  - English (`en-IN`): `ZUrEGyu8GFMwnHbvLhv2`
+  - Marathi (`mr-IN`): `dSEhEXLzhnZEytnJ2rRy`
+- **Deep Marathi Training (Aarogya Dental Care)**: Authentic Marathi (`स्त्रीलिंगी` female grammar lock) covering Dr. Sharma consultation, FC Road Shivaji Nagar Pune address, timings, cleaning/RCT/implant pricing, and appointment booking.
+- **No-Refresh Session Isolation**: Switching agents or starting consecutive calls cleanly aborts previous audio/timers and isolates session context without refreshing the page.
+- **Hugging Face Router Support**: Migrated all HF TTS (`facebook/mms-tts-eng`, `facebook/mms-tts-hin`, `facebook/mms-tts-mar`), embeddings, and sentiment inference to `https://router.huggingface.co/hf-inference/models`.
+- **Full Vercel Serverless Runtime (`api/calling.js` + `api/_runtime.js`)**: Supports `/api/calling/runtime/*` endpoints in production alongside the full Express backend.
+
+---
+
+## ✨ Key Platform Modules
+
+| Module | Capabilities |
+| :--- | :--- |
+| **Live Conversational Voice Sandbox** | Real-time microphone + text turn simulation with Simran (SwiftTel 5G), Priya (Aarogya Dental Care), and Aarti (Tata Smartflo Banking) |
+| **WebRTC Browser Softphone** | Zero-cost local & cloud audio softphone with continuous speech loop, DTMF keypad, barge-in cancellation, and transcript logging |
+| **Campaign Dialer & Scheduler** | Automated batch execution, TRAI calling-window guardrails (`09:30–20:00 IST`), retry cadences, and CSV lead ingestion |
+| **AI Script Lab & Prompt Studio** | Multi-turn persona rules, strict language locks (`en-IN`, `hi-IN`, `mr-IN`), tool schemas, and RAG snippet grounding |
+| **Recordings, CDR & QA Scoring** | Persistent call detail records, automated QA rubrics, sentiment analytics, and WhatsApp follow-up templates |
+| **Billing & Enterprise Controls** | INR Prepaid Wallet, GST invoicing, 100% Consent/DND whitelisting, and workspace team roles |
+
+---
+
+## 🏗️ Architecture
+
+```
+Smart_AI_Dialer/
+├── api/
+│   ├── calling.js              # Vercel serverless API dispatcher (/api/calling/*)
+│   └── _runtime.js             # Serverless Groq + ElevenLabs tri-lingual AI runtime
+├── callforge-ops/
+│   ├── client/                 # React 18 + Vite + TailwindCSS frontend dashboard
+│   ├── server/                 # Express backend, WebSocket bridge & runtime engine
+│   └── data/                   # Persistent JSON storage (leads, campaigns, CDRs)
+├── core-engine/                # Python LiveKit/FastAPI autonomous voice agent worker
+│   └── agent/
+│       ├── tts/                # ElevenLabs, Edge TTS, HuggingFace Router TTS
+│       ├── rag/                # Local embeddings & vector store
+│       └── analytics/          # Sentiment & transcript scoring
+├── PROJECT_UPDATES_AND_CHANGELOG.md
+├── package.json
+└── vercel.json
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone Repository
 ```bash
-# Unified launch: Starts both Python Core Agent (:8000) and Node.js Dashboard (:3000)
-npm run dev
-
-# Or start individually:
-npm run dev:node     # Node.js Server & React UI only (Port 3000)
-npm run dev:agent    # Python Core Voice Engine only (Port 8000)
+git clone https://github.com/sagark7652-commits/Smart_AI_Dialer.git
+cd Smart_AI_Dialer
 ```
 
-- **CallForge Dashboard**: `http://localhost:3000`
-- **Core Engine API**: `http://localhost:8000`
-- **In-Browser Voice Demo**: `http://localhost:8000/demo`
-- **Virtual Number Status**: Deferred / Pending (Ready to plug in anytime via Settings or `.env`)
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` (and `callforge-ops/.env`) and add your keys (`GROQ_API_KEY`, `ELEVENLABS_API_KEY`, `HUGGINGFACE_API_KEY` as needed). Never commit `.env` files to Git.
 
----
-
-## Executive Summary
-
-**Smart AI Dialer / CallForge Ops** is an enterprise-grade calling operations console engineered for high-throughput outbound and inbound voice campaigns across India. The system unites:
-1. **Node.js & React Dashboard** (`callforge-ops`): Real-time campaign builder, wallboard, supervisor console, CDR analytics, and WebRTC softphone.
-2. **Python Core Voice Engine** (`core-engine`): FastAPI streaming voice pipeline with VAD, Deepgram STT, OpenAI LLM (`gpt-4o-mini`), OpenAI Neural TTS, and domain tools.
-3. **Integrated Voice Agents**:
-   - **Priya - Aarogya Dental Care**: Clinic front-desk coordinator for patient appointments, doctor availability (`check_availability`, `book_appointment`), and pricing across Hindi, English, Hinglish, and Marathi.
-   - **Aarti - Tata Smartflo Banking**: Senior customer care specialist for loan balance queries, EMI scheduling, and UPI payment dispatch.
-4. **Virtual Number Readiness**: Provisioning of carrier virtual numbers (Tata Smartflo, Twilio, or Exotel) is deferred and cleanly decoupled. Direct testing is active immediately via in-browser WebAudio and the interactive sandbox.
-
-
----
-
-## High-Level Voice Architecture
-
+### 3. Install & Run Locally
+```bash
+npm --prefix callforge-ops install
+npm run dev:node
+# App & API available at http://localhost:3000
 ```
-                  CUSTOMER (Mobile / Landline)
-                              │
-                              │ Voice (16kHz PCM Linear via Tata SIP Trunk)
-                              ▼
-                ┌───────────────────────────┐
-                │ Tata Smartflo / Dialer    │ (Carrier PSTN & Cloud SIP Trunk Gateway)
-                └─────────────┬─────────────┘
-                              │
-                              ▼
-                ┌───────────────────────────┐
-                │ Silero VAD Audio Engine   │ (Audio Processing, Noise Gating & VAD)
-                └─────────────┬─────────────┘
-                              │
-                              ▼
-                ┌───────────────────────────┐
-                │ OpenAI Whisper STT        │ (Real-Time Streaming Speech-to-Text)
-                │ Example: "I want to know  │
-                │ my loan balance."         │
-                └─────────────┬─────────────┘
-                              ▼ Text Transcript
-                ┌───────────────────────────┐
-                │ OpenAI GPT LLM + Tools    │ (Understands Intent & Executes Tools)
-                │ Core Business Logic:      │
-                │ Query Loan Database       │
-                │ Generate: "Your loan      │
-                │ balance is ₹50,000."      │
-                └─────────────┬─────────────┘
-                              ▼ Text Response
-                ┌───────────────────────────┐
-                │ OpenAI Neural TTS         │ (Multilingual Agentic Voice Synthesis)
-                └─────────────┬─────────────┘
-                              │ 24kHz Neural Audio
-                              ▼
-                ┌───────────────────────────┐
-                │ Tata Dialer Audio Bridge  │ (Outbound Media Relay)
-                └─────────────┬─────────────┘
-                              ▼
-                  CUSTOMER (Hears Natural Voice)
 
+### 4. Production Build & Type Check
+```bash
+npm run check
+npm run build
 ```
 
 ---
 
+## 🛡️ Security & Compliance
 
-## Real-Time Latency SLA Benchmark
-
-CallForge Ops operates within an ultra-low round-trip latency budget to preserve conversational flow:
-
-```
-┌─────────────────┬──────────────────┬─────────────────┬─────────────────┐
-│ Silero VAD Ingest│ Whisper STT      │ OpenAI LLM Turn │ OpenAI TTS      │
-│ 16ms – 22ms     │ 78ms – 88ms      │ 104ms – 118ms   │ 72ms – 82ms     │
-└─────────────────┴──────────────────┴─────────────────┴─────────────────┘
- Total Round-Trip Audio Loop: 270ms – 295ms (Well under the 350ms Human SLA)
-
-```
+- **No Secrets in VCS**: `.env` and API credentials remain strictly local or inside Vercel Environment Variables.
+- **TRAI DND & Consent Filtering**: Pre-dial consent & calling-hours enforcement before outbound execution.
+- **DPDP Act Audit Trails**: Role-scoped team access and call compliance logging.
 
 ---
 
+<div align="center">
 
-## Key Enterprise Capabilities
+**CallForge / Smart AI Dialer Platform**  
+Documentation & Updates Manifest: [PROJECT_UPDATES_AND_CHANGELOG.md](./PROJECT_UPDATES_AND_CHANGELOG.md)
 
-- **AI Voice Studio**: Real-time pipeline visualizer and sandbox simulator with preloaded banking and retail scenarios.
-- **Multilingual Persona Library**: High-fidelity Indian English, Hindi, Marathi, and Indic regional voices.
-- **Carrier Agility & Fallback**: Native Tata Smartflo SIP trunk integration with seamless toggle between live carrier trunks and virtual sandbox testing.
-- **Predictive & Progressive Dialer**: Decoupled asynchronous worker queue handling thousands of concurrent leads without UI thread degradation.
-- **Live Supervisor Wallboard**: Real-time Server-Sent Events (SSE) stream offering 3-way supervisor whisper coaching, call barging, and talk-over alerts.
-- **Automated QA & Call Records (CDR)**: 100% call audit logging with transcription, automated quality scoring, and sentiment analytics.
-
----
-
-## Regulatory & Telecom Compliance (TRAI / DLT)
-
-- **Statutory Calling Window**: Hard enforcement of 09:00 to 21:00 IST calling hours with lead timezone validation.
-- **National DNC Registry Scrub**: Automated de-duplication against the National Do Not Call (NDNC) suppression list.
-- **Mandatory Disclosure Preamble**: Locked AI disclosure preamble delivered automatically upon call pickup.
-- **DLT Registration Verification**: Enterprise caller ID validation against registered TRAI entity headers.
-
----
-
-## Technical Stack
-
-- **Frontend**: React 19, TypeScript, Tailwind CSS, Lucide Icons, Web Audio API
-- **Backend**: Node.js, Express, tRPC, Drizzle ORM, SSE Event Broker, WebSocket Voice Stream
-- **Telephony & Speech**: Tata Smartflo Cloud Telephony, OpenAI Speech-to-Text, OpenAI Neural TTS, Silero VAD
-- **Database & Storage**: MySQL / PostgreSQL via Drizzle with persistent local fallback
-
----
-
-## License & Enterprise Support
-Proprietary & Confidential. Designed for enterprise telecommunications deployments.
-
+</div>

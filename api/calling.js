@@ -1,3 +1,5 @@
+import { handleRuntimeRoute } from "./_runtime.js";
+
 // Comprehensive Vercel Serverless API Dispatcher for CallForge Ops / Smart AI Dialer
 // Handles all /api/calling/* REST endpoints in serverless environments
 
@@ -325,6 +327,12 @@ export default async function handler(req, res) {
   body = body || {};
 
   try {
+    // 0. AI RUNTIME
+    if (path.startsWith("runtime/")) {
+      const runtimeResult = await handleRuntimeRoute(path, req, res, store, body);
+      if (runtimeResult) return runtimeResult;
+    }
+
     // 1. LEADS
     if (path === "leads" || path.startsWith("leads/")) {
       if (req.method === "GET") {

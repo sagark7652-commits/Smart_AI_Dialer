@@ -3,6 +3,7 @@
 Synthesizes audio using Hugging Face inference models such as:
 - facebook/mms-tts-eng (English)
 - facebook/mms-tts-hin (Hindi)
+- facebook/mms-tts-mar (Marathi)
 - hexgrad/Kokoro-82M or custom endpoints
 Converts synthesized audio into streaming PCM chunks compatible with telephony.
 """
@@ -18,6 +19,7 @@ logger = setup_logger("tts.huggingface")
 
 DEFAULT_HF_TTS_ENG = "facebook/mms-tts-eng"
 DEFAULT_HF_TTS_HIN = "facebook/mms-tts-hin"
+DEFAULT_HF_TTS_MAR = "facebook/mms-tts-mar"
 HF_INFERENCE_URL = "https://router.huggingface.co/hf-inference/models"
 
 
@@ -38,6 +40,8 @@ class HuggingFaceTTS(BaseTTS):
 
         if model:
             self.model = model
+        elif self.language.startswith("mr"):
+            self.model = DEFAULT_HF_TTS_MAR
         elif self.language.startswith("hi"):
             self.model = DEFAULT_HF_TTS_HIN
         else:
@@ -50,7 +54,9 @@ class HuggingFaceTTS(BaseTTS):
 
     def set_language(self, language: str) -> None:
         self.language = language.lower()
-        if self.language.startswith("hi"):
+        if self.language.startswith("mr"):
+            self.model = DEFAULT_HF_TTS_MAR
+        elif self.language.startswith("hi"):
             self.model = DEFAULT_HF_TTS_HIN
         else:
             self.model = DEFAULT_HF_TTS_ENG
@@ -66,7 +72,12 @@ class HuggingFaceTTS(BaseTTS):
             return
 
         lang = (language or self.language).lower()
-        model_to_use = DEFAULT_HF_TTS_HIN if lang.startswith("hi") else self.model
+        if lang.startswith("mr"):
+            model_to_use = DEFAULT_HF_TTS_MAR
+        elif lang.startswith("hi"):
+            model_to_use = DEFAULT_HF_TTS_HIN
+        else:
+            model_to_use = self.model
 
         if not self.api_key:
             logger.warning("HUGGINGFACE_API_KEY missing; cannot synthesize audio via HF.")
